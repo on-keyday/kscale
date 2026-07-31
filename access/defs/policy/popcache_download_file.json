@@ -1,0 +1,32 @@
+{
+    "name": "AllowPoPCacheFileDownload",
+    "policy": "Allow",
+    "resource": "dp_operations",
+    "action": [
+        "download_file"
+    ],
+    "or": [
+        {
+            "name": "CanDownloadPoPCacheFile",
+            "and": [
+                {
+                    "name": "UserAuthorityIsDataplane",
+                    "condition": "$user.authority.full_name suffix $env.authority.system.dp.popcache."
+                },
+                {
+                    "name": "ArgumentsHaveDesiredValues",
+                    "condition": "$env.args.file_name suffix `.wasm` or $env.args.file_name suffix `.pem`"
+                },
+                {
+                    "name": "UserHasRequiredRole",
+                    "or": [
+                        {
+                            "name": "HumanUserHasManagementRole",
+                            "condition": "$user.roles list_contains `popcache`"
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+}

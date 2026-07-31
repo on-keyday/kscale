@@ -1,0 +1,204 @@
+{
+    "prometheus": [
+        {
+            "metric_name": "ksdk_popcache_requests_total",
+            "help": "Popcache metric requests_total",
+            "long_name": "PopcacheRequestsTotal",
+            "value_type": "counter",
+            "hold_type": "uint64",
+            "source_metric": "popcache_stats",
+            "optional": true,
+            "optional_condtition": "$self.PopcacheEnabled",
+            "to_prometheus": "$dst = uint64($src.RequestsTotal)",
+            "labels": [
+                {
+                    "name": "instance"
+                }
+            ]
+        },
+        {
+            "metric_name": "ksdk_popcache_requests_end_total",
+            "help": "Popcache metric requests_end_total",
+            "long_name": "PopcacheRequestsEndTotal",
+            "value_type": "counter",
+            "hold_type": "uint64",
+            "source_metric": "popcache_stats",
+            "optional": true,
+            "optional_condtition": "$self.PopcacheEnabled",
+            "to_prometheus": "$dst = uint64($src.RequestsEndTotal)",
+            "labels": [
+                {
+                    "name": "instance"
+                }
+            ]
+        },
+        {
+            "metric_name": "ksdk_popcache_connect_total",
+            "help": "Popcache metric connect_total",
+            "long_name": "PopcacheConnectTotal",
+            "value_type": "counter",
+            "hold_type": "uint64",
+            "source_metric": "popcache_stats",
+            "optional": true,
+            "optional_condtition": "$self.PopcacheEnabled",
+            "to_prometheus": "$dst = uint64($src.ConnectTotal)",
+            "labels": [
+                {
+                    "name": "instance"
+                }
+            ]
+        },
+        {
+            "metric_name": "ksdk_popcache_cache_hits_total",
+            "help": "Popcache metric cache_hits_total",
+            "long_name": "PopcacheCacheHitsTotal",
+            "value_type": "counter",
+            "hold_type": "uint64",
+            "source_metric": "popcache_stats",
+            "optional": true,
+            "optional_condtition": "$self.PopcacheEnabled",
+            "to_prometheus": "$dst = uint64($src.CacheHitsTotal)",
+            "labels": [
+                {
+                    "name": "instance"
+                }
+            ]
+        },
+        {
+            "metric_name": "ksdk_popcache_cache_misses_total",
+            "help": "Popcache metric cache_misses_total",
+            "long_name": "PopcacheCacheMissesTotal",
+            "value_type": "counter",
+            "hold_type": "uint64",
+            "source_metric": "popcache_stats",
+            "optional": true,
+            "optional_condtition": "$self.PopcacheEnabled",
+            "to_prometheus": "$dst = uint64($src.CacheMissesTotal)",
+            "labels": [
+                {
+                    "name": "instance"
+                }
+            ]
+        },
+        {
+            "metric_name": "ksdk_popcache_close_total",
+            "help": "Popcache metric close_total",
+            "long_name": "PopcacheCloseTotal",
+            "value_type": "counter",
+            "hold_type": "uint64",
+            "source_metric": "popcache_stats",
+            "optional": true,
+            "optional_condtition": "$self.PopcacheEnabled",
+            "to_prometheus": "$dst = uint64($src.CloseTotal)",
+            "labels": [
+                {
+                    "name": "instance"
+                }
+            ]
+        },
+        {
+            "metric_name": "ksdk_popcache_hijacked_total",
+            "help": "Popcache metric hijacked_total",
+            "long_name": "PopcacheHijackedTotal",
+            "value_type": "counter",
+            "hold_type": "uint64",
+            "source_metric": "popcache_stats",
+            "optional": true,
+            "optional_condtition": "$self.PopcacheEnabled",
+            "to_prometheus": "$dst = uint64($src.HijackedTotal)",
+            "labels": [
+                {
+                    "name": "instance"
+                }
+            ]
+        },
+        {
+            "metric_name": "ksdk_popcache_per_method_total",
+            "help": "Popcache metric per_method_total",
+            "long_name": "PopcachePerMethodTotal",
+            "value_type": "counter",
+            "hold_type": "[10]uint64",
+            "source_metric": "popcache_stats",
+            "optional": true,
+            "optional_condtition": "$self.PopcacheEnabled",
+            "to_prometheus": "$dst = [10]uint64{uint64($src.PerMethodTotalGet), uint64($src.PerMethodTotalHead), uint64($src.PerMethodTotalPost), uint64($src.PerMethodTotalPut), uint64($src.PerMethodTotalDelete), uint64($src.PerMethodTotalPatch), uint64($src.PerMethodTotalOptions), uint64($src.PerMethodTotalTrace), uint64($src.PerMethodTotalConnect), uint64($src.PerMethodTotalOther)}",
+            "labels": [
+                {
+                    "name": "instance"
+                },
+                {
+                    "name": "method",
+                    "convert": "func() string { switch i {case 0: \n return \"GET\"\ncase 1: \n return \"HEAD\"\ncase 2: \n return \"POST\"\ncase 3: \n return \"PUT\"\ncase 4: \n return \"DELETE\"\ncase 5: \n return \"PATCH\"\ncase 6: \n return \"OPTIONS\"\ncase 7: \n return \"TRACE\"\ncase 8: \n return \"CONNECT\"\ncase 9: \n return \"OTHER\"\n default: return \"unknown\" } }()"
+                }
+            ]
+        },
+        {
+            "metric_name": "ksdk_popcache_per_protocol_total",
+            "help": "Popcache metric per_protocol_total",
+            "long_name": "PopcachePerProtocolTotal",
+            "value_type": "counter",
+            "hold_type": "[8]uint64",
+            "source_metric": "popcache_stats",
+            "optional": true,
+            "optional_condtition": "$self.PopcacheEnabled",
+            "to_prometheus": "$dst = [8]uint64{uint64($src.PerProtocolTotalHttp10Plain), uint64($src.PerProtocolTotalHttp10), uint64($src.PerProtocolTotalHttp11Plain), uint64($src.PerProtocolTotalHttp11), uint64($src.PerProtocolTotalHttp2), uint64($src.PerProtocolTotalHttp3), uint64($src.PerProtocolTotalOtherPlain), uint64($src.PerProtocolTotalOther)}",
+            "labels": [
+                {
+                    "name": "instance"
+                },
+                {
+                    "name": "protocol",
+                    "convert": "func() string { switch i {case 0: \n return \"HTTP1.0(plain)\"\ncase 1: \n return \"HTTP1.0\"\ncase 2: \n return \"HTTP1.1(plain)\"\ncase 3: \n return \"HTTP1.1\"\ncase 4: \n return \"HTTP2\"\ncase 5: \n return \"HTTP3\"\ncase 6: \n return \"OTHER(plain)\"\ncase 7: \n return \"OTHER\"\n default: return \"unknown\" } }()"
+                }
+            ]
+        },
+        {
+            "metric_name": "ksdk_popcache_http_port",
+            "help": "Popcache metric http_port",
+            "long_name": "PopcacheHttpPort",
+            "value_type": "gauge",
+            "hold_type": "uint16",
+            "source_metric": "popcache_stats",
+            "optional": true,
+            "optional_condtition": "$self.PopcacheEnabled",
+            "to_prometheus": "$dst = uint16($src.HttpPort)",
+            "labels": [
+                {
+                    "name": "instance"
+                }
+            ]
+        },
+        {
+            "metric_name": "ksdk_popcache_https_port",
+            "help": "Popcache metric https_port",
+            "long_name": "PopcacheHttpsPort",
+            "value_type": "gauge",
+            "hold_type": "uint16",
+            "source_metric": "popcache_stats",
+            "optional": true,
+            "optional_condtition": "$self.PopcacheEnabled",
+            "to_prometheus": "$dst = uint16($src.HttpsPort)",
+            "labels": [
+                {
+                    "name": "instance"
+                }
+            ]
+        },
+        {
+            "metric_name": "ksdk_popcache_http3_port",
+            "help": "Popcache metric http3_port",
+            "long_name": "PopcacheHttp3Port",
+            "value_type": "gauge",
+            "hold_type": "uint16",
+            "source_metric": "popcache_stats",
+            "optional": true,
+            "optional_condtition": "$self.PopcacheEnabled",
+            "to_prometheus": "$dst = uint16($src.Http3Port)",
+            "labels": [
+                {
+                    "name": "instance"
+                }
+            ]
+        }
+    ]
+}

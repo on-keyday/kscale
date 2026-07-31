@@ -1,0 +1,23 @@
+syntax = "proto3";
+
+package ksdk.rpc;
+
+option go_package = "github.com/on-keyday/kscale/protobuf/proto";
+
+import "google/protobuf/empty.proto";
+
+// streamtest_service.proto は server-streaming RPC codegen の回帰 fixture。
+// 本番 service ではなく、protoc plugin が server-streaming method に対して
+// 正しい client stub (ReceiveStream) / server interface (ctx + ServerSendStream) /
+// RegisterStreamMethod 登録を吐くことを検証するためだけに存在する
+// (rpc/streaming_test.go の TestGeneratedServerStreaming_*)。
+
+message StreamTestItem {
+    uint32 seq = 1;
+    string note = 2;
+}
+
+service StreamTestService {
+    // server-streaming: 1 request -> N StreamTestItem。
+    rpc Watch(google.protobuf.Empty) returns (stream StreamTestItem);
+}

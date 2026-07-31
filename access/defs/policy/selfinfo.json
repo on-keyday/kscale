@@ -1,0 +1,14 @@
+{
+    "name": "AllowGetSelfInfo",
+    "policy": "Allow",
+    "resource": "session_management",
+    "action": [
+        "self_info"
+    ],
+    "or": [
+        {
+            "name": "EveryoneCanGetSelfInfo",
+            "condition": "$user.authority.full_name suffix $env.authority."
+        }
+    ]
+}

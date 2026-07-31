@@ -1,0 +1,14 @@
+syntax = "proto3";
+
+package ksdk.trsf_proxy;
+
+option go_package = "github.com/on-keyday/kscale/protobuf/proto/trsf_proxy";
+
+// DialPreface is the first frame on a trsf/proxy bidi stream after the
+// StreamMagicHTTP magic. Replaces the legacy
+// objproto.EncodeProperty("dial", ObjectMap{network, addr}) format
+// (A4 phase δ).
+message DialPreface {
+    string network = 1;
+    string addr = 2;
+}

@@ -1,0 +1,719 @@
+{
+    "nested_categories": [
+        "interface_spec"
+    ],
+    "imports": [
+        "net/netip",
+        "time",
+        "net",
+        "github.com/on-keyday/objtrsf/objproto",
+        "github.com/on-keyday/kscale/l4lb/l4lbdrv",
+        "github.com/on-keyday/kscale/popcache/popmetrics",
+        "github.com/on-keyday/kscale/dns/dnsmetrics",
+        "encoding/binary",
+        "bytes"
+    ],
+    "metrics": [
+        {
+            "name": "conn_id",
+            "display_name": "Connection ID",
+            "long_name": "ConnID",
+            "type": "objproto.ConnectionID",
+            "category": "connection",
+            "sample_value": [
+                "objproto.MustParseConnectionID(\"ws:192.168.1.1:9829-1020\")",
+                "objproto.MustParseConnectionID(\"tcp:[2001:db8::1]:443-2048\")"
+            ]
+        },
+        {
+            "name": "cpu_count",
+            "display_name": "CPU Count",
+            "type": "uint32",
+            "category": "host_spec"
+        },
+        {
+            "name": "cpu_usages",
+            "display_name": "CPU Usages",
+            "type": "[]float64",
+            "category": "host_realtime",
+            "string_format": "func() string { res := \"\"; for i, u := range $src { if i > 0 { res += \", \" }; res += fmt.Sprintf(\"CPU%d: %.2f%%\", i, u) }; return res }()"
+        },
+        {
+            "name": "memory_usage",
+            "display_name": "Memory Usage",
+            "type": "uint64",
+            "category": "host_realtime",
+            "string_format": "humanSize($src)"
+        },
+        {
+            "name": "memory_total",
+            "display_name": "Memory Total",
+            "type": "uint64",
+            "category": "host_spec",
+            "string_format": "humanSize($src)"
+        },
+        {
+            "name": "disk_swap",
+            "display_name": "Disk Swap",
+            "type": "float64",
+            "category": "host_realtime",
+            "string_format": "fmt.Sprintf(\"%.2f%%\", $src)"
+        },
+        {
+            "name": "disk_usage",
+            "display_name": "Disk Usage",
+            "type": "uint64",
+            "category": "host_realtime",
+            "string_format": "humanSize($src)"
+        },
+        {
+            "name": "disk_total",
+            "display_name": "Disk Total",
+            "type": "uint64",
+            "category": "host_spec",
+            "string_format": "humanSize($src)"
+        },
+        {
+            "name": "host_uptime",
+            "display_name": "Host Uptime",
+            "type": "uint64",
+            "category": "host_realtime",
+            "string_format": "fmt.Sprintf(\"%v\", time.Duration($src)*time.Second)"
+        },
+        {
+            "name": "server_uptime",
+            "display_name": "Server Uptime",
+            "type": "time.Duration",
+            "category": "host_realtime"
+        },
+        {
+            "name": "load_avg",
+            "display_name": "Load Average",
+            "type": "[]float64",
+            "hold_type": "[3]float64",
+            "category": "host_realtime",
+            "to_objproto": "$dst = $src[:]",
+            "sample_value": [
+                "[3]float64{0.15, 0.10, 0.05}",
+                "[3]float64{1.25, 0.90, 0.75}"
+            ],
+            "string_format": "fmt.Sprintf(\"1min: %.2f, 5min: %.2f, 15min: %.2f\", $src[0], $src[1], $src[2])"
+        },
+        {
+            "name": "interfaces",
+            "display_name": "Network Interfaces",
+            "long_name": "Interfaces",
+            "type": "[]InterfaceSpecStat",
+            "hold_type": "[]InterfaceSpecStat",
+            "proto_type": "repeated InterfaceSpecStat",
+            "category": "network_spec",
+            "to_proto": "{ tmp := make([]*pbstat.InterfaceSpecStat, len($src)); for i := range $src { tmp[i] = $src[i].ToProto() }; $dst = tmp }",
+            "from_proto": "{ tmp := make([]InterfaceSpecStat, len($src)); for i := range $src { if $src[i] != nil { tmp[i].FromProto($src[i]) } }; $dst = tmp }",
+            "equal_check": "slices.EqualFunc($src1, $src2, func(a, b InterfaceSpecStat) bool { return a.Equal(&b) })",
+            "sample_value": [
+                "[]InterfaceSpecStat{{Name: \"eth0\", Flags: net.FlagUp, MTU: 1500, Mac: net.HardwareAddr{0x00, 0x1A, 0x2B, 0x3C, 0x4D, 0x5E}, IPs: []netip.Prefix{netip.MustParsePrefix(\"192.168.1.0/24\")}}}",
+                "[]InterfaceSpecStat{{Name: \"eth1\", Flags: net.FlagBroadcast, MTU: 9000, Mac: net.HardwareAddr{0xDE, 0xAD, 0xBE, 0xEF, 0x00, 0x01}, IPs: []netip.Prefix{netip.MustParsePrefix(\"2001:db8::/32\")}}}"
+            ]
+        },
+        {
+            "name": "name",
+            "display_name": "Name",
+            "long_name": "Name",
+            "type": "string",
+            "category": "interface_spec"
+        },
+        {
+            "name": "mtu",
+            "display_name": "MTU",
+            "long_name": "MTU",
+            "type": "uint32",
+            "category": "interface_spec"
+        },
+        {
+            "name": "mac",
+            "display_name": "MAC Address",
+            "long_name": "Mac",
+            "type": "net.HardwareAddr",
+            "hold_type": "net.HardwareAddr",
+            "proto_type": "string",
+            "category": "interface_spec",
+            "to_proto": "$dst = $src.String()",
+            "from_proto": "$dst, _ = net.ParseMAC($src)",
+            "sample_value": [
+                "net.HardwareAddr{0x00, 0x1A, 0x2B, 0x3C, 0x4D, 0x5E}",
+                "net.HardwareAddr{0xDE, 0xAD, 0xBE, 0xEF, 0x00, 0x01}"
+            ],
+            "equal_check": "bytes.Equal($src1, $src2)"
+        },
+        {
+            "name": "flags",
+            "display_name": "Flags",
+            "long_name": "Flags",
+            "type": "uint32",
+            "hold_type": "net.Flags",
+            "proto_type": "uint32",
+            "category": "interface_spec",
+            "to_proto": "$dst = uint32($src)",
+            "from_proto": "$dst = net.Flags($src)",
+            "sample_value": [
+                "net.FlagUp",
+                "net.FlagBroadcast | net.FlagMulticast"
+            ]
+        },
+        {
+            "name": "rx_bytes",
+            "display_name": "RX Bytes",
+            "long_name": "RxBytes",
+            "type": "[]uint64",
+            "category": "network_realtime"
+        },
+        {
+            "name": "tx_bytes",
+            "display_name": "TX Bytes",
+            "long_name": "TxBytes",
+            "type": "[]uint64",
+            "category": "network_realtime"
+        },
+        {
+            "name": "rx_packets",
+            "display_name": "RX Packets",
+            "long_name": "RxPackets",
+            "type": "[]uint64",
+            "category": "network_realtime"
+        },
+        {
+            "name": "tx_packets",
+            "display_name": "TX Packets",
+            "long_name": "TxPackets",
+            "type": "[]uint64",
+            "category": "network_realtime"
+        },
+        {
+            "name": "rx_errors",
+            "display_name": "RX Errors",
+            "long_name": "RxErrors",
+            "type": "[]uint64",
+            "category": "network_realtime"
+        },
+        {
+            "name": "tx_errors",
+            "display_name": "TX Errors",
+            "long_name": "TxErrors",
+            "type": "[]uint64",
+            "category": "network_realtime"
+        },
+        {
+            "name": "rx_drops",
+            "display_name": "RX Drops",
+            "long_name": "RxDrops",
+            "type": "[]uint64",
+            "category": "network_realtime"
+        },
+        {
+            "name": "tx_drops",
+            "display_name": "TX Drops",
+            "long_name": "TxDrops",
+            "type": "[]uint64",
+            "category": "network_realtime"
+        },
+        {
+            "name": "rtt",
+            "long_name": "RTT",
+            "type": "time.Duration",
+            "category": "connection"
+        },
+        {
+            "name": "vip",
+            "display_name": "VIPs",
+            "type": "[]any",
+            "hold_type": "[]netip.Addr",
+            "category": "cdn_app_realtime",
+            "proto_presence": true,
+            "from_objproto": "tmpAddrs := $src; res := make([]netip.Addr, len(tmpAddrs)); for i:=range tmpAddrs { res[i] , _ = tmpAddrs[i].(netip.Addr) }; $dst = res",
+            "sample_value": [
+                "[]netip.Addr{netip.MustParseAddr(\"192.168.1.1\")}",
+                "[]netip.Addr{netip.MustParseAddr(\"2001:db8::1\")}"
+            ]
+        },
+        {
+            "name": "ebpf_stats",
+            "display_name": "eBPF Stats",
+            "type": "[]byte",
+            "hold_type": "l4lbdrv.StatCounters",
+            "category": "l4lb",
+            "to_objproto": "var w [unsafe.Sizeof(l4lbdrv.StatCounters{})]byte; binary.Encode(w[:],binary.LittleEndian, $src); $dst = w[:]",
+            "from_objproto": "r := bytes.NewReader($src); var res l4lbdrv.StatCounters; binary.Read(r,binary.LittleEndian, &res); $dst = res",
+            "sample_value": [
+                "l4lbdrv.StatCounters{}",
+                "l4lbdrv.StatCounters{NoVipMatchTotal: 10}"
+            ],
+            "string_format": "fmt.Sprintf(\"%v\", &$src)"
+        },
+        {
+            "name": "popcache_stats",
+            "display_name": "PoP Cache Stats",
+            "type": "[]byte",
+            "hold_type": "popmetrics.PoPMetrics",
+            "category": "popcache",
+            "expand_struct": "popcache/popmetrics/metrics.json",
+            "to_objproto": "var w [unsafe.Sizeof(popmetrics.PoPMetrics{})]byte; binary.Encode(w[:],binary.LittleEndian, $src); $dst = w[:]",
+            "from_objproto": "r := bytes.NewReader($src); var res popmetrics.PoPMetrics; binary.Read(r,binary.LittleEndian, &res); $dst = res",
+            "sample_value": [
+                "popmetrics.PoPMetrics{}",
+                "popmetrics.PoPMetrics{RequestsTotal: 100}"
+            ],
+            "string_format": "fmt.Sprintf(\"%v\", &$src)"
+        },
+        {
+            "name": "dns_stats",
+            "display_name": "DNS Stats",
+            "type": "[]byte",
+            "hold_type": "dnsmetrics.DNSMetrics",
+            "category": "dns",
+            "expand_struct": "dns/dnsmetrics/metrics.json",
+            "to_objproto": "var w [unsafe.Sizeof(dnsmetrics.DNSMetrics{})]byte; binary.Encode(w[:],binary.LittleEndian, $src); $dst = w[:]",
+            "from_objproto": "r := bytes.NewReader($src); var res dnsmetrics.DNSMetrics; binary.Read(r,binary.LittleEndian, &res); $dst = res",
+            "sample_value": [
+                "dnsmetrics.DNSMetrics{}",
+                "dnsmetrics.DNSMetrics{DnsPort: 5353}"
+            ],
+            "string_format": "fmt.Sprintf(\"%v\", &$src)"
+        },
+        {
+            "name": "bound_ifaces",
+            "display_name": "Bound Interfaces",
+            "long_name": "BoundInterfaces",
+            "type": "[]string",
+            "category": "cdn_app_realtime",
+            "proto_presence": true
+        },
+        {
+            "name": "ips",
+            "display_name": "IP Addresses",
+            "long_name": "IPs",
+            "type": "[]netip.Prefix",
+            "hold_type": "[]netip.Prefix",
+            "category": "interface_spec",
+            "sample_value": [
+                "[]netip.Prefix{netip.MustParsePrefix(\"192.168.1.0/24\")}",
+                "[]netip.Prefix{netip.MustParsePrefix(\"2001:db8::/32\")}"
+            ],
+            "equal_check": "slices.Equal($src1, $src2)"
+        },
+        {
+            "name": "appstat",
+            "display_name": "App Status",
+            "long_name": "AppStatus",
+            "type": "uint8",
+            "hold_type": "consts.AppStatus",
+            "category": "cdn_app_realtime",
+            "proto_presence": true,
+            "sample_value": [
+                "consts.AppStatusRunning",
+                "consts.AppStatusStopped"
+            ]
+        },
+        {
+            "name": "lb_id",
+            "display_name": "Load Balancer ID",
+            "long_name": "LoadBalancerID",
+            "type": "uint32",
+            "category": "cdn_app_realtime",
+            "proto_presence": true
+        },
+        {
+            "name": "kernel_version",
+            "display_name": "Kernel Version",
+            "type": "string",
+            "category": "host_spec"
+        },
+        {
+            "name": "os",
+            "display_name": "OS",
+            "type": "string",
+            "category": "host_spec"
+        },
+        {
+            "name": "platform",
+            "display_name": "Platform",
+            "type": "string",
+            "category": "host_spec"
+        },
+        {
+            "name": "platform_ver",
+            "display_name": "Platform Version",
+            "type": "string",
+            "category": "host_spec"
+        },
+        {
+            "name": "arch",
+            "display_name": "Architecture",
+            "type": "string",
+            "category": "host_spec"
+        },
+        {
+            "name": "common_name",
+            "display_name": "Common Name",
+            "long_name": "CommonName",
+            "type": "string",
+            "category": "cdn_app_spec"
+        },
+        {
+            "name": "temperature_celsius",
+            "display_name": "Temperature Celsius",
+            "long_name": "TemperatureCelsius",
+            "type": "[]float64",
+            "category": "host_physical"
+        },
+        {
+            "name": "temperature_sensor_keys",
+            "display_name": "Temperature Sensor Keys",
+            "long_name": "TemperatureSensorKeys",
+            "type": "[]string",
+            "category": "host_physical"
+        },
+        {
+            "name": "temperature_celsius_critical",
+            "display_name": "Critical Temperature Celsius",
+            "long_name": "TemperatureCelsiusCritical",
+            "type": "[]float64",
+            "category": "host_physical"
+        },
+        {
+            "name": "temperature_celsius_high",
+            "display_name": "High Temperature Celsius",
+            "long_name": "TemperatureCelsiusHigh",
+            "type": "[]float64",
+            "category": "host_physical"
+        },
+        {
+            "name": "origin_server_address",
+            "display_name": "Origin Server Address",
+            "long_name": "OriginServerAddress",
+            "type": "string",
+            "category": "popcache_spec"
+        },
+        {
+            "name": "managed_dns_zones",
+            "display_name": "Managed DNS Zones",
+            "long_name": "ManagedDNSZones",
+            "type": "[]string",
+            "category": "dns_spec"
+        }
+    ],
+    "prometheus": [
+        {
+            "metric_name": "ksdk_cpu_usage_percentage",
+            "help": "CPU usage percentage",
+            "labels": [
+                {
+                    "name": "instance"
+                },
+                {
+                    "name": "core",
+                    "convert": "fmt.Sprintf(\"cpu%d\", i)"
+                }
+            ],
+            "value_type": "gauge",
+            "source_metric": "cpu_usages"
+        },
+        {
+            "metric_name": "ksdk_memory_usage_bytes",
+            "help": "Memory usage in bytes",
+            "value_type": "gauge",
+            "source_metric": "memory_usage",
+            "labels": [
+                {
+                    "name": "instance"
+                }
+            ]
+        },
+        {
+            "metric_name": "ksdk_memory_total_bytes",
+            "help": "Total memory in bytes",
+            "value_type": "gauge",
+            "source_metric": "memory_total",
+            "labels": [
+                {
+                    "name": "instance"
+                }
+            ]
+        },
+        {
+            "metric_name": "ksdk_disk_usage_bytes",
+            "help": "Disk usage in bytes",
+            "value_type": "gauge",
+            "source_metric": "disk_usage",
+            "labels": [
+                {
+                    "name": "instance"
+                }
+            ]
+        },
+        {
+            "metric_name": "ksdk_disk_total_bytes",
+            "help": "Total disk size in bytes",
+            "value_type": "gauge",
+            "source_metric": "disk_total",
+            "labels": [
+                {
+                    "name": "instance"
+                }
+            ]
+        },
+        {
+            "metric_name": "ksdk_disk_swap_percentage",
+            "help": "Disk swap usage percentage",
+            "value_type": "gauge",
+            "source_metric": "disk_swap",
+            "labels": [
+                {
+                    "name": "instance"
+                }
+            ]
+        },
+        {
+            "metric_name": "ksdk_instance",
+            "help": "Instance identifier (common name)",
+            "value_type": "label",
+            "source_metric": "common_name"
+        },
+        {
+            "metric_name": "ksdk_rtt_to_control_plane_microseconds",
+            "help": "Round-trip time to control plane in microseconds",
+            "value_type": "gauge",
+            "source_metric": "rtt",
+            "hold_type": "float64",
+            "to_prometheus": "$dst = float64($src.Microseconds())",
+            "labels": [
+                {
+                    "name": "instance"
+                }
+            ]
+        },
+        {
+            "metric_name": "ksdk_app_status",
+            "help": "Application status",
+            "value_type": "gauge",
+            "source_metric": "appstat",
+            "hold_type": "float64",
+            "to_prometheus": "$dst = float64($src)",
+            "labels": [
+                {
+                    "name": "instance"
+                }
+            ]
+        },
+        {
+            "metric_name": "ksdk_server_uptime_seconds",
+            "help": "Server uptime in seconds",
+            "value_type": "gauge",
+            "source_metric": "server_uptime",
+            "hold_type": "float64",
+            "to_prometheus": "$dst = $src.Seconds()",
+            "labels": [
+                {
+                    "name": "instance"
+                }
+            ]
+        },
+        {
+            "metric_name": "ksdk_load_average",
+            "help": "Load average over 1, 5, and 15 minutes",
+            "value_type": "gauge",
+            "source_metric": "load_avg",
+            "labels": [
+                {
+                    "name": "instance"
+                },
+                {
+                    "name": "interval",
+                    "convert": "func() string { switch i { case 0: return \"1min\"; case 1: return \"5min\"; case 2: return \"15min\"; default: return \"unknown\" } }()"
+                }
+            ]
+        },
+        {
+            "metric_name": "ksdk_l4lb_ebpf_enabled",
+            "help": "Indicates if eBPF L4LB is enabled",
+            "long_name": "L4lbEbpfEnabled",
+            "value_type": "info",
+            "source_metric": "ebpf_stats",
+            "hold_type": "bool",
+            "to_prometheus": "/*set by user*/"
+        },
+        {
+            "metric_name": "ksdk_popcache_enabled",
+            "help": "Total PopCache requests",
+            "long_name": "PopcacheEnabled",
+            "value_type": "info",
+            "hold_type": "bool",
+            "to_prometheus": "/*set by user*/",
+            "source_metric": "popcache_stats",
+            "labels": [
+                {"name": "instance"}
+            ]
+        },
+        {
+            "metric_name": "ksdk_dns_enabled",
+            "help": "Indicates if DNS is enabled",
+            "long_name": "DnsEnabled",
+            "value_type": "info",
+            "source_metric": "dns_stats",
+            "hold_type": "bool",
+            "to_prometheus": "/*set by user*/",
+            "labels": [{"name": "instance"}]
+        },
+        {
+            "metric_name": "ksdk_tempature_celsius",
+            "help": "Temperature in Celsius",
+            "long_name": "TemperatureCelsius",
+            "value_type": "gauge",
+            "source_metric": "temperature_celsius",
+            "labels": [
+                {"name": "instance"  },
+                {
+                    "name": "sensor_key",
+                    "convert": "func() string { if $self.TemperatureSensorKeys != nil && i < len($self.TemperatureSensorKeys) { return $self.TemperatureSensorKeys[i] } else { return \"unknown\" } }()"
+                }
+            ]
+        },
+        {
+            "metric_name": "ksdk_temperature_sensor_key",
+            "help": "Temperature sensor keys",
+            "long_name": "TemperatureSensorKeys",
+            "value_type": "label",
+            "source_metric": "temperature_sensor_keys"
+        },
+        {
+            "metric_name": "ksdk_network_interface_rx_bytes_total",
+            "help": "Total received bytes on network interfaces",
+            "value_type": "counter",
+            "source_metric": "rx_bytes",
+            "labels": [
+                {
+                    "name": "instance"
+                },
+                {
+                    "name": "interface"
+                }
+            ]
+        },
+        {
+            "metric_name": "ksdk_network_interfaces",
+            "help": "Network interfaces available on the instance",
+            "long_name": "Interfaces",
+            "hold_type": "[]string",
+            "value_type": "label",
+            "source_metric": "interfaces",
+            "to_prometheus": "$dst = func() []string { r := make([]string, len($src)); for i := range $src { r[i] = $src[i].Name }; return r }()"
+        },
+        {
+            "metric_name": "ksdk_network_interface_tx_bytes_total",
+            "help": "Total transmitted bytes on network interfaces",
+            "value_type": "counter",
+            "source_metric": "tx_bytes",
+            "labels": [
+                {
+                    "name": "instance"
+                },
+                {
+                    "name": "interface"
+                }
+            ]
+        },
+        {
+            "metric_name": "ksdk_network_interface_rx_packets_total",
+            "help": "Total received packets on network interfaces",
+            "value_type": "counter",
+            "source_metric": "rx_packets",
+            "labels": [
+                {
+                    "name": "instance"
+                },
+                {
+                    "name": "interface"
+                }
+            ]
+        },
+        {
+            "metric_name": "ksdk_network_interface_tx_packets_total",
+            "help": "Total transmitted packets on network interfaces",
+            "value_type": "counter",
+            "source_metric": "tx_packets",
+            "labels": [
+                {
+                    "name": "instance"
+                },
+                {
+                    "name": "interface"
+                }
+            ]
+        },
+        {
+            "metric_name": "ksdk_network_interface_rx_errors_total",
+            "help": "Total receive errors on network interfaces",
+            "value_type": "counter",
+            "source_metric": "rx_errors",
+            "labels": [
+                {
+                    "name": "instance"
+                },
+                {
+                    "name": "interface"
+                }
+            ]
+        },
+        {
+            "metric_name": "ksdk_network_interface_tx_errors_total",
+            "help": "Total transmit errors on network interfaces",
+            "value_type": "counter",
+            "source_metric": "tx_errors",
+            "labels": [
+                {
+                    "name": "instance"
+                },
+                {
+                    "name": "interface"
+                }
+            ]
+        },
+        {
+            "metric_name": "ksdk_network_interface_rx_drops_total",
+            "help": "Total received drops on network interfaces",
+            "value_type": "counter",
+            "source_metric": "rx_drops",
+            "labels": [
+                {
+                    "name": "instance"
+                },
+                {
+                    "name": "interface"
+                }
+            ]
+        },
+        {
+            "metric_name": "ksdk_network_interface_tx_drops_total",
+            "help": "Total transmitted drops on network interfaces",
+            "value_type": "counter",
+            "source_metric": "tx_drops",
+            "labels": [
+                {
+                    "name": "instance"
+                },
+                {
+                    "name": "interface"
+                }
+            ]
+        }
+    ],
+    "prometheus_converts": [
+        {
+            "name": "instance",
+            "convert": "$self.CommonName"
+        },
+        {
+            "name": "interface",
+            "convert": "func() string { if i < len($self.Interfaces) { return $self.Interfaces[i] } else { return \"unknown\" } }()"
+        }
+    ]
+}

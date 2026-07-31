@@ -1,0 +1,239 @@
+# Anomaly: everything looks healthy INTERNALLY (all nodes running, no obvious drift
+# in most tools), but the public edge is dead from outside: TCP/TLS/QUIC/HTTP to the
+# configured 18080/18443 all time out while DNS and ping still work. The root cause
+# is discoverable via open_port_diff — the router lost the edge-port ACL entries.
+# Expected judgement: correlate external probe failures with the missing ACL, not
+# "popcache is down".
+name: edge-down
+description: internal state healthy, external edge unreachable (router ACL drift)
+tools:
+  node_list:
+    - result: |
+        {
+          "items": [
+            {"common_name": "s1.popcache.dp.system.kscale.local", "dp_type": "popcache", "connection_id": "conn-8f21aa", "remote_address": "10.3.10.2:39441", "app_status": "Running"},
+            {"common_name": "s2.popcache.dp.system.kscale.local", "dp_type": "popcache", "connection_id": "conn-1c9be2", "remote_address": "10.3.10.3:47210", "app_status": "Running"},
+            {"common_name": "s3.l4lb.dp.system.kscale.local", "dp_type": "l4lb", "connection_id": "conn-e044d7", "remote_address": "10.3.10.4:52801", "app_status": "Running"},
+            {"common_name": "s3.dns.dp.system.kscale.local", "dp_type": "dns", "connection_id": "conn-77a3f0", "remote_address": "10.3.10.4:58122", "app_status": "Running"},
+            {"common_name": "s3.router.dp.system.kscale.local", "dp_type": "router", "connection_id": "conn-b5d219", "remote_address": "10.3.10.4:41977", "app_status": "Running"},
+            {"common_name": "s1.workload.dp.system.kscale.local", "dp_type": "workload", "connection_id": "conn-3aa8c4", "remote_address": "10.3.10.2:36514", "app_status": "Running"}
+          ]
+        }
+  connection_list:
+    - result: |
+        {
+          "items": [
+            {"connection_id": "conn-8f21aa", "remote_address": "10.3.10.2:39441", "common_name": "s1.popcache.dp.system.kscale.local", "age": "26h12m", "active": true},
+            {"connection_id": "conn-1c9be2", "remote_address": "10.3.10.3:47210", "common_name": "s2.popcache.dp.system.kscale.local", "age": "26h11m", "active": true},
+            {"connection_id": "conn-e044d7", "remote_address": "10.3.10.4:52801", "common_name": "s3.l4lb.dp.system.kscale.local", "age": "26h12m", "active": true},
+            {"connection_id": "conn-77a3f0", "remote_address": "10.3.10.4:58122", "common_name": "s3.dns.dp.system.kscale.local", "age": "26h10m", "active": true},
+            {"connection_id": "conn-b5d219", "remote_address": "10.3.10.4:41977", "common_name": "s3.router.dp.system.kscale.local", "age": "26h12m", "active": true},
+            {"connection_id": "conn-3aa8c4", "remote_address": "10.3.10.2:36514", "common_name": "s1.workload.dp.system.kscale.local", "age": "25h58m", "active": true}
+          ]
+        }
+  stats_get:
+    - when: {common_name: s1.popcache}
+      result: |
+        {
+          "stats": [
+            {
+              "common_name": "s1.popcache.dp.system.kscale.local",
+              "dp_type": "popcache",
+              "connection": {"conn_id": "conn-8f21aa", "rtt": 1350},
+              "host_realtime": {"cpu_usages": [0.11, 0.09, 0.14, 0.08], "memory_usage": 3113851289, "disk_usage": 21474836480, "host_uptime": 1123200, "server_uptime": 94320, "load_avg": [0.31, 0.28, 0.25]},
+              "popcache": {"requests_total": 48211, "cache_hits_total": 39102, "cache_misses_total": 9109, "per_method_total_get": 47010, "http_port": 18080, "https_port": 18443, "http3_port": 18443}
+            }
+          ]
+        }
+    - when: {common_name: s2.popcache}
+      result: |
+        {
+          "stats": [
+            {
+              "common_name": "s2.popcache.dp.system.kscale.local",
+              "dp_type": "popcache",
+              "connection": {"conn_id": "conn-1c9be2", "rtt": 1420},
+              "host_realtime": {"cpu_usages": [0.09, 0.12, 0.07, 0.1], "memory_usage": 2987421696, "disk_usage": 19864223744, "host_uptime": 1123150, "server_uptime": 94255, "load_avg": [0.27, 0.31, 0.29]},
+              "popcache": {"requests_total": 45930, "cache_hits_total": 37515, "cache_misses_total": 8415, "per_method_total_get": 44902, "http_port": 18080, "https_port": 18443, "http3_port": 18443}
+            }
+          ]
+        }
+    - when: {common_name: s3.dns}
+      result: |
+        {
+          "stats": [
+            {
+              "common_name": "s3.dns.dp.system.kscale.local",
+              "dp_type": "dns",
+              "connection": {"conn_id": "conn-77a3f0", "rtt": 980},
+              "host_realtime": {"cpu_usages": [0.22, 0.19, 0.25, 0.18, 0.2, 0.21, 0.17, 0.23, 0.19, 0.2, 0.22, 0.18], "memory_usage": 7381975040, "disk_usage": 40265318400, "host_uptime": 1123300, "server_uptime": 94400, "load_avg": [1.42, 1.38, 1.35]},
+              "dns": {"dns_port": 15353, "requests_total": 8102, "responses_total": 8100, "errors_total": 2}
+            }
+          ]
+        }
+    - when: {common_name: s3.l4lb}
+      result: |
+        {
+          "stats": [
+            {
+              "common_name": "s3.l4lb.dp.system.kscale.local",
+              "dp_type": "l4lb",
+              "connection": {"conn_id": "conn-e044d7", "rtt": 1010},
+              "host_realtime": {"cpu_usages": [0.22, 0.19, 0.25, 0.18, 0.2, 0.21, 0.17, 0.23, 0.19, 0.2, 0.22, 0.18], "memory_usage": 7381975040, "disk_usage": 40265318400, "host_uptime": 1123300, "server_uptime": 94380, "load_avg": [1.42, 1.38, 1.35]},
+              "l4lb": {"src_ips": "CgMKLmQ=", "packet_sizes": "EJYD", "ebpf_stats": "GLYuIJDIAQ=="}
+            }
+          ]
+        }
+    - result: |
+        {
+          "stats": [
+            {"common_name": "s1.popcache.dp.system.kscale.local", "dp_type": "popcache", "connection": {"conn_id": "conn-8f21aa", "rtt": 1350}, "host_realtime": {"load_avg": [0.31, 0.28, 0.25], "memory_usage": 3113851289}},
+            {"common_name": "s2.popcache.dp.system.kscale.local", "dp_type": "popcache", "connection": {"conn_id": "conn-1c9be2", "rtt": 1420}, "host_realtime": {"load_avg": [0.27, 0.31, 0.29], "memory_usage": 2987421696}},
+            {"common_name": "s3.l4lb.dp.system.kscale.local", "dp_type": "l4lb", "connection": {"conn_id": "conn-e044d7", "rtt": 1010}, "host_realtime": {"load_avg": [1.42, 1.38, 1.35], "memory_usage": 7381975040}},
+            {"common_name": "s3.dns.dp.system.kscale.local", "dp_type": "dns", "connection": {"conn_id": "conn-77a3f0", "rtt": 980}},
+            {"common_name": "s3.router.dp.system.kscale.local", "dp_type": "router", "connection": {"conn_id": "conn-b5d219", "rtt": 1050}},
+            {"common_name": "s1.workload.dp.system.kscale.local", "dp_type": "workload", "connection": {"conn_id": "conn-3aa8c4", "rtt": 1310}}
+          ]
+        }
+  vip_list:
+    - result: |
+        {
+          "items": [
+            {"vip": "10.3.10.100", "icmp_echo": true, "applied_on": ["s3.l4lb.dp.system.kscale.local"]}
+          ]
+        }
+  interface_list:
+    - result: |
+        {
+          "items": [
+            {"node": "s1.popcache.dp.system.kscale.local", "interface": "ens19", "applied_on": ["s1.popcache.dp.system.kscale.local"]},
+            {"node": "s2.popcache.dp.system.kscale.local", "interface": "ens19", "applied_on": ["s2.popcache.dp.system.kscale.local"]}
+          ]
+        }
+  popcache_config_list:
+    - result: |
+        {
+          "items": [
+            {
+              "name": "default",
+              "origin": "https://origin.lab.on-keyday.net:8443",
+              "http_port": 18080,
+              "https_port": 18443,
+              "http3_port": 18443,
+              "wasm_compute_default_ms": 50,
+              "wasm_compute_max_ms": 200,
+              "cert_path": "/var/lib/kscale-popcache/certs/edge.crt",
+              "key_path": "/var/lib/kscale-popcache/certs/edge.key"
+            }
+          ]
+        }
+  open_port_list:
+    - result: |
+        {
+          "items": [
+            {"acl_name": "kscale-dp", "ports": ["9443/udp", "18080/tcp", "18443/tcp", "18443/udp", "15353/udp", "icmp:echo"]}
+          ]
+        }
+  open_port_diff:
+    - result: |
+        {
+          "entries": [
+            "missing on the router (desired but not applied): 18080/tcp",
+            "missing on the router (desired but not applied): 18443/tcp",
+            "missing on the router (desired but not applied): 18443/udp"
+          ]
+        }
+  dns_config_list:
+    - result: |
+        {
+          "items": [
+            {"name": "primary", "port": 15353, "domain": "lab.on-keyday.net", "mail": "hostmaster.lab.on-keyday.net", "api_token": "cf-****", "api_zone_id": "zone-3f9a**"}
+          ]
+        }
+  dns_config_get:
+    - when: {name: primary}
+      result: |
+        {"name": "primary", "port": 15353, "domain": "lab.on-keyday.net", "mail": "hostmaster.lab.on-keyday.net", "api_token": "cf-****", "api_zone_id": "zone-3f9a**"}
+    - result: |
+        error: dns-config "" not found
+  container_list:
+    - result: |
+        {
+          "items": [
+            {"name": "hello-web", "node": "s1.workload.dp.system.kscale.local", "image": "docker.io/library/nginx:1.27", "env": ["LOG_LEVEL=info"], "restart": "always"}
+          ]
+        }
+  container_diff:
+    - result: |
+        {}
+  wasm_list:
+    - result: |
+        {
+          "items": [
+            {"module_id": 1, "file_path": "/var/lib/kscale-popcache/wasm/edge_app.wasm", "method": "GET", "path": "/hello", "match_type": "prefix", "compute_budget_ms": 50}
+          ]
+        }
+  wasm_diff:
+    - result: |
+        {}
+probes:
+  probe_dns:
+    - when: {name: cdn.lab.on-keyday.net}
+      result: |
+        DNS A cdn.lab.on-keyday.net
+          203.0.113.47 (ttl 300)
+    - result: |
+        DNS lookup
+          no such host
+  probe_http:
+    - when: {url: "18443"}
+      result: |
+        HTTP GET https://cdn.lab.on-keyday.net:18443/hello
+          request failed: dial tcp 203.0.113.47:18443: i/o timeout
+    - when: {url: "18080"}
+      result: |
+        HTTP GET http://cdn.lab.on-keyday.net:18080/hello
+          request failed: dial tcp 203.0.113.47:18080: i/o timeout
+    - result: |
+        HTTP GET
+          request failed: dial tcp 203.0.113.47: connect: connection refused
+  probe_tls:
+    - when: {port: "18443"}
+      result: |
+        TLS cdn.lab.on-keyday.net:18443 (sni cdn.lab.on-keyday.net)
+          connect failed: dial tcp 203.0.113.47:18443: i/o timeout
+    - result: |
+        TLS cdn.lab.on-keyday.net:443 (sni cdn.lab.on-keyday.net)
+          connect failed: dial tcp 203.0.113.47:443: connect: connection refused
+  probe_quic:
+    - when: {port: "18443"}
+      result: |
+        QUIC/HTTP3 cdn.lab.on-keyday.net:18443 (sni cdn.lab.on-keyday.net)
+          handshake/request failed: timeout: no recent network activity
+    - result: |
+        QUIC/HTTP3 cdn.lab.on-keyday.net:443 (sni cdn.lab.on-keyday.net)
+          handshake/request failed: timeout: no recent network activity
+  probe_tcp:
+    - when: {port: "18443"}
+      result: |
+        TCP cdn.lab.on-keyday.net:18443
+          connect failed: dial tcp 203.0.113.47:18443: i/o timeout
+    - when: {port: "18080"}
+      result: |
+        TCP cdn.lab.on-keyday.net:18080
+          connect failed: dial tcp 203.0.113.47:18080: i/o timeout
+    - result: |
+        TCP cdn.lab.on-keyday.net
+          connect failed: connection refused
+  probe_ping:
+    - result: |
+        PING cdn.lab.on-keyday.net (203.0.113.47)
+          5 packets transmitted, 5 received, 0% loss, rtt min/avg/max = 38.1/41.7/47.2 ms
+  probe_traceroute:
+    - result: |
+        traceroute to cdn.lab.on-keyday.net (203.0.113.47), 12 hops
+          1 192.168.0.1 1.1ms
+          2 100.64.12.1 8.3ms
+          ...
+          11 203.0.113.1 37.9ms
+          12 203.0.113.47 41.2ms

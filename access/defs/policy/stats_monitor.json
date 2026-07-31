@@ -1,0 +1,25 @@
+{
+    "name": "StatsMonitor",
+    "policy": "Allow",
+    "description": "Read-only monitoring access for the monitor role: nodewatch reads snapshots via get; metricsgw fans out node /metrics via scrape_metrics. Both are read-only.",
+    "resource": "stats",
+    "action": [
+        "get",
+        "scrape_metrics"
+    ],
+    "or": [
+        {
+            "name": "CanStatsMonitor",
+            "and": [
+                {
+                    "name": "UserAuthorityIsManager",
+                    "condition": "$user.authority.full_name suffix $env.authority.admin.ca.manager."
+                },
+                {
+                    "name": "UserHasMonitorRole",
+                    "condition": "$user.roles list_contains `monitor`"
+                }
+            ]
+        }
+    ]
+}

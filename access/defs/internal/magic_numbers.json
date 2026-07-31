@@ -1,0 +1,14 @@
+{
+    "numbers": [
+        {
+            "name": "InitialMTU",
+            "value": 1200,
+            "description": "The initial Maximum Transmission Unit (MTU) size for network packets."
+        },
+        {
+            "name": "DefaultMTU",
+            "value": 1500,
+            "description": "The default Maximum Transmission Unit (MTU) size for network packets."
+        }
+    ]
+}

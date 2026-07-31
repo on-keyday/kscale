@@ -1,0 +1,22 @@
+syntax = "proto3";
+
+package ksdk;
+
+option go_package = "github.com/on-keyday/kscale/protobuf/proto/ksdkpb;ksdkpb";
+
+import "google/protobuf/descriptor.proto";
+
+extend google.protobuf.FieldOptions {
+    // Override the generated Go type for this field. The wire format remains
+    // the proto3 declared type; only the Go-side type is substituted by the
+    // plugin. Value form: "import/path.TypeName" (split on the last '.').
+    // Example:
+    //   int64 size = 1 [(ksdk.hold) = "io/fs.FileMode"];
+    //   string ip = 2 [(ksdk.hold) = "net/netip.Addr"];
+    string hold = 50001;
+
+    // Mark a field as having a CLI-side string representation. The referenced
+    // Go type must implement the ParseFromArg/FormatAsArg helper interface so
+    // the generated CLI bindings can call it.
+    bool cli_format = 50002;
+}

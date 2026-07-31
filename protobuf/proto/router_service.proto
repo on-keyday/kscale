@@ -1,0 +1,93 @@
+syntax = "proto3";
+
+package ksdk.rpc;
+
+option go_package = "github.com/on-keyday/kscale/protobuf/proto";
+
+import "google/protobuf/empty.proto";
+import "proto/ksdkpb/ksdk_options.proto";
+
+message PortInfo {
+    uint32 port = 1 [(ksdk.hold) = "uint16", (ksdk.cli_format) = true];
+    string protocol = 2;
+}
+
+message AddrPortInfo {
+    string addr = 1 [(ksdk.hold) = "net/netip.Addr"];
+    repeated PortInfo ports = 2;
+}
+
+// Per-peer wrapper for AddrPortInfo array (was: StateFrom[[]AddrPortInfo]).
+message AddrPortInfoArrayFromPeer {
+    string peer = 1 [(ksdk.hold) = "github.com/on-keyday/objtrsf/objproto.ConnectionID"];
+    repeated AddrPortInfo ports = 2;
+}
+
+// 集約レスポンス (was: PeerStates[[]AddrPortInfo]).
+message ListAddrPortResponse {
+    repeated AddrPortInfoArrayFromPeer states = 1;
+}
+
+message ACLDiff {
+    repeated string add = 1;
+    repeated string remove = 2;
+}
+
+// Per-peer wrapper for ACLDiff (was: StateFrom[ACLDiff]).
+message ACLDiffFromPeer {
+    string peer = 1 [(ksdk.hold) = "github.com/on-keyday/objtrsf/objproto.ConnectionID"];
+    ACLDiff diff = 2;
+}
+
+// 集約レスポンス (was: PeerStates[ACLDiff]).
+message ACLDiffResponse {
+    repeated ACLDiffFromPeer states = 1;
+}
+
+message RouterServiceListOpenPortRequest {
+    string acl_name = 1;
+}
+
+message RouterServiceListOpenPortResponse {
+    repeated AddrPortInfo ports = 1;
+}
+
+message RouterServiceDesireOpenPortRequest {
+    string acl_name = 1;
+    repeated PortInfo ports = 2;
+    bool dry_run = 3;
+}
+
+message RouterServiceDesireOpenPortResponse {
+    ACLDiff diff = 1;
+}
+
+// 旧 GenericControl の router 設定系 (set-router-hostname/username/password)。
+message RouterServiceSetRouterHostnameRequest {
+    string hostname = 1;
+}
+message RouterServiceSetRouterUsernameRequest {
+    string username = 1;
+}
+message RouterServiceSetRouterPasswordRequest {
+    string password = 1;
+}
+
+// ApplyConfig sets the managed router's connection config in one call — the
+// combined-setter the router_config resource's reconcile drives (it internally calls
+// SetRouterHostname / SetRouterUsername / SetRouterPassword). Empty fields leave that
+// setting unchanged.
+message RouterServiceApplyConfigRequest {
+    string hostname = 1;
+    string username = 2;
+    string password = 3;
+}
+
+service RouterService {
+    rpc ListOpenPort(RouterServiceListOpenPortRequest) returns (RouterServiceListOpenPortResponse);
+    rpc DesireOpenPort(RouterServiceDesireOpenPortRequest) returns (RouterServiceDesireOpenPortResponse);
+    rpc SetRouterHostname(RouterServiceSetRouterHostnameRequest) returns (google.protobuf.Empty);
+    rpc SetRouterUsername(RouterServiceSetRouterUsernameRequest) returns (google.protobuf.Empty);
+    rpc SetRouterPassword(RouterServiceSetRouterPasswordRequest) returns (google.protobuf.Empty);
+    rpc ApplyConfig(RouterServiceApplyConfigRequest) returns (google.protobuf.Empty);
+}

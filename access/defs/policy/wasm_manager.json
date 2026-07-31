@@ -1,0 +1,32 @@
+{
+    "name": "WasmManager",
+    "policy": "Allow",
+    "resource": "wasm_module",
+    "action": [
+        "apply",
+        "list",
+        "get",
+        "delete"
+    ],
+    "or": [
+        {
+            "name": "CanManageWasmModules",
+            "description": "Demo grants the CA-manager admin; the real owner is the dataplane manager (admin.dp.manager).",
+            "and": [
+                {
+                    "name": "UserAuthorityIsManager",
+                    "condition": "$user.authority.full_name suffix $env.authority.admin.ca.manager."
+                },
+                {
+                    "name": "UserHasRequiredRole",
+                    "or": [
+                        {
+                            "name": "HumanUserHasManagementRole",
+                            "condition": "$user.roles list_contains `admin`"
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+}

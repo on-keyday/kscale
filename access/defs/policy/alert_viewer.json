@@ -1,0 +1,37 @@
+{
+    "name": "AlertViewer",
+    "policy": "Allow",
+    "description": "List active control-plane alerts. Read-only; granted to the manager roles.",
+    "resource": "alert",
+    "action": [
+        "list"
+    ],
+    "or": [
+        {
+            "name": "CanViewAlerts",
+            "and": [
+                {
+                    "name": "UserAuthorityIsManager",
+                    "condition": "$user.authority.full_name suffix $env.authority.admin.ca.manager."
+                },
+                {
+                    "name": "UserHasManagerRole",
+                    "or": [
+                        {
+                            "name": "AdminRole",
+                            "condition": "$user.roles list_contains `admin`"
+                        },
+                        {
+                            "name": "ViewerRole",
+                            "condition": "$user.roles list_contains `viewer`"
+                        },
+                        {
+                            "name": "MonitorRole",
+                            "condition": "$user.roles list_contains `monitor`"
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+}

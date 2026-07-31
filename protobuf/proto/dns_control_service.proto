@@ -1,0 +1,66 @@
+syntax = "proto3";
+
+package ksdk.rpc;
+
+option go_package = "github.com/on-keyday/kscale/protobuf/proto";
+
+import "google/protobuf/empty.proto";
+import "proto/ksdkpb/ksdk_options.proto";
+
+// 旧 GenericControl の DNS 設定系 (set-dns-*)。challenge-dns/cleanup-dns は
+// ACME stream (acme.proto) で typed 化済なので対象外。
+message DnsControlServiceSetDnsPortRequest {
+    uint32 port = 1 [(ksdk.hold) = "uint16"];
+}
+message DnsControlServiceSetDnsDomainRequest {
+    string domain = 1;
+}
+message DnsControlServiceSetDnsMailRequest {
+    string mail = 1;
+}
+message DnsControlServiceSetDnsApiTokenRequest {
+    string token = 1;
+}
+message DnsControlServiceSetDnsApiZoneIdRequest {
+    string zone_id = 1;
+}
+message DnsControlServiceResetDnsAcmeRequest {
+    string domain = 1;
+}
+
+// ApplyConfig sets the DNS agent's upstream-provider config in one call — the
+// combined-setter the dns_config resource's reconcile drives (it internally calls
+// SetDnsPort / SetDnsDomain / SetDnsMail / SetDnsApiToken / SetDnsApiZoneId). Empty /
+// zero fields leave that setting unchanged.
+message DnsControlServiceApplyConfigRequest {
+    uint32 port = 1;
+    string domain = 2;
+    string mail = 3;
+    string api_token = 4;
+    string api_zone_id = 5;
+}
+
+// ACME challenge token の反映/解除 (旧 StreamMagicACME / acme.proto AcmeFrame
+// の Setup/Cleanup)。control plane (acme agent) → dns agent。token 状態は dns
+// server 側に保持され stream 非依存なので per-call unary RPC で等価。成否は
+// RPCStatus / RPCError で返るため response は Empty。
+message DnsControlServiceSetupAcmeChallengeRequest {
+    string domain = 1;
+    string token = 2;
+}
+message DnsControlServiceCleanupAcmeChallengeRequest {
+    string domain = 1;
+    string token = 2;
+}
+
+service DnsControlService {
+    rpc SetDnsPort(DnsControlServiceSetDnsPortRequest) returns (google.protobuf.Empty);
+    rpc SetDnsDomain(DnsControlServiceSetDnsDomainRequest) returns (google.protobuf.Empty);
+    rpc SetDnsMail(DnsControlServiceSetDnsMailRequest) returns (google.protobuf.Empty);
+    rpc SetDnsApiToken(DnsControlServiceSetDnsApiTokenRequest) returns (google.protobuf.Empty);
+    rpc SetDnsApiZoneId(DnsControlServiceSetDnsApiZoneIdRequest) returns (google.protobuf.Empty);
+    rpc ResetDnsAcme(DnsControlServiceResetDnsAcmeRequest) returns (google.protobuf.Empty);
+    rpc SetupAcmeChallenge(DnsControlServiceSetupAcmeChallengeRequest) returns (google.protobuf.Empty);
+    rpc CleanupAcmeChallenge(DnsControlServiceCleanupAcmeChallengeRequest) returns (google.protobuf.Empty);
+    rpc ApplyConfig(DnsControlServiceApplyConfigRequest) returns (google.protobuf.Empty);
+}

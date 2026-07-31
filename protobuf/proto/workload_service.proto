@@ -1,0 +1,51 @@
+syntax = "proto3";
+
+package ksdk.rpc;
+
+option go_package = "github.com/on-keyday/kscale/protobuf/proto";
+
+import "google/protobuf/empty.proto";
+
+// WorkloadService is served BY the workload dp_type agent (like DataplaneService,
+// the control plane is the acceptor and opens streams to the agent). The agent
+// reconciles the desired container set to the node's container runtime over CRI
+// (containerd). See notes/ai/2026_07_07_container_workload_cri_design.md.
+
+// ContainerSpec is one desired container. Mirrors the `container` resource's
+// fields (flat model: one spec is one container, wrapped in an implicit pod
+// sandbox by the agent). env entries are "KEY=VALUE"; mount entries are
+// "hostPath:containerPath" with an optional ":ro" suffix.
+message WorkloadServiceContainerSpec {
+    string name = 1;
+    string image = 2;
+    repeated string command = 3;
+    repeated string args = 4;
+    repeated string env = 5;
+    repeated string mounts = 6;
+    string restart = 7; // "always" | "never"
+}
+
+// ApplyContainers hands the agent the FULL desired set for this node. The agent
+// converges idempotently: (re)creates drifted/missing containers and removes
+// managed containers no longer desired.
+message WorkloadServiceApplyContainersRequest {
+    repeated WorkloadServiceContainerSpec containers = 1;
+}
+
+// ContainerStatus is the observed state of one managed container.
+message WorkloadServiceContainerStatus {
+    string name = 1;
+    string container_id = 2;
+    string image = 3;
+    string state = 4; // CRI ContainerState: CREATED | RUNNING | EXITED | UNKNOWN
+    string pod_sandbox_id = 5;
+}
+
+message WorkloadServiceListContainersResponse {
+    repeated WorkloadServiceContainerStatus containers = 1;
+}
+
+service WorkloadService {
+    rpc ApplyContainers(WorkloadServiceApplyContainersRequest) returns (google.protobuf.Empty);
+    rpc ListContainers(google.protobuf.Empty) returns (WorkloadServiceListContainersResponse);
+}

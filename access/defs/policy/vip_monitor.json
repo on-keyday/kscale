@@ -1,0 +1,25 @@
+{
+    "name": "VipMonitor",
+    "policy": "Allow",
+    "description": "Read-only monitoring access for the nodewatch agent's `monitor` role.",
+    "resource": "vip",
+    "action": [
+        "list",
+        "get"
+    ],
+    "or": [
+        {
+            "name": "CanVipMonitor",
+            "and": [
+                {
+                    "name": "UserAuthorityIsManager",
+                    "condition": "$user.authority.full_name suffix $env.authority.admin.ca.manager."
+                },
+                {
+                    "name": "UserHasMonitorRole",
+                    "condition": "$user.roles list_contains `monitor`"
+                }
+            ]
+        }
+    ]
+}

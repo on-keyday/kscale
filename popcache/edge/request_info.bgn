@@ -1,0 +1,192 @@
+config.go.package = "edge"
+input.endian = config.endian.little
+
+enum LogLevel:
+    :u8
+    TRACE = "TRACE"
+    DEBUG = "DEBUG"
+    INFO = "INFO"
+    WARN = "WARN"
+    ERROR = "ERROR"
+
+enum Protocol:
+    :u8
+    http1_plain
+    http1
+    h2
+    h3
+    other = 0xff
+
+format ProtocolInfo:
+    protocol :Protocol
+    if protocol == Protocol.other:
+        len :u8
+        protocol_name :[len]u8
+
+enum Method:
+    :u8
+    GET = "GET"
+    POST = "POST"
+    PUT = "PUT"
+    HEAD = "HEAD"
+    OPTIONS = "OPTIONS"
+    PATCH = "PATCH"
+    DELETE = "DELETE"
+    CONNECT = "CONNECT"
+    PRI = "PRI"
+    TRACE = "TRACE"
+    WELL_KNOWN_MAX
+    OTHER = 0xff
+
+format MethodInfo:
+    method :Method
+    if method == Method.OTHER:
+        len :u8
+        method_name :[len]u8
+
+format PathInfo:
+    path :String
+    query_len :u8
+    query :[query_len]Field
+
+format String:
+    len :u16
+    data :[len]u8
+
+format Field:
+    key :String
+    value :String
+
+format Header:
+    len :u16
+    fields :[len]Field
+
+format Body:
+    offset :u32
+    len :u32
+    body :[len]u8
+
+format Address:
+    is_v6 :u1
+    reserved :u7
+    if is_v6 == 1:
+        addr_v6 :[16]u8
+    else:
+        addr_v4 :[4]u8
+
+format AddrPort:
+    addr :Address
+    port :u16
+
+format TlsInfo:
+    version :u16
+    cipher_suite :u16
+    sni :String
+    alpn :String
+    client_cert_len :u16
+    client_cert :[client_cert_len]u8
+
+format RequestInfo:
+    popID :u32
+    reqID :u64
+    protocol :ProtocolInfo
+    remote :AddrPort
+    local :AddrPort
+    method :MethodInfo
+    path :PathInfo
+    header :Header
+    has_tls :u1
+    reserved :u7
+    if has_tls == 1:
+        tls :TlsInfo
+
+format ResponseInfo:
+    status :u16
+    header :Header
+
+# Host callback: geo-locate an IP. Guest encodes GeolocRequest, host replies
+# with GeolocResponse (or writes 0 bytes when unavailable / not found).
+format GeolocRequest:
+    ip :Address
+
+format GeolocResponse:
+    asn :u32
+    asn_org :String
+    country :String
+    city :String
+
+# Host callback: fetch this popcache node's serving config. Guest calls with no
+# input; host writes an encoded PopcacheConfig (or 0 bytes when unavailable). A
+# port of 0 means that listener is not configured / not parseable.
+format PopcacheConfig:
+    origin :String
+    http_port :u16
+    https_port :u16
+    http3_port :u16
+
+# Host callback: issue an outbound HTTP(S) sub-request ("fetch"). Guest encodes
+# FetchRequest and calls fetch(req_ptr, req_size) -> fetch_id (0 = rejected:
+# bad encoding, scheme not http/https, host not in the module's allowed_hosts,
+# or the per-request fetch budget is spent). The host executes the request
+# synchronously and buffers the response (body capped host-side; over-cap is a
+# transport error, not a truncation). The guest then pulls the outcome with
+# get_fetch_response(id, out, size) -> total (encoded FetchResponseInfo) and
+# get_fetch_body(id, out, size) -> total (same pull convention as
+# get_{request,response}_body). Results live until the request finishes.
+format FetchRequest:
+    method :MethodInfo
+    url :String
+    header :Header
+    body_len :u32
+    body :[body_len]u8
+    timeout_ms :u32 # 0 = host default; clamped by a host-side maximum
+
+format FetchResponseInfo:
+    status :u16 # HTTP status; 0 = transport error (see error)
+    if status == 0:
+        error :String
+    else:
+        header :Header
+
+enum DiffDataType:
+    :u8
+    header # for multiple fields
+    field # for single field
+    method 
+    path
+    status
+    body
+    routing
+
+enum DiffKind:
+    :u8
+    replace
+    insert
+    delete
+
+enum Routing:
+    :u8
+    cont # continue processing
+    skip_cache # continue but not using cache even if exists. response may be cached
+    no_cache # almost same as skip_cache but response would not be cached
+    force_cache # force cache the response even if response not specified to be cached
+    skip_response_exec_if_cached # skip on_response hook if response was cached
+    deny # do not allowed to access origin, wasm function also can do redirect using this
+    abort # disconnect connection, for DoS prevension
+
+format DiffData:
+    diff_type :DiffDataType
+    kind :DiffKind 
+    match diff_type:
+        DiffDataType.header => header :Header
+        DiffDataType.field => field :Field
+        DiffDataType.method => method :MethodInfo
+        DiffDataType.path => path :PathInfo
+        DiffDataType.status => status :u16
+        DiffDataType.body => body :Body
+        DiffDataType.routing => routing :Routing
+
+format ChangeSet:
+    len :u8
+    diff :[len]DiffData
+

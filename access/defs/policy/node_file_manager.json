@@ -1,0 +1,27 @@
+{
+    "name": "NodeFileManager",
+    "policy": "Allow",
+    "description": "Declare files that should exist on dataplane nodes (shipped from the CP file store). Admin only.",
+    "resource": "node_file",
+    "action": [
+        "apply",
+        "list",
+        "get",
+        "delete"
+    ],
+    "or": [
+        {
+            "name": "CanManageNodeFiles",
+            "and": [
+                {
+                    "name": "UserAuthorityIsManager",
+                    "condition": "$user.authority.full_name suffix $env.authority.admin.ca.manager."
+                },
+                {
+                    "name": "UserHasAdminRole",
+                    "condition": "$user.roles list_contains `admin`"
+                }
+            ]
+        }
+    ]
+}

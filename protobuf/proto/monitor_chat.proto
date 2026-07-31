@@ -1,0 +1,19 @@
+syntax = "proto3";
+
+package ksdk.rpc;
+
+option go_package = "github.com/on-keyday/kscale/protobuf/proto";
+
+// ChatEvent is one step of a monitor-chat turn, streamed back while the monitor
+// agent's LLM works through its tool loop. A turn emits zero or more tool_call /
+// tool_result pairs followed by one terminal assistant (or error) event.
+message ChatEvent {
+    // "tool_call" | "tool_result" | "assistant" | "error"
+    string kind = 1;
+    // assistant text / error detail / tool result summary (truncated on the agent)
+    string text = 2;
+    // tool name, set for kind = tool_call / tool_result
+    string tool = 3;
+    // tool arguments as JSON, set for kind = tool_call
+    string args = 4;
+}

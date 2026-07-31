@@ -1,0 +1,16 @@
+config.go.package = "wire"
+
+# Framing for the remote-exec EXEC stream preamble (package remoteexec).
+# 1 EXEC stream = 1 trsf.BidirectionalStream:
+#   trsf-level magic (consts.StreamMagicEXEC, 4B) → 呼出側で rpc.DecodeMagic が消費
+#   → ExecCommandPreamble (この length-prefixed envelope)
+#   → 以降 objtrsf/exec/frame の I/O (stdin/stdout/stderr/control)
+#
+# magic は trsf-level で消費済前提のため frame には含めない。ExecCommand 本体は
+# protobuf message (protobuf/proto/exec/exec.proto)。本 frame はその
+# length-prefixed envelope を提供する。trsf/proxy/wire/dial.bgn と同型だが、
+# remoteexec の既存 wire を忠実に保つため長さは固定 u32 big-endian(varint 非依存)。
+
+format ExecCommandPreamble:
+    body_len :u32
+    body     :[body_len]u8

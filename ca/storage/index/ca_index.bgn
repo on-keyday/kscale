@@ -1,0 +1,145 @@
+config.go.package = "index"
+config.word.map("Castate","CAState")
+config.word.map("ManagerId","ManagerID")
+
+# CAState MUST be encrypted 
+format CAState:
+    saved_time :u64
+    current_serial :[20]u8
+    ca :KeyPairIndex
+    manager_id :ManagerID
+    record_counter :u64 # to prevent replay attack. checking with Index.record_counter 
+
+format ManagerID:
+    id :[16]u8
+
+format Secret:
+    len :u16
+    secret :[len]u8
+
+format IndexFileHeader:
+    nonce :IndexNonce
+    record_counter :u64 # protected to prevent replay attack
+    aead_tag :[16]u8
+
+INDEX_FILE_HEADER_SIZE ::= 12 + 8 + 16
+
+format IndexFile:
+    header :IndexFileHeader
+    records :[..]Record
+
+
+
+# AEAD target but file_offset is not included in header
+format AEADProtectTarget:
+    header :RecordHeaderWithNonce
+    file_offset :u64
+
+
+format RecordHeader:
+    index_len :u16
+    record_version :u8 # currently 0
+    manager_id :ManagerID # to derive key. above this has patterns, be careful. but almost all usecase, only a file contains one ManagerID
+    key_material :u64 # random key material. encryption key is derived from record master secret(not appear here), context(manager_id + key_material) and used with RecordHeaderWithNonce.nonce
+
+format RecordHeaderWithNonce:
+    header :RecordHeader
+    nonce :IndexNonce
+
+RECORD_HEADER_SIZE ::= 39
+
+format Record:
+    header :RecordHeaderWithNonce # header is protected with AEADProtectTarget
+    index :[header.header.index_len]u8 # index contains *Index object, not the certificate or private key itself
+                                       # also index field is encrypted
+
+format KeyHash: # HMAC-SHA-512
+    hash :[64]u8
+
+format IndexNonce: 
+    nonce :[12]u8
+
+enum IndexKind:
+    :u8
+    cert
+    priv
+    keypair
+    blob 
+
+format Index:
+    record_counter :u64
+    kind :IndexKind
+    match kind:
+        IndexKind.cert => cert :CertIndex
+        IndexKind.priv => priv :PrivateKeyIndex
+        IndexKind.keypair => key_pair :KeyPairIndex
+        IndexKind.blob => blob :BlobIndex
+
+# implementation depended index. but this implementation, not a file offset, only a logical key
+format OpaquePointer:
+    pointer :u64
+
+format IndexCommonInfo:
+    revoked :u1
+    reserved :u7
+    not_before :Time
+    not_after :Time
+    updated_at :Time
+
+# private key itself should be encrypted
+format PrivateKeyIndex:
+    pointer :OpaquePointer
+    priv_len :u16
+    common :IndexCommonInfo
+    private_key_hash :KeyHash
+    name :Name
+
+format BlobIndex:
+    pointer :OpaquePointer
+    blob_len :u64
+    common :IndexCommonInfo
+    blob_hash :KeyHash
+    name :Name
+
+format Time:
+    seconds :u64
+
+format SerialNumber:
+    serial :[20]u8
+
+# actual content is encrypted
+format CertIndex:
+    pointer :OpaquePointer
+    serial_number :SerialNumber
+    cert_len :u16
+    common :IndexCommonInfo
+    certificate_hash :KeyHash
+    name :Name # fixed per record
+
+# actual data is stored concated and encrypted
+format KeyPairIndex:
+    priv_len :u16 # private key length
+    cert :CertIndex
+
+format Name:
+    len :u8
+    name :[len]u8
+
+# from state
+format KeyPair:
+    priv_len :u16
+    private_key :[priv_len]u8
+    cert :IssuedCert
+
+format IssuedCert:
+    len :u16
+    certificate :[len]u8
+
+format BootInfo:
+    self_cert :KeyPair
+    peer_cert :IssuedCert
+    peer_is_self_signed :u1
+    reserved :u7
+    if peer_is_self_signed == 0:
+        ca_cert :IssuedCert
+ 

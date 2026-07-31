@@ -1,0 +1,16 @@
+{
+    "name": "DnsConfigMonitor",
+    "policy": "Allow",
+    "description": "Read-only monitoring access for the nodewatch agent's `monitor` role (the api_token is never returned).",
+    "resource": "dns_config",
+    "action": ["list", "get"],
+    "or": [
+        {
+            "name": "CanDnsConfigMonitor",
+            "and": [
+                {"name": "UserAuthorityIsManager", "condition": "$user.authority.full_name suffix $env.authority.admin.ca.manager."},
+                {"name": "UserHasMonitorRole", "condition": "$user.roles list_contains `monitor`"}
+            ]
+        }
+    ]
+}

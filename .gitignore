@@ -1,0 +1,43 @@
+# Build output / binaries
+/bin/
+*.o
+*.a
+*.so
+*.exe
+*.test
+
+# Go coverage / profiling
+*.out
+coverage.*
+
+# Editor / OS
+.DS_Store
+*.swp
+
+# l4lb eBPF generated/host-specific artifacts
+l4lb/c/vmlinux.h
+l4lb/c/*.o
+l4lb/dpdk/build/
+
+# WASM build artifacts (built from edge_app/ Rust source)
+*.wasm
+
+# Rust build artifacts (edge_app/)
+target/
+
+# stray cmd binaries (built at repo root by `go build ./cmd/X/`)
+/controlplane
+/cli
+/katui
+/popcacheagent
+/dnsagent
+/dpagent
+/routeragent
+/metricsgw
+/remoteshell
+/gen
+/gen_access
+/build/
+
+# local notes
+/notes/

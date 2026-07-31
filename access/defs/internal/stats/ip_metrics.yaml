@@ -1,0 +1,181 @@
+metrics:
+    - 
+        name: src_ips
+        display_name: Src IP Packet Count
+        long_name: SourceIPPacketCount
+        type: '[]byte'
+        hold_type: l4lbdrv.SrcIPCounts
+        category: l4lb
+        sample_value:
+            - |
+              l4lbdrv.SrcIPCounts{
+                Map: map[netip.Addr]map[l4lbdrv.ProtocolNumber]map[uint16]uint64{ 
+                    netip.AddrFrom4([4]byte{192, 168, 1, 0}): map[l4lbdrv.ProtocolNumber]map[uint16]uint64{
+                        l4lbdrv.ProtocolNumber_Tcp: map[uint16]uint64{
+                            80: 1500,
+                            443: 500,
+                        }, 
+                        l4lbdrv.ProtocolNumber_Udp: map[uint16]uint64{
+                            53: 200,
+                        },
+                    }, 
+                    netip.AddrFrom4([4]byte{10, 0, 0, 0}): map[l4lbdrv.ProtocolNumber]map[uint16]uint64{
+                        l4lbdrv.ProtocolNumber_Tcp: map[uint16]uint64{
+                            22: 2800,
+                        },
+                    },
+                }, 
+                Sum: 5000,
+              }
+            - |
+                l4lbdrv.SrcIPCounts{
+                    Map: map[netip.Addr]map[l4lbdrv.ProtocolNumber]map[uint16]uint64{ 
+                        netip.AddrFrom16([16]byte{0x20,0x01,0x0d,0xb8,0x85,0xa3,0x00,0x00,0x00,0x00,0x8a,0x2e,0x03,0x70,0x73,0x34}): map[l4lbdrv.ProtocolNumber]map[uint16]uint64{
+                            l4lbdrv.ProtocolNumber_Tcp: map[uint16]uint64{
+                                30: 2000,
+                            },
+                        }, 
+                        netip.AddrFrom16([16]byte{0x20,0x01,0x0d,0xb8,0x85,0xa3,0x00,0x00,0x00,0x00,0x8a,0x2e,0x03,0x70,0x73,0x35}): map[l4lbdrv.ProtocolNumber]map[uint16]uint64{
+                            l4lbdrv.ProtocolNumber_Udp: map[uint16]uint64{
+                                1000: 2000,
+                            },
+                        },
+                    }, 
+                    Sum: 3000,
+                }
+        to_objproto: $dst = l4lbdrv.SrcIPCountToBytes($src.Map)
+        from_objproto: |
+            tmpSrcIPs,err := l4lbdrv.SrcIPCountFromBytes($src)
+            if err !=nil { return $dst,false }
+            $dst = *tmpSrcIPs
+        to_proto: '$dst = l4lbdrv.SrcIPCountToBytes($src.Map)'
+        from_proto: 'if v, err := l4lbdrv.SrcIPCountFromBytes($src); err == nil && v != nil { $dst = *v }'
+        equal_check: | 
+            func() bool { 
+                for k, v := range $src1.Map { 
+                    v2, ok := $src2.Map[k] 
+                    if !ok { return false }
+                    for k, v1elm := range v { 
+                        v2elm, ok := v2[k] 
+                        if !ok { return false } 
+                        for k, v1elm2 := range v1elm {
+                            v2elm2, ok := v2elm[k]
+                            if !ok || v1elm2 != v2elm2 { return false }
+                        }
+                    }
+                }
+                return true
+            }()
+        string_format: $src.String()
+    - 
+        name: packet_sizes
+        display_name: Packet Size Distribution
+        long_name: PacketSizeDistribution
+        type: '[]byte'
+        hold_type: l4lbdrv.PacketSizeDist
+        category: l4lb
+        sample_value:
+            - 'l4lbdrv.PacketSizeDist{Map: map[uint32]uint64{64: 1000, 128: 500, 512: 200}, Count: 1700, Sum: 230400 }'
+            - 'l4lbdrv.PacketSizeDist{Map: map[uint32]uint64{1500: 300, 9000: 50}, Count: 350, Sum: 5250000 }'
+        to_objproto: $dst = l4lbdrv.PacketSizeDistToBytes($src.Map)
+        from_objproto: 'tmpPacketSizes,err := l4lbdrv.PacketSizeDistFromBytes($src); if err !=nil { return $dst,false }; $dst = *tmpPacketSizes'
+        to_proto: '$dst = l4lbdrv.PacketSizeDistToBytes($src.Map)'
+        from_proto: 'if v, err := l4lbdrv.PacketSizeDistFromBytes($src); err == nil && v != nil { $dst = *v }'
+        equal_check: 'func() bool { for k, v := range $src1.Map { if v2, ok := $src2.Map[k]; !ok || v != v2 { return false } }; return true }()'
+        string_format: $src.String()
+    -   name: isn_least_significant_bytes
+        display_name: ISN Least Significant Byte Distribution
+        long_name: ISNLeastSignificantByteDistribution
+        type: '[]byte'
+        category: l4lb
+        hold_type: l4lbdrv.ISNLeastSignificantByteMap
+        sample_value:
+            - |
+              l4lbdrv.ISNLeastSignificantByteMap{
+                Map: map[uint8]uint64{
+                    0: 100,
+                    1: 200,
+                    255: 50,
+                },
+                Count: 350,
+                Sum: 12950,
+              }
+            - |
+              l4lbdrv.ISNLeastSignificantByteMap{
+                Map: map[uint8]uint64{
+                    128: 400,
+                    129: 100,
+                },
+                Count: 500,
+                Sum: 64500,
+              }
+        to_objproto: $dst = l4lbdrv.ISNLeastSignificantByteMapToBytes($src.Map)
+        from_objproto: |
+            tmpISNMap,err := l4lbdrv.ISNLeastSignificantByteMapFromBytes($src)
+            if err !=nil { return $dst,false }
+            $dst = *tmpISNMap
+        to_proto: '$dst = l4lbdrv.ISNLeastSignificantByteMapToBytes($src.Map)'
+        from_proto: 'if v, err := l4lbdrv.ISNLeastSignificantByteMapFromBytes($src); err == nil && v != nil { $dst = *v }'
+        equal_check: | 
+            func() bool { 
+                for k, v := range $src1.Map { 
+                    v2, ok := $src2.Map[k] 
+                    if !ok || v != v2 { return false }
+                }
+                return true
+            }()
+        string_format: $src.String()
+
+prometheus:
+    - 
+        metric_name: ksdk_l4lb_ebpf_packet_size_histogram
+        help: L4LB eBPF Packet Size Histogram
+        value_type: histogram
+        source_metric: packet_sizes
+        labels:
+            - 
+                name: instance
+        map_budgets: $src.Histogram
+        map_sum: float64($src.Sum)
+        map_count: $src.Count
+        optional: true
+        optional_condtition: $self.L4lbEbpfEnabled
+    - 
+        metric_name: ksdk_l4lb_ebpf_isn_least_significant_byte_histogram
+        help: L4LB eBPF ISN Least Significant Byte Histogram
+        value_type: histogram
+        source_metric: isn_least_significant_bytes
+        labels:
+            - 
+                name: instance
+        map_budgets: $src.Histogram
+        map_sum: float64($src.Sum)
+        map_count: $src.Count
+        optional: true
+        optional_condtition: $self.L4lbEbpfEnabled
+    - 
+        metric_name: ksdk_l4lb_ebpf_src_ip_map
+        help: L4LB eBPF Packet per Source IP and Protocol
+        value_type: custom
+        source_metric: src_ips
+        labels:
+            - 
+                name: instance
+            - 
+                name: src_ip
+                convert: ip.String()
+            - 
+                name: protocol
+                convert: proto.String()
+            -   name: port
+                convert: fmt.Sprintf("%d", port)
+        optional: true
+        optional_condtition: $self.L4lbEbpfEnabled
+        custom_collect: |
+            for ip, protoMap := range $src.Map { 
+                for proto, ports := range protoMap { 
+                    for port, count := range ports {
+                        ch <- prometheus.MustNewConstMetric($desc, prometheus.CounterValue, float64(count) $labels) 
+                    }
+                } 
+            }

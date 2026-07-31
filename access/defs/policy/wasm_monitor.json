@@ -1,0 +1,26 @@
+{
+    "name": "WasmMonitor",
+    "policy": "Allow",
+    "description": "Read-only monitoring access for the nodewatch agent's `monitor` role. Lets the monitor LLM observe declared WASM edge modules (list/get) and their actual-vs-desired attach drift on popcache nodes (diff, a read-only query); mutating actions (apply/delete) stay admin-only in WasmManager.",
+    "resource": "wasm_module",
+    "action": [
+        "list",
+        "get",
+        "diff"
+    ],
+    "or": [
+        {
+            "name": "CanWasmMonitor",
+            "and": [
+                {
+                    "name": "UserAuthorityIsManager",
+                    "condition": "$user.authority.full_name suffix $env.authority.admin.ca.manager."
+                },
+                {
+                    "name": "UserHasMonitorRole",
+                    "condition": "$user.roles list_contains `monitor`"
+                }
+            ]
+        }
+    ]
+}

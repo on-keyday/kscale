@@ -1,0 +1,24 @@
+{
+    "status": [
+        {
+            "name":"Unknown",
+            "value":0
+        },
+        {
+            "name":"Running",
+            "value":1
+        },
+        {
+            "name":"Stopped",
+            "value":2
+        },
+        {
+            "name":"Initialized",
+            "value":3
+        },
+        {
+            "name":"Error",
+            "value":4
+        }
+    ]
+}

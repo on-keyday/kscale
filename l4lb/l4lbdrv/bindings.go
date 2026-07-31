@@ -1,0 +1,363 @@
+package l4lbdrv
+
+import (
+	"encoding/binary"
+	"errors"
+	"fmt"
+	"log/slog"
+	"net"
+	"net/netip"
+	"os"
+	"syscall"
+	"unsafe"
+
+	"github.com/cilium/ebpf"
+	"go.uber.org/multierr"
+)
+
+const (
+	XDP_ABORTED = uint32(0)
+	XDP_DROP    = 1
+	XDP_PASS    = 2
+	XDP_TX      = 3
+)
+
+func XdpRetValToString(retval uint32) string {
+	switch retval {
+	case XDP_ABORTED:
+		return "XDP_ABORTED"
+	case XDP_DROP:
+		return "XDP_DROP"
+	case XDP_PASS:
+		return "XDP_PASS"
+	case XDP_TX:
+		return "XDP_TX"
+	default:
+		return fmt.Sprintf("Unknown(%d)", retval)
+	}
+}
+
+type Bindings struct {
+	LBMain                *ebpf.Program `ebpf:"lb_main"`
+	TestDecrypt           *ebpf.Program `ebpf:"test_decrypt"`
+	StatCountersMap       *ebpf.Map     `ebpf:"stat_counters_map"`
+	XdpcapHook            *ebpf.Map     `ebpf:"xdpcap_hook"`
+	DestinationArray      *ebpf.Map     `ebpf:"destinations_map"`
+	ConfigMap             *ebpf.Map     `ebpf:"lb_config_map"`
+	CryptoCtxMap          *ebpf.Map     `ebpf:"__crypto_ctx_map"`
+	SrcIPCounters         *ebpf.Map     `ebpf:"src_ip_counters_map"`
+	PacketSizeMap         *ebpf.Map     `ebpf:"packet_size_map"`
+	ISNLsbDistributionMap *ebpf.Map     `ebpf:"isn_lsb_distribution_map"`
+}
+
+func (b *Bindings) Close() error {
+	return multierr.Combine(
+		b.StatCountersMap.Close(),
+		b.XdpcapHook.Close(),
+		b.DestinationArray.Close(),
+		b.ConfigMap.Close(),
+		b.CryptoCtxMap.Close(),
+		b.SrcIPCounters.Close(),
+		b.PacketSizeMap.Close(),
+		b.ISNLsbDistributionMap.Close(),
+	)
+}
+
+func BindBalancer(logger *slog.Logger, binPath, xdpcapHookPath, cryptoPinDirPath string) (*Bindings, error) {
+	m, err := ReadDWARFStructs(binPath)
+	if err != nil {
+		return nil, fmt.Errorf("ReadDWARFStructs(%q): %w", binPath, err)
+	}
+	if err := LbAssertLayout(m); err != nil {
+		return nil, fmt.Errorf("Htdilb2AssertLayout: %w", err)
+	}
+	logger.Info("Go binding type assertions passed")
+
+	f, err := os.Open(binPath)
+	if err != nil {
+		return nil, fmt.Errorf("Failed to open balancer bin %q: %w", binPath, err)
+	}
+	defer f.Close()
+
+	spec, err := ebpf.LoadCollectionSpecFromReader(f)
+	if err != nil {
+		return nil, fmt.Errorf("Failed to read spec %q: %w", binPath, err)
+	}
+
+	spec.Maps["__crypto_ctx_map"].Pinning = ebpf.PinByName
+
+	var bindings Bindings
+	if err := spec.LoadAndAssign(&bindings, &ebpf.CollectionOptions{
+		Programs: ebpf.ProgramOptions{
+			LogLevel:     0,
+			LogSizeStart: 1 * 1024 * 1024,
+		},
+		Maps: ebpf.MapOptions{
+			PinPath: cryptoPinDirPath,
+		},
+	}); err != nil {
+		var ve *ebpf.VerifierError
+		if errors.As(err, &ve) {
+			for _, line := range ve.Log {
+				slog.Error("Full verifier log", slog.String("line", line))
+			}
+			slog.Error("Full verifier", slog.String("error", ve.Error()))
+		}
+		return nil, fmt.Errorf("Failed to bind spec: %w", err)
+	}
+
+	if xdpcapHookPath != "" {
+		if _, err := os.Stat(xdpcapHookPath); !os.IsNotExist(err) {
+			logger.Warn("XdpcapHook path already exists",
+				slog.String("path", xdpcapHookPath))
+		} else {
+			/*
+				if err := os.RemoveAll(xdpcapHookPath); err != nil {
+					return nil, fmt.Errorf("Failed to rm previous XdpcapHook at %s: %w", xdpcapHookPath, err)
+				}
+			*/
+			if err := bindings.XdpcapHook.Pin(xdpcapHookPath); err != nil {
+				return nil, fmt.Errorf("Failed to pin XdpcapHook: %w", err)
+			}
+		}
+		logger.Info("XdpcapHook pinned", slog.String("path", xdpcapHookPath))
+	}
+
+	return &bindings, nil
+}
+
+func (b *Bindings) ResetStatCounters() error {
+	ncpus := ebpf.MustPossibleCPU()
+
+	zeros := make([][]byte, ncpus)
+	for i := range zeros {
+		zeros[i] = make([]byte, unsafe.Sizeof(StatCounters{}))
+	}
+
+	if err := b.StatCountersMap.Put(int32(0), zeros); err != nil {
+		return fmt.Errorf("StatCountersMap.Put: %w", err)
+	}
+	return nil
+}
+
+func (b *Bindings) ReadStatCountersAggregate() (*StatCounters, error) {
+	sum := &StatCounters{}
+
+	// b.StatsCountersMap is a per-CPU map. Compute sum over all CPUs.
+	var cs [][]byte
+	if err := b.StatCountersMap.Lookup(int32(0), &cs); err != nil {
+		return nil, fmt.Errorf("StatCountersMap.Lookup: %w", err)
+	}
+	for _, c := range cs {
+		p := (*StatCounters)(unsafe.Pointer(&c[0]))
+
+		sum.Add(p)
+	}
+	return sum, nil
+}
+
+var isBigEndianHost bool
+
+func init() {
+	isBigEndianHost = binary.BigEndian.Uint16([]byte{0, 1}) == binary.NativeEndian.Uint16([]byte{0, 1})
+}
+
+func (b *Bindings) ReadSrcIPCounters() (map[netip.Addr]map[ProtocolNumber]map[uint16]uint64, uint64, error) {
+	result := make(map[netip.Addr]map[ProtocolNumber]map[uint16]uint64)
+	ntoh16 := func(n uint16) uint16 { // assume platform is little-endian
+		if isBigEndianHost {
+			return n
+		}
+		return (n<<8)&0xff00 | (n>>8)&0x00ff
+	}
+	var (
+		key   IpKeyT
+		value []uint64
+	)
+	iterator := b.SrcIPCounters.Iterate()
+	totalSize := uint64(0)
+	for iterator.Next(&key, &value) {
+		switch key.Family {
+		case IP_KEY_FAMILY_IPV4:
+			ip := netip.AddrFrom4([4]byte{
+				byte(key.AddrPrefix[0]),
+				byte(key.AddrPrefix[1]),
+				byte(key.AddrPrefix[2]),
+				byte(key.AddrPrefix[3]),
+			})
+			sum := uint64(0)
+			for _, v := range value {
+				sum += v
+			}
+			if _, ok := result[ip]; !ok {
+				result[ip] = make(map[ProtocolNumber]map[uint16]uint64)
+			}
+			if _, ok := result[ip][ProtocolNumber(key.Protocol)]; !ok {
+				result[ip][ProtocolNumber(key.Protocol)] = make(map[uint16]uint64)
+			}
+			result[ip][ProtocolNumber(key.Protocol)][ntoh16(key.DestPort)] = sum
+			totalSize += sum
+		case IP_KEY_FAMILY_IPV6:
+			ip := netip.AddrFrom16([16]byte{
+				byte(key.AddrPrefix[0]),
+				byte(key.AddrPrefix[1]),
+				byte(key.AddrPrefix[2]),
+				byte(key.AddrPrefix[3]),
+				byte(key.AddrPrefix[4]),
+				byte(key.AddrPrefix[5]),
+				byte(key.AddrPrefix[6]),
+				byte(key.AddrPrefix[7]),
+				0, 0, 0, 0, 0, 0, 0, 0,
+			})
+			sum := uint64(0)
+			for _, v := range value {
+				sum += v
+			}
+			if _, ok := result[ip]; !ok {
+				result[ip] = make(map[ProtocolNumber]map[uint16]uint64)
+			}
+			if _, ok := result[ip][ProtocolNumber(key.Protocol)]; !ok {
+				result[ip][ProtocolNumber(key.Protocol)] = make(map[uint16]uint64)
+			}
+			result[ip][ProtocolNumber(key.Protocol)][ntoh16(key.DestPort)] = sum
+			totalSize += sum
+		default:
+			return nil, 0, fmt.Errorf("unknown IP family in SrcIPCounters: %d", key.Family)
+		}
+	}
+	return result, totalSize, nil
+}
+
+func (b *Bindings) ReadPacketSizeCounters(histogram map[float64]uint64) (map[uint32]uint64, uint64, uint64, error) {
+	result := make(map[uint32]uint64)
+	var (
+		key   uint32
+		value []uint64
+	)
+	totalCount := uint64(0)
+	totalSize := uint64(0)
+	notInBucketSum := uint64(0)
+	notInBucketMax := uint32(0)
+	iterator := b.PacketSizeMap.Iterate()
+	for iterator.Next(&key, &value) {
+		sum := uint64(0)
+		for _, v := range value {
+			sum += v
+		}
+		if sum == 0 {
+			continue
+		}
+		result[key] = sum
+		totalCount += sum
+		totalSize += uint64(key) * sum
+		// append to histogram
+		if histogram != nil {
+			inBucket := false
+			for bucket := range histogram {
+				if float64(key) <= bucket {
+					histogram[bucket] += sum
+					inBucket = true
+				}
+			}
+			if !inBucket {
+				notInBucketSum += sum
+				if key > notInBucketMax {
+					notInBucketMax = key
+				}
+			}
+		}
+	}
+	if histogram != nil && notInBucketSum > 0 {
+		histogram[float64(notInBucketMax)+1] += totalCount
+	}
+	return result, totalCount, totalSize, nil
+}
+
+func (b *Bindings) ReadISNLsbDistribution(histogram map[float64]uint64) (map[uint8]uint64, uint64, uint64, error) {
+	result := make(map[uint8]uint64)
+	var (
+		key   uint32
+		value []uint64
+	)
+	totalCount := uint64(0)
+	totalSize := uint64(0)
+	notInBucketSum := uint64(0)
+	notInBucketMax := uint32(0)
+	iterator := b.ISNLsbDistributionMap.Iterate()
+	for iterator.Next(&key, &value) {
+		sum := uint64(0)
+		for _, v := range value {
+			sum += v
+		}
+		if sum == 0 {
+			continue
+		}
+		result[uint8(key)] = sum
+		totalCount += sum
+		totalSize += uint64(key) * sum
+		if histogram != nil {
+			inBucket := false
+			for bucket := range histogram {
+				if float64(key) <= bucket {
+					histogram[bucket] += sum
+					inBucket = true
+				}
+			}
+			if !inBucket {
+				notInBucketSum += sum
+				if uint32(key) > notInBucketMax {
+					notInBucketMax = uint32(key)
+				}
+			}
+		}
+	}
+	if histogram != nil && notInBucketSum > 0 {
+		histogram[float64(notInBucketMax)+1] += totalCount
+	}
+	return result, totalCount, totalSize, nil
+}
+
+// NowNanoseconds returns a time that can be compared to bpf_ktime_get_ns()
+// adopted from https://github.com/iovisor/gobpf/ (Apache 2.0 License)
+func NowNanoseconds() uint64 {
+	var ts syscall.Timespec
+	syscall.Syscall(syscall.SYS_CLOCK_GETTIME, 1 /* CLOCK_MONOTONIC */, uintptr(unsafe.Pointer(&ts)), 0)
+	sec, nsec := ts.Unix()
+	return 1000*1000*1000*uint64(sec) + uint64(nsec)
+}
+
+type DestinationEntry struct {
+	IPAddr       netip.Addr
+	HardwareAddr net.HardwareAddr
+	ServerID     uint32
+}
+
+func (e DestinationEntry) String() string {
+	return fmt.Sprintf("{IPAddr: %v, HardwareAddr: %v, ServerID: %d}", e.IPAddr, e.HardwareAddr, e.ServerID)
+}
+
+type DestinationEntries []DestinationEntry
+
+const DestinationEntrySize = 14
+
+func (es DestinationEntries) MarshalBinary() ([]byte, error) {
+	buf := make([]byte, len(es)*DestinationEntrySize)
+	bs := buf
+
+	for _, e := range es {
+		if e.IPAddr.Is6() {
+			return nil, fmt.Errorf("destination must be ipv4 address, but was %s", e.IPAddr)
+		} else {
+			ip4 := e.IPAddr.As4()
+			copy(bs[0:4], ip4[:])
+			bs = bs[4:]
+		}
+		copy(bs[0:6], e.HardwareAddr)
+		bs = bs[6:]
+		// ServerID is a uint32, so we need to convert it to native byte order
+		binary.NativeEndian.PutUint32(bs[0:4], e.ServerID)
+		bs = bs[4:]
+	}
+
+	return buf, nil
+}

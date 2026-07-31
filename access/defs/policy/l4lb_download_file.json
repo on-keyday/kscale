@@ -1,0 +1,32 @@
+{
+    "name": "AllowL4LBFileDownload",
+    "policy": "Allow",
+    "resource": "dp_operations",
+    "action": [
+        "download_file"
+    ],
+    "or": [
+        {
+            "name": "CanDownloadL4LBFile",
+            "and": [
+                {
+                    "name": "UserAuthorityIsDataplane",
+                    "condition": "$user.authority.full_name suffix $env.authority.system.dp.l4lb."
+                },
+                {
+                    "name": "ArgumentsHaveDesiredValues",
+                    "condition": "$env.args.file_name suffix `.o`"
+                },
+                {
+                    "name": "UserHasRequiredRole",
+                    "or": [
+                        {
+                            "name": "HumanUserHasManagementRole",
+                            "condition": "$user.roles list_contains `l4lb`"
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+}

@@ -1,0 +1,30 @@
+{
+    "name": "MonitorChatAdmin",
+    "policy": "Allow",
+    "resource": "monitor_chat",
+    "action": [
+        "send",
+        "resume"
+    ],
+    "or": [
+        {
+            "name": "CanChatWithMonitor",
+            "description": "Chatting with the monitor agent's LLM is an admin-only operation (the LLM holds read tools over the whole fleet).",
+            "and": [
+                {
+                    "name": "UserAuthorityIsManager",
+                    "condition": "$user.authority.full_name suffix $env.authority.admin.ca.manager."
+                },
+                {
+                    "name": "UserHasRequiredRole",
+                    "or": [
+                        {
+                            "name": "HumanUserHasManagementRole",
+                            "condition": "$user.roles list_contains `admin`"
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+}

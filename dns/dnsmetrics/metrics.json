@@ -1,0 +1,22 @@
+{
+    "metrics": [
+        {
+            "name": "dns_port",
+            "type": "uint16",
+            "hold_type": "uint32",
+            "kind": "gauge"
+        },
+        {
+            "name": "requests_total",
+            "type": "uint64"
+        },
+        {
+            "name": "responses_total",
+            "type": "uint64"
+        },
+        {
+            "name": "errors_total",
+            "type": "uint64"
+        }
+    ]
+}

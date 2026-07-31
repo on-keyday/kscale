@@ -1,0 +1,1272 @@
+
+resources:
+    # The ca_management facade is gone (untangle complete on the CA side): its
+    # actions are now the genuine resources below — user_hierarchy_authority,
+    # certificate, bootstrap_token — and its lone maintenance op (garbage_collect)
+    # lives on certificate as a hand-declared operation.
+    #
+    # user_hierarchy_authority: carved out of the ca_management facade as a genuine
+    # resource (kscale untangle). Standard CRUD verbs; CA-backed by RootAuthority.
+    # Declares only its shape; create/get/list/delete are synthesized by
+    # ExpandResourceSchemas (kscale CRUD auto-generation).
+    - name: user_hierarchy_authority
+      description: User hierarchy authority — a CA-backed identity-tree node
+      command_name: authority
+      kind: resource
+      rpc_service: true
+      schema:
+          key: authority_name
+          declarative: true       # gets an idempotent `apply` (ensure-exists)
+          fields:
+              - name: authority_name
+                type: string
+              - name: is_leaf
+                type: bool
+                readonly: true   # observed from the tree, not set on create
+    # certificate: carved from the ca_management facade. An imperative read+delete
+    # resource — certs are issued via the bootstrap flow, not created through this
+    # API, so it has no create/apply (verb subset).
+    - name: certificate
+      description: An issued certificate (CA-managed)
+      command_name: certificate
+      kind: resource
+      rpc_service: true
+      schema:
+          key: common_name
+          verbs: [list, get, delete]
+          fields:
+              - name: common_name
+                type: string
+              - name: serial_number
+                type: string
+              - name: issued_at
+                type: time.Time
+              - name: expires_at
+                type: time.Time
+      # garbage_collect: a hand-declared operation alongside the synthesized CRUD
+      # (proves schema + operations mixing) — prunes expired certificates/tokens.
+      actions:
+          - name: garbage_collect
+            command_name: gc
+            args: []
+            response:
+                fields:
+                    - name: status
+                      type: string
+                    - name: certificate_count
+                      type: uint64
+    - name: session_management
+      command_name: session
+      description: Session Management
+      actions:
+          - name: list_sessions
+            command_name: list
+            args: []
+            response:
+                fields:
+                    - name: sessions
+                      type: "[]string"
+                cli_format: |
+                    var sb strings.Builder
+                    for _, s := range $self.Sessions {
+                        sb.WriteString(s + "\n")
+                    }
+                    return sb.String()
+          - name: terminate_session
+            command_name: kick
+            args:
+                - name: conn_id
+                  type: objproto.ConnectionID
+                - name: session_kind
+                  type: string
+          - name: self_info
+            command_name: me
+            args: []
+            response:
+                fields:
+                    - name: connection_id
+                      type: string
+                    - name: common_name
+                      type: string
+                cli_format: |
+                    return fmt.Sprintf("Connection ID: %s\nCommon Name: %s\n", $self.ConnectionId, $self.CommonName)
+    - name: logs
+      description: Stream structured logs from a dataplane node (or the control plane)
+      command_name: logs
+      monitor:
+          tail: "Tail the newest buffered log lines from the fleet's processes (each keeps ~200). Investigate errors, 'why did X happen', or recent events. Filter with level (minimum, e.g. warn), contains (substring), common_name (a node CN / '<type>/*' / 'cp'; empty = every source). Entries are NEWEST FIRST; older lines beyond the size cap are dropped, so narrow the filters instead of raising lines."
+      kind: resource
+      rpc_service: true
+      actions:
+          - name: stream
+            command_name: stream
+            args:
+                # The node to stream from by CommonName; empty streams the control
+                # plane's own logs.
+                - name: common_name
+                  type: string
+                  default: ""
+            response:
+                stream: true
+                use: pb.LogRecord
+          # tail: the bounded companion to stream — the newest matching lines from the
+          # per-process retained log rings (~200 each), for consumers that need a
+          # returning call (the monitor LLM's tool loop; a quick CLI peek). Unlike
+          # stream, common_name "" means EVERY source (control plane + all dataplane
+          # nodes + monitor agents); "cp" is the control plane alone. Filters run on
+          # each node (DataplaneService.TailLogs) so only matches cross the wire.
+          # Hand-written handler (service/logs).
+          - name: tail
+            command_name: tail
+            args:
+                - name: common_name
+                  type: string
+                  default: ""
+                - name: level
+                  type: string
+                  default: ""
+                - name: contains
+                  type: string
+                  default: ""
+                - name: lines
+                  type: uint32
+                  default: "50"
+            response:
+                fields:
+                    # note discloses coverage honestly (shown/matched counts, ordering,
+                    # any cut) — a size-capped result must never look complete.
+                    - name: note
+                      type: string
+                    - name: entries
+                      type: "[]string"
+          # set_level / get_level switch & read live log verbosity. node selects the
+          # target(s): "cp" (control plane, in-process), a node CN / "<type>/*" / "*"
+          # (dataplane), a monitor agent, or "all" (everything). Pushed/read over
+          # DataplaneService.Set/GetLogLevel; the CP handles its own in-process.
+          - name: set_level
+            command_name: set-level
+            args:
+                - name: node
+                  type: string
+                - name: level
+                  type: string
+            response:
+                fields:
+                    - name: applied
+                      type: "[]string"
+          - name: get_level
+            command_name: get-level
+            args:
+                - name: node
+                  type: string
+            response:
+                fields:
+                    - name: levels
+                      type: "[]string"
+    # monitor_chat: interactive chat with the monitor agent's local LLM (nodewatch).
+    # One send = one turn: the control plane relays the call to the monitor agent's
+    # peer (same generated service on both legs, like `logs stream monitor` but
+    # symmetric), which runs its tool loop and streams step events (tool_call /
+    # tool_result / assistant / error) back. session_id keys the multi-turn history
+    # held on the agent.
+    - name: monitor_chat
+      description: Chat with the monitor agent's local LLM
+      command_name: chat
+      kind: resource
+      rpc_service: true
+      actions:
+          - name: send
+            command_name: send
+            args:
+                # The monitor agent to talk to by CommonName; empty picks the only
+                # connected monitor agent.
+                - name: agent
+                  type: string
+                  default: ""
+                # Conversation key: the client generates one per chat session and
+                # reuses it across turns; a fresh id starts a fresh history.
+                - name: session_id
+                  type: string
+                - name: message
+                  type: string
+            response:
+                stream: true
+                use: pb.ChatEvent
+          # resume feeds a client-side tool result back into a suspended turn. When
+          # the LLM calls a client-side tool (an external probe run by the frontend,
+          # not the agent), send ends with a tool_request event; the frontend runs
+          # it (with operator approval) and resumes the same session with the result,
+          # continuing the tool loop.
+          - name: resume
+            command_name: resume
+            args:
+                - name: agent
+                  type: string
+                  default: ""
+                - name: session_id
+                  type: string
+                # The client-side tool being answered (matches the tool_request).
+                - name: tool
+                  type: string
+                # The tool output (or, when denied is set, ignored).
+                - name: result
+                  type: string
+                # Non-empty = the operator denied the probe; the reason is fed to the
+                # model instead of a result so it can choose another path.
+                - name: denied
+                  type: string
+                  default: ""
+            response:
+                stream: true
+                use: pb.ChatEvent
+    - name: dp_operations
+      description: Data Plane Operations (for dataplane agents)
+      actions:
+          - name: download_file
+            command_name: download
+            args:
+                - name: file_name
+                  type: string
+                - name: file_seq
+                  type: uint32
+          - name: realtime_stats
+            command_name: realtime-stats
+            args:
+                - name: enable
+                  type: bool_enable
+                - name: dp_type
+                  type: string
+                - name: address
+                  type: "*objproto.ConnectionID"
+                  default: "*"
+                - name: interval
+                  type: time.Duration
+                  default: 5s
+                - name: filter
+                  type: "[]string"
+                  default: ""
+          - name: message
+            command_name: message
+            args:
+                - name: message
+                  type: string
+          - name: report_status
+            command_name: stat-report
+            args: []
+    - name: remote_shell
+      description: Remote Shell Access
+      command_name: shell
+      actions:
+          - name: dp_execute_command
+            command_name: exec-dp
+            args:
+                - name: dp_type
+                  type: string
+                - name: address
+                  type: objproto.ConnectionID
+                - name: command
+                  type: string
+                - name: args
+                  type: "[]string"
+                - name: pty
+                  type: string
+          - name: cplane_execute_command
+            command_name: exec-cp
+            args:
+                - name: command
+                  type: string
+                - name: args
+                  type: "[]string"
+                - name: pty
+                  type: string
+    - name: http_proxy
+      description: HTTP Proxy Management
+      command_name: http-proxy
+      actions:
+          - name: connect_to_target
+            command_name: connect
+            args:
+                - name: target
+                  type: string
+          - name: request_via_proxy
+            command_name: request
+            args:
+                - name: proxy_dp_type
+                  type: string
+                - name: proxy_address
+                  type: objproto.ConnectionID
+                - name: host
+                  type: string
+                - name: method
+                  type: string
+                - name: url
+                  type: string
+                - name: headers
+                  type: "[]string"
+    # acme: ACME (Let's Encrypt) certificate provisioning. `obtain` runs the lego
+    # client (popcache/encrypt) with a DNS-01 provider that fans the challenge TXT
+    # record out to the dns dataplane (DnsControlService.SetupAcmeChallenge), then
+    # distributes the obtained cert to the popcache nodes over the transport
+    # (DataplaneService.SendFile + PopcacheControlService.ReloadTlsCert). Re-home of
+    # ksdk's acme_challenge_management facade as a clean operation.
+    - name: acme
+      description: ACME (Let's Encrypt) certificate provisioning via DNS-01
+      command_name: acme
+      kind: resource
+      rpc_service: true
+      actions:
+          - name: obtain
+            command_name: obtain
+            args:
+                - name: domain
+                  type: string
+                - name: email
+                  type: string
+                - name: ca_dir_url
+                  type: string
+                  default: "https://acme-staging-v02.api.letsencrypt.org/directory"
+            response:
+                fields:
+                    - name: status
+                      type: string
+                    - name: distributed_to
+                      type: "[]string"
+          # cert/account management (the underlying encrypt.AcmeAgent already supports
+          # these; each constructs the agent fresh via SetupAcme — cheap, stateless,
+          # matching obtain's auto-setup). ca_dir_url selects which ACME account/store.
+          - name: list
+            command_name: list
+            args:
+                - name: ca_dir_url
+                  type: string
+                  default: "https://acme-staging-v02.api.letsencrypt.org/directory"
+            response:
+                fields:
+                    - name: certificates
+                      type: "[]string"
+          - name: get-cert
+            command_name: get-cert
+            args:
+                - name: domain
+                  type: string
+                - name: ca_dir_url
+                  type: string
+                  default: "https://acme-staging-v02.api.letsencrypt.org/directory"
+            response:
+                fields:
+                    - name: certificate
+                      type: string
+          - name: delete-cert
+            command_name: delete-cert
+            args:
+                - name: domain
+                  type: string
+                - name: ca_dir_url
+                  type: string
+                  default: "https://acme-staging-v02.api.letsencrypt.org/directory"
+            response:
+                fields:
+                    - name: status
+                      type: string
+          - name: delete-account
+            command_name: delete-account
+            args:
+                - name: ca_dir_url
+                  type: string
+                  default: "https://acme-staging-v02.api.letsencrypt.org/directory"
+            response:
+                fields:
+                    - name: status
+                      type: string
+    - name: wasm_module
+      description: A WASM edge module (declarative desired state)
+      command_name: wasm
+      monitor:
+          list: "List desired WASM edge modules (module_id, file_path, method, path, match_type, allowed_hosts). Use to learn which edge WASM handlers are declared, which request paths they serve, and which outbound fetch destinations they may reach."
+          get: "Get one desired WASM edge module by module_id."
+          diff: "Show actual (attached on popcache nodes) vs desired WASM module drift — what is really loaded vs what is declared."
+      kind: resource
+      rpc_service: true
+      schema:
+          key: module_id
+          declarative: true
+          generated_store: true
+          verbs: [apply, list, delete]
+          fields:
+              - name: module_id
+                type: uint32
+              - name: file_path
+                type: string
+              # method: the HTTP method(s) this module serves. A comma lists
+              # several ("GET,HEAD"); "*" (or empty) matches any method. Among
+              # modules on the same path, a method-exact entry wins over "*".
+              - name: method
+                type: string
+              - name: path
+                type: string
+              # match_type selects how `path` is matched against request paths on
+              # the popcache node: "exact" (default; empty is treated as exact) or
+              # "prefix" (path-segment-boundary longest-prefix match). Exact wins
+              # over any prefix; among prefixes the longest match wins.
+              - name: match_type
+                type: string
+              # allowed_hosts gates the module's outbound `fetch` host call
+              # (default-deny: empty/absent = the module cannot fetch at all).
+              # Each entry is [scheme://]host[:port][/path-prefix] — host-only
+              # allows any port/path ("api.example.com"); a port pins the port;
+              # a path restricts to that prefix on segment boundaries
+              # ("github.com/myorg" covers /myorg and /myorg/..., not
+              # /myorgxyz); a scheme pins http vs https. Host matching is
+              # case-insensitive, no wildcards; paths are dot-segment-cleaned
+              # before matching; every redirect hop is re-checked.
+              - name: allowed_hosts
+                type: "[]string"
+              # compute_budget_ms is this module's per-hook compute budget (time
+              # actually EXECUTING wasm; blocked host calls like fetch do not
+              # count). 0 = the node default (100ms). Always clamped to the node
+              # ceiling popcache_config.wasm_compute_budget_ms.
+              - name: compute_budget_ms
+                type: uint32
+          # southbound reconcile: register each desired module on every popcache
+          # node via WasmService.Register (multi-field: the desired object's fields
+          # map to the request's). Replaces the old imperative
+          # dataplane_node.register_wasm op.
+          reconcile:
+              dp_type: popcache
+              service: WasmService
+              method: Register
+              request_fields:
+                  - {from: module_id, to: id}
+                  - {from: file_path, to: binary_path}
+                  - {from: method, to: method}
+                  - {from: path, to: path}
+                  - {from: match_type, to: match_type}
+                  - {from: allowed_hosts, to: allowed_hosts}
+                  - {from: compute_budget_ms, to: compute_budget_ms}
+              # converge on deletion too: list what's attached on the node and
+              # unregister any module no longer in the desired set.
+              prune:
+                  list_method: ListAttached
+                  list_field: info
+                  item_key: id
+                  remove_method: Unregister
+                  remove_field: id
+      # diff: observed-status / drift on demand. For each connected popcache node, ask
+      # its actual attached modules (WasmService.ListAttached) and compare against the
+      # desired wasm_module set — returning human-readable lines for missing (+),
+      # unmanaged-extra (-), and field drift (path/method/match_type/binary path). Empty =
+      # every popcache node is in sync. Read-only (query only); hand-written handler
+      # (service/wasmmodule/diff.go) since it queries the southbound wasm service.
+      # Exposed to the monitor role too (read-only actual-state visibility).
+      actions:
+          - name: diff
+            command_name: diff
+            response:
+                fields:
+                    - name: entries
+                      type: "[]string"
+    # popcache_config: the desired popcache live config (origin / http port),
+    # carved from the old imperative dataplane_node.configure_popcache op. A
+    # cluster-wide singleton (key "name", conventionally "default") reconciled to
+    # every popcache node via the combined PopcacheControlService.ApplyConfig.
+    - name: popcache_config
+      description: Desired popcache live config (origin/ports/qlog), reconciled to popcache nodes
+      command_name: popcache-config
+      monitor:
+          list: "List desired popcache config (origin, HTTP/HTTPS/HTTP3 ports, qlog). Use to learn which listeners/ports are actually configured before probing the edge from outside."
+          get: "Get one popcache config by name."
+      kind: resource
+      rpc_service: true
+      schema:
+          key: name
+          declarative: true
+          generated_store: true
+          verbs: [apply, get, list]
+          fields:
+              - name: name
+                type: string
+              - name: origin
+                type: string
+              - name: http_port
+                type: uint32
+              - name: https_port
+                type: uint32
+              - name: http3_port
+                type: uint32
+              - name: qlog_enabled
+                type: bool
+              # Per-module wasm compute budgets are resolved as: the module's
+              # own compute_budget_ms if set, else wasm_compute_default_ms
+              # (else the built-in 100ms) — then clamped to wasm_compute_max_ms
+              # (unset max = the default is also the ceiling).
+              - name: wasm_compute_default_ms
+                type: uint32
+              - name: wasm_compute_max_ms
+                type: uint32
+              # TLS cert/key paths on the popcache node, RELATIVE to its dp_files store
+              # (an os.Root sandbox at <data>/dp_files — absolute paths are rejected).
+              # These match the names ACME delivers to: "acme/<domain>.crt" / ".key".
+              # Declarative + reconciled so they survive a node restart (the in-memory
+              # SetCertPath alone did not); decoupled from ACME, which only writes the
+              # cert file to this path.
+              - name: cert_path
+                type: string
+              - name: key_path
+                type: string
+          reconcile:
+              dp_type: popcache
+              service: PopcacheControlService
+              method: ApplyConfig
+              request_fields:
+                  - {from: origin, to: origin}
+                  - {from: http_port, to: port}
+                  - {from: https_port, to: https_port}
+                  - {from: http3_port, to: http3_port}
+                  - {from: qlog_enabled, to: qlog_enabled}
+                  - {from: wasm_compute_default_ms, to: wasm_compute_default_ms}
+                  - {from: wasm_compute_max_ms, to: wasm_compute_max_ms}
+                  - {from: cert_path, to: cert_path}
+                  - {from: key_path, to: key_path}
+    # open_port: carved from the router_management facade as a declarative
+    # resource. Its spec carries a list-valued `ports` field ([]string, each
+    # "proto:port" — tcp:80 / udp:443 / icmp:echo, the last permitting ICMP echo
+    # to the VIP for l4lb's vip.icmp_echo), exercising JSON-valued --arg binding and a list attribute the
+    # deny policies match on (list_contains_any). The node selector (the facade's
+    # `address`) and the desired-vs-actual diff response are reconcile concerns,
+    # deferred; the typed PortInfo form is the dataplane's representation.
+    - name: open_port
+      description: A router ACL's desired open ports (declarative)
+      command_name: open-port
+      monitor:
+          list: "List desired open ports per router ACL."
+          diff: "Show actual router ACL vs desired open-port drift — the monitor's actual-state view of router firewalling."
+      kind: resource
+      rpc_service: true
+      schema:
+          key: acl_name
+          declarative: true
+          generated_store: true
+          verbs: [apply, list, delete]
+          # Reconcile is hand-written (reconcile/open_port.go): the []string "proto:port"
+          # ports must be parsed into the southbound []*PortInfo, which the generated
+          # field-copy emitter can't do. custom: true gives the store its Desired/OnChange
+          # surface while skipping the generated loop.
+          reconcile:
+              custom: true
+              dp_type: router
+          fields:
+              - name: acl_name
+                type: string
+              - name: ports
+                type: "[]string"
+      # diff: observed-status / drift on demand. For each desired ACL, ask every router
+      # what it would change to converge (DesireOpenPort dryRun -> ACLDiff), and return
+      # the human-readable add/remove lines. Read-only (dry run); hand-written handler
+      # (service/openport/diff.go) since it queries the southbound router service.
+      actions:
+          - name: diff
+            command_name: diff
+            response:
+                fields:
+                    - name: entries
+                      type: "[]string"
+    # node_file: declare a file that should exist on a dataplane node — the declarative
+    # counterpart of the imperative dp-file send. Reconcile is hand-written
+    # (reconcile/node_file.go): it reads the named cplane_file from the CP file store and
+    # SendFiles it to the node as save_as, on change + on node connect (content sourced
+    # from the CP store, not a DTO field, so the generated field-copy emitter can't do it).
+    - name: node_file
+      description: A file that should exist on a dataplane node (declarative; shipped from the CP file store)
+      command_name: node-file
+      kind: resource
+      rpc_service: true
+      schema:
+          key: name
+          declarative: true
+          generated_store: true
+          verbs: [apply, list, delete]
+          reconcile:
+              custom: true
+              dp_type: "*"
+          fields:
+              - name: name
+                type: string
+              - name: node
+                type: string
+              - name: save_as
+                type: string
+              - name: cplane_file
+                type: string
+    # container: a container workload to run on a node, reconciled to the node's
+    # container runtime (containerd) over CRI by the workload dp_type agent. Flat
+    # model — one entry is one container (the agent wraps it in an implicit pod
+    # sandbox). Stage-1 is host network, so command/args/env/mounts are the only
+    # runtime knobs; ports are moot under host network. Custom reconcile (the
+    # CRI converge lives in reconcile/container.go, not a single RPC method).
+    - name: container
+      description: A container workload to run on a node (declarative; reconciled to the node's container runtime via CRI)
+      command_name: container
+      monitor:
+          list: "List declared container workloads per node (image, command, restart policy)."
+          get: "Get one declared container workload by name."
+          diff: "Show actual (CRI) vs desired container drift per workload node — what is really running vs what is declared."
+      kind: resource
+      rpc_service: true
+      schema:
+          key: name
+          declarative: true
+          generated_store: true
+          verbs: [apply, get, list, delete]
+          reconcile:
+              custom: true
+              dp_type: workload
+          fields:
+              - name: name
+                type: string
+              - name: node
+                type: string
+              - name: image
+                type: string
+              - name: command
+                type: "[]string"
+              - name: args
+                type: "[]string"
+              - name: env
+                type: "[]string"
+              - name: mounts
+                type: "[]string"
+              - name: restart
+                type: string
+      # diff: observed-status / drift on demand. For each connected workload node, ask
+      # its actual CRI state (WorkloadService.ListContainers) and compare against the
+      # desired container set matching that node — returning human-readable lines for
+      # missing (+), unmanaged-extra (-), non-running state, and image mismatch. Empty =
+      # every workload node is in sync. Read-only (query only); hand-written handler
+      # (service/container/diff.go) since it queries the southbound workload service.
+      # Exposed to the monitor role too (read-only actual-state visibility).
+      actions:
+          - name: diff
+            command_name: diff
+            response:
+                fields:
+                    - name: entries
+                      type: "[]string"
+    # l4lb_object: which eBPF objects an l4lb node loads (by file name in the node's file
+    # store, put there via node_file). Generated per-node reconcile pushes object/crypto/
+    # pin to the node via DataplaneService.SetBalancerObject, which (re)loads the driver.
+    - name: l4lb_object
+      description: Which eBPF objects an l4lb node loads (per-node; reconciled via DataplaneService.SetBalancerObject)
+      command_name: l4lb-object
+      kind: resource
+      rpc_service: true
+      schema:
+          key: node
+          declarative: true
+          generated_store: true
+          verbs: [apply, get, list, delete]
+          reconcile:
+              dp_type: l4lb
+              per_node: true
+              node_field: node
+              service: DataplaneService
+              method: SetBalancerObject
+              request_fields:
+                  - {from: object, to: object}
+                  - {from: crypto_object, to: crypto_object}
+                  - {from: pin_dir, to: pin_dir}
+          fields:
+              - name: node
+                type: string
+              - name: object
+                type: string
+              - name: crypto_object
+                type: string
+              - name: pin_dir
+                type: string
+    # bootstrap_token: carved from the ca_management facade. An operation-only
+    # resource (no schema/CRUD): issue mints a token (returns the secret) and
+    # revoke presents a token to revoke it — the CA has no token list/get, so this
+    # exercises hand-declared operation actions alongside the synthesized-CRUD
+    # resources, plus time.Duration args (Duration hold) that the bootstrap policy
+    # gates with duration_lte.
+    - name: bootstrap_token
+      description: A CA bootstrap (enrollment) token
+      command_name: bootstrap-token
+      kind: resource
+      rpc_service: true
+      actions:
+          - name: issue
+            command_name: issue
+            args:
+                - name: duration
+                  type: time.Duration
+                - name: appName
+                  type: string
+                - name: domain
+                  type: string
+                - name: expires_period
+                  type: time.Duration
+            response:
+                fields:
+                    - name: token
+                      type: string
+          - name: revoke
+            command_name: revoke
+            args:
+                - name: token
+                  type: string
+            response:
+                fields:
+                    - name: token
+                      type: string
+    # connection: carved from dp_management's list_connections. A read-only
+    # (query/stream) resource — a verb subset of [list, get, watch] with no write
+    # verbs. list/get are queries (snapshot reads), watch is a server-streaming
+    # query; no new generator capability is needed (verb subset + the synthesized
+    # Watch cover it). The dataplane is absent, so the business is a stub.
+    # vip: carved from dp_management's update_vip as a declarative l4lb resource.
+    # The desired VIP set lives in a control-plane store; a reconcile loop pushes
+    # it to every connected l4lb dataplane via DataplaneService.UpdateVip (M3).
+    # l4lb-scoped (no per-node address) — reconcile fans out to all l4lb nodes.
+    # expected_node: the declared node inventory — which dataplane nodes SHOULD exist,
+    # written independently of any live connection (derived from the Ansible
+    # placement groups at deploy time). Purely advisory: it never gates admission
+    # (enrollment/certs stay the security boundary) — its job is making ABSENCE
+    # visible. dataplane_node list folds it in: a declared CN with no live broker
+    # connection appears with app_status "NotConnected", so the monitor can finally
+    # say "s2 should be here and isn't" (previously a disconnected node vanished
+    # with all its traces; and a node that NEVER connected — the historically common
+    # failure — was undetectable in principle). Deliberately NOT derived from minted
+    # bootstrap tokens: tokens get issued without ever materializing into a node, so
+    # mint is not a trustworthy expectation signal.
+    # desired_run: the declared run-state of the node's dataplane ("running"/
+    # "stopped"; "" = unmanaged, node start/stop stays fully manual). readonly —
+    # not settable via apply (so the deploy tooling re-applying the inventory can't
+    # wipe it); it is written ONLY through dataplane_node start/stop, which are now
+    # sugar over this field. The hand-written reconcile/node_run.go converges it:
+    # push Start/StopDataplane on desired change / (re)connect / tick, with bounded
+    # exponential backoff on failure and a hold after repeated failures (observed
+    # app_status Error is never hammered). run_generation increments on every
+    # start/stop, so re-running `node start` on an already-desired-running node
+    # clears a hold and retries — the operator's explicit "try again".
+    - name: expected_node
+      description: Declared node inventory (which dataplane nodes should exist) and their desired run-state
+      command_name: expected-node
+      monitor:
+          list: "List the DECLARED node inventory (which nodes should exist, from the deploy config) and each node's desired run-state. Cross-check against node_list: declared but NotConnected = a node that is down or never enrolled; desired_run running but app_status not Running = a node the reconcile is still converging (or holding after repeated start failures — see reconcile_errors)."
+      kind: resource
+      rpc_service: true
+      schema:
+          key: common_name
+          declarative: true
+          generated_store: true
+          verbs: [apply, list, delete]
+          # run-state reconcile is hand-written (reconcile/node_run.go): the push is
+          # stateful (backoff/hold on failure, app_status-gated), which the generated
+          # broadcast emitter can't express. custom keeps the store's reconcile
+          # surface (Desired/OnChange) without generating a loop.
+          reconcile:
+              custom: true
+              dp_type: "*"
+          fields:
+              - name: common_name
+                type: string
+              - name: dp_type
+                type: string
+              - name: desired_run
+                type: string
+                readonly: true
+              - name: run_generation
+                type: uint64
+                readonly: true
+    - name: vip
+      description: A desired l4lb virtual IP (declarative; reconciled to l4lb nodes)
+      command_name: vip
+      monitor:
+          list: "List desired l4lb virtual IPs (declarative). Use to check which VIPs should be bound across the fleet."
+      kind: resource
+      rpc_service: true
+      schema:
+          key: vip
+          declarative: true
+          verbs: [apply, list, delete]
+          # southbound reconcile binding: fan the desired VIP set out to every
+          # dataplane node (dp_type "*" = all kinds — l4lb/popcache/dns/router all
+          # need the VIP) via DataplaneService.UpdateVip, one call per VIP.
+          reconcile:
+              dp_type: "*"
+              service: DataplaneService
+              method: UpdateVip
+              request_fields:
+                  - {from: vip, to: vip}
+                  - {from: icmp_echo, to: icmp_echo}
+              # status: observe the actual VIP set each node reports at this path
+              # (pbstat.Stats.CdnAppRealtime.Vip), generating a VipObserver.
+              status_observed_from: CdnAppRealtime.Vip
+          fields:
+              - name: vip
+                type: string
+              # icmp_echo: answer VIP-destined ICMPv4 echo requests in the l4lb XDP
+              # data plane (ping the VIP -> reply). l4lb-only; other dp_types ignore
+              # it. Off by default; the VIP is otherwise silent to ICMP.
+              - name: icmp_echo
+                type: bool
+              # status (observed): the nodes whose reported actual VIP set
+              # includes this VIP. readonly = excluded from apply, shown by get/list.
+              - name: applied_on
+                type: "[]string"
+                readonly: true
+    # interface: the host interface each dataplane node binds to — l4lb attaches its
+    # XDP balancer there; popcache records it as its serving interface so the control
+    # plane can build l4lb destinations from the popcache nodes' reported MAC/IP
+    # (peering). Shape-identical to vip — a declarative string fanned out via
+    # DataplaneService.BindInterface. Apply it BEFORE `node start`: binding is only
+    # valid pre-start (the controller no-ops a redundant post-start bind). dp-wide
+    # (every node binds its local <interface>); per-node naming would need per-node
+    # reconcile addressing (future).
+    - name: interface
+      description: The interface dataplane nodes bind to (declarative; reconciled via BindInterface)
+      command_name: interface
+      monitor:
+          list: "List the desired bind interface per node (which NIC each node binds)."
+      kind: resource
+      rpc_service: true
+      schema:
+          # Per-node: each node binds its OWN interface (node1 -> eth0, node2 ->
+          # enp3s0), so the desired state is keyed by node, not a global set.
+          key: node
+          declarative: true
+          verbs: [apply, list, delete]
+          reconcile:
+              dp_type: "*"
+              # node-targeted: push each item's interface to ONLY its node
+              # (broker.Resolve(node)), not broadcast to every node.
+              per_node: true
+              node_field: node
+              service: DataplaneService
+              method: BindInterface
+              request_field: interface
+              # status: each node reports its actually-bound interface(s) at
+              # CdnAppRealtime.BoundIfaces -> generates an InterfaceObserver so
+              # applied_on shows where the interface is really bound.
+              status_observed_from: CdnAppRealtime.BoundIfaces
+          fields:
+              - name: node
+                type: string
+              - name: interface
+                type: string
+              - name: applied_on
+                type: "[]string"
+                readonly: true
+    # router_config: a managed router's desired connection config (hostname + login),
+    # per-node — each router agent drives its OWN device, so the desired state is keyed
+    # by node (like interface) and reconciled to ONLY that node via the combined
+    # RouterService.ApplyConfig (the typed replacement for the old GenericControl
+    # set-router-* ops). The password is sensitive (never a policy attribute / never
+    # logged); reconcile still pushes it to the node, but the store blanks it out of
+    # get/list so it is write-only northbound.
+    - name: router_config
+      description: A managed router's desired connection config (per-node; reconciled via RouterService.ApplyConfig)
+      command_name: router-config
+      kind: resource
+      rpc_service: true
+      schema:
+          key: node
+          declarative: true
+          generated_store: true
+          verbs: [apply, get, list]
+          reconcile:
+              dp_type: router
+              per_node: true
+              node_field: node
+              service: RouterService
+              method: ApplyConfig
+              request_fields:
+                  - {from: hostname, to: hostname}
+                  - {from: username, to: username}
+                  - {from: password, to: password}
+          fields:
+              - name: node
+                type: string
+              - name: hostname
+                type: string
+              - name: username
+                type: string
+              - name: password
+                type: string
+                sensitive: true
+    # dns_config: the DNS agent's upstream-provider config (port + domain + mail +
+    # Cloudflare API token/zone), carved from ksdk's GenericControl set-dns-* ops. A
+    # cluster-wide singleton (key "name", conventionally "default") reconciled to every
+    # dns node via the combined DnsControlService.ApplyConfig. The api_token is
+    # sensitive (never a policy attribute / never logged); the store blanks it out of
+    # get/list (write-only), but reconcile still pushes it.
+    - name: dns_config
+      description: Desired DNS upstream-provider config (declarative; reconciled to dns nodes)
+      command_name: dns-config
+      monitor:
+          list: "List desired DNS upstream-provider config (zones/records/provider). Use for DNS-side troubleshooting and to learn the public hostnames/records that should resolve before an external reachability check."
+          get: "Get one DNS config by name."
+      kind: resource
+      rpc_service: true
+      schema:
+          key: name
+          declarative: true
+          generated_store: true
+          verbs: [apply, get, list]
+          reconcile:
+              dp_type: dns
+              service: DnsControlService
+              method: ApplyConfig
+              request_fields:
+                  - {from: port, to: port}
+                  - {from: domain, to: domain}
+                  - {from: mail, to: mail}
+                  - {from: api_token, to: api_token}
+                  - {from: api_zone_id, to: api_zone_id}
+          fields:
+              - name: name
+                type: string
+              - name: port
+                type: uint32
+              - name: domain
+                type: string
+              - name: mail
+                type: string
+              - name: api_token
+                type: string
+                sensitive: true
+              - name: api_zone_id
+                type: string
+    # mtu: the MTU each l4lb node applies on its data path, carved from ksdk's
+    # GenericControl update-mtu (L4LB only). Per-node (key=node) like interface,
+    # reconciled to ONLY that node via DataplaneService.UpdateMtu. The value is the
+    # string the dataplane parses (matches the UpdateMtu wire field).
+    - name: mtu
+      description: The MTU an l4lb node applies (per-node; reconciled via UpdateMtu)
+      command_name: mtu
+      kind: resource
+      rpc_service: true
+      schema:
+          key: node
+          declarative: true
+          generated_store: true
+          verbs: [apply, list, delete]
+          reconcile:
+              dp_type: l4lb
+              per_node: true
+              node_field: node
+              service: DataplaneService
+              method: UpdateMtu
+              request_field: mtu
+          fields:
+              - name: node
+                type: string
+              - name: mtu
+                type: string
+    # secret: carved from dp_management's sync_secret. The desired QUIC shared
+    # secret, reconciled to every dataplane via DataplaneService.SyncSecret. The
+    # secret is held as a string and sent as bytes (request_bytes).
+    # secret: the dataplane QUIC-LB shared secret. The operator does NOT type the value
+    # (it must be cryptographic): apply names it + gives a length, and the control plane
+    # GENERATES a random secret (HKDF-derived, ported from ksdk's sync-secret), holds it
+    # internally, and the reconcile distributes it to every dataplane via SyncSecret. The
+    # value is never a field — it is never returned, logged, or apply-able.
+    - name: secret
+      description: A dataplane shared secret — generated by length, reconciled via SyncSecret
+      command_name: secret
+      kind: resource
+      rpc_service: true
+      schema:
+          key: name
+          declarative: true
+          verbs: [apply, list, delete]
+          reconcile:
+              dp_type: "*"
+              service: DataplaneService
+              method: SyncSecret
+              request_field: shared_secret
+              request_bytes: true
+          fields:
+              - name: name
+                type: string
+              - name: length
+                type: uint32
+    # dataplane_node: the connected dataplane agents (the broker inventory) made
+    # visible northbound. list is a read-only query; start/stop are node-scoped
+    # operations that drive DataplaneService.Start/StopDataplane on one node.
+    - name: dataplane_node
+      description: A connected dataplane node (inventory + connection + lifecycle)
+      command_name: node
+      monitor:
+          list: "List every dataplane node with its dp_type, connection state, and lifecycle status (RUNNING/STOPPED). Start here for 'which servers/nodes are up', 'is X connected', or fleet inventory."
+          get: "Get one dataplane node's inventory, connection, and lifecycle status by common_name."
+      kind: resource
+      rpc_service: true
+      schema:
+          key: common_name
+          verbs: [list, get, watch]
+          fields:
+              - name: common_name
+                type: string
+              - name: dp_type
+                type: string
+              # the node's live transport connection (folds in the former `connection`
+              # resource — same broker.Nodes() source, just the transport-level view).
+              - name: connection_id
+                type: string
+              - name: remote_address
+                type: string
+              # the dataplane's running state (Running/Stopped/Initialized/Error/Unknown),
+              # read from the control plane's stat cache so start/stop and the current
+              # state are visible together. Unknown until the node reports its first stat.
+              - name: app_status
+                type: string
+              # declarative resources whose LAST reconcile push to this node FAILED
+              # ("<resource>: <error>"), surfaced from the reconcile status so a bad
+              # config is visible here instead of only in the logs. Empty = all clean.
+              - name: reconcile_errors
+                type: "[]string"
+      actions:
+          # common_name is a node selector: a node, "<dp_type>/*", or "*"/"*/*" for all.
+          # nodes lists the nodes actually started/stopped (fan-out).
+          - name: start
+            command_name: start
+            args:
+                - name: common_name
+                  type: string
+                # refuse to start a node whose declarative config last failed to reconcile
+                # (reconcile_errors non-empty) unless force=true — so you don't unknowingly
+                # start a misconfigured node.
+                - name: force
+                  type: bool
+            response:
+                fields:
+                    - name: nodes
+                      type: "[]string"
+          - name: stop
+            command_name: stop
+            args:
+                - name: common_name
+                  type: string
+            response:
+                fields:
+                    - name: nodes
+                      type: "[]string"
+          # register a WASM edge module on a popcache node: the node's WasmService
+          # reads binary_path from its file store (staged via dp-file send) and the
+          # edge runtime compiles it for (method, path).
+          # configure a popcache node over PopcacheControlService (CP-driven): set
+          # the cache origin (live) and HTTP listen port. Empty fields are skipped.
+    # connection: EVERY live transport connection on the control plane endpoint
+    # (ep.ListActiveConnections()), not the one-per-node broker view that
+    # dataplane_node gives. Multiple connections per node are normal — the main
+    # connection, the cert-renewal connection, and any not-yet-GC'd reconnect
+    # remnants all show here, so this is the view for spotting connection churn /
+    # leaks. common_name is filled by cross-referencing the broker (a connection
+    # that matches no live node — renewal / orphan — shows empty).
+    - name: connection
+      description: A live transport connection on the control plane endpoint (all of them, not one-per-node)
+      command_name: connection
+      monitor:
+          list: "List live transport connections on the control plane (remote address, rtt, uptime). Use to judge per-connection link health once node_list shows a node is connected."
+      kind: resource
+      rpc_service: true
+      schema:
+          key: connection_id
+          verbs: [list]
+          fields:
+              - name: connection_id
+                type: string
+              - name: remote_address
+                type: string
+              - name: common_name
+                type: string
+              - name: age
+                type: string
+              - name: active
+                type: bool
+    # alert: active control-plane alerts from the deterministic evaluator (cert expiry /
+    # renewal stall, reconcile-push failure, app Error, host CPU/load over threshold) —
+    # derived from state the CP already holds, no LLM. Surfaced here AND emitted to the log
+    # so silent failures (e.g. the cert-renewal wedge) become visible.
+    - name: alert
+      description: An active control plane alert (deterministic evaluator)
+      command_name: alert
+      kind: resource
+      rpc_service: true
+      schema:
+          key: node
+          verbs: [list]
+          fields:
+              - name: kind
+                type: string
+              - name: severity
+                type: string
+              - name: node
+                type: string
+              - name: message
+                type: string
+              - name: age
+                type: string
+    # cplane_file: the control plane's local file store (carved from
+    # dp_management's upload-file/list-files/delete-file). Files are staged here,
+    # then pushed to a node via DpFile.send. Operations (not CRUD) so list returns
+    # only names, never content. upload's `content` is []byte bound from a local
+    # path on the client (--arg content=/path), exercising []byte arg support.
+    - name: cplane_file
+      description: A file staged in the control plane's local store
+      command_name: cplane-file
+      kind: resource
+      rpc_service: true
+      actions:
+          - name: upload
+            command_name: upload
+            args:
+                - name: file_name
+                  type: string
+                - name: content
+                  type: "[]byte"
+            response:
+                fields:
+                    - name: file_name
+                      type: string
+          - name: list
+            command_name: list
+            args: []
+            response:
+                fields:
+                    - name: files
+                      type: "[]string"
+          - name: delete
+            command_name: delete
+            args:
+                - name: file_name
+                  type: string
+            response:
+                fields:
+                    - name: file_name
+                      type: string
+    # dp_file: files on a dataplane node. Node-scoped operations over the
+    # southbound DataplaneService: list (ListFiles), send (push a staged
+    # cplane_file's content via SendFile), delete (RemoveFile). send reads the
+    # content from the cplane_file store and pushes it inline (unary).
+    - name: dp_file
+      description: A file on a dataplane node
+      command_name: dp-file
+      kind: resource
+      rpc_service: true
+      actions:
+          - name: list
+            command_name: list
+            args:
+                - name: common_name
+                  type: string
+                - name: dir
+                  type: string
+                  default: "."
+            response:
+                fields:
+                    - name: files
+                      type: "[]string"
+          - name: send
+            command_name: send
+            args:
+                - name: common_name
+                  type: string
+                - name: cplane_file
+                  type: string
+                - name: save_as
+                  type: string
+            response:
+                fields:
+                    - name: save_as
+                      type: string
+          - name: delete
+            command_name: delete
+            args:
+                - name: common_name
+                  type: string
+                - name: file
+                  type: string
+            response:
+                fields:
+                    - name: file
+                      type: string
+    # stats: dataplane metrics (carved from dp_management's dp_stats/realtime_stats/
+    # get_trsf_state). get/watch read the control plane's per-node stat cache, fed
+    # by the southbound StreamStats reporting path; transfer_state is a direct pull
+    # (GetTransferState) kept for debugging.
+    - name: stats
+      description: Dataplane stats (reported snapshot / stream) + transfer state
+      command_name: stats
+      monitor:
+          get: "Get a node's reported stats snapshot (load, request counts, cache) by common_name (default '*' = all nodes). Use for 'how loaded is X', throughput, or cache detail."
+      kind: resource
+      rpc_service: true
+      actions:
+          - name: get
+            command_name: get
+            args:
+                - name: common_name
+                  type: string
+                  default: "*"
+            response:
+                use: pbstat.StatBatch
+          - name: watch
+            command_name: watch
+            args:
+                - name: common_name
+                  type: string
+                  default: "*"
+                - name: interval
+                  type: time.Duration
+                  default: 5s
+            response:
+                stream: true
+                use: pbstat.StatBatch
+          - name: transfer_state
+            command_name: transfer-state
+            args:
+                # node selector: a node, "<dp_type>/*", or "*"/"*/*" for all (fan-out).
+                - name: common_name
+                  type: string
+            response:
+                # per-node trsf internal state (congestion window, bytes in flight, RTT,
+                # queue lengths, ...) as a text dump, one block per matched node.
+                fields:
+                    - name: result
+                      type: string
+          - name: scrape_metrics
+            command_name: scrape-metrics
+            args:
+                - name: common_name
+                  type: string
+            response:
+                # the node's prometheus /metrics text, scraped over the encrypted
+                # transport (the control plane dials the node's /metrics through the
+                # peer connection — not a local TCP port).
+                fields:
+                    - name: metrics
+                      type: string
+
+# peering: membership-driven l4lb<->popcache reconciles (NOT declarative-store
+# fanouts) — the control plane derives the source dataplane's ready nodes from the
+# live stat cache and pushes them to the target dataplane. Generates
+# reconcile/peering_gen.go (one controller per binding). Shared runtime
+# (destFromBatch / DestStatSource) is hand-written in reconcile/peering_support.go.
+peering:
+    # forward (encap): push the popcache backends to each l4lb's eBPF dest table.
+    # prepend_self puts the l4lb's own front at index 0 (the source-fill slot).
+    - source: popcache
+      target: l4lb
+      service: DataplaneService
+      method: UpdateDestinations
+      request_field: dests
+      prepend_self: true
+    # reverse (decap): push the l4lb fronts to each popcache for IPIP decap tunnels.
+    - source: l4lb
+      target: popcache
+      service: DataplaneService
+      method: UpdateRemote
+      request_field: remotes

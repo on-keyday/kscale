@@ -1,0 +1,29 @@
+{
+    
+    "name": "AllowRealtimeStatsAccess",
+    "policy": "Allow",
+    "resource": "dp_operations",
+    "action": [
+        "realtime_stats"
+    ],
+    "or": [
+        {
+            "name": "CanAccessRealtimeStats",
+            "and": [
+                {
+                    "name": "UserAuthorityIsDataplane",
+                    "condition": "$user.authority.full_name suffix $env.authority.system.dp."
+                },
+                {
+                    "name": "UserHasRequiredRole",
+                    "or": [
+                        {
+                            "name": "HumanUserHasStatsRole",
+                            "condition": "$user.roles list_contains_any [`l4lb`, `popcache`]"
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+}

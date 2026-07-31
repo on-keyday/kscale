@@ -1,0 +1,62 @@
+syntax = "proto3";
+
+package ksdk.rpc;
+
+option go_package = "github.com/on-keyday/kscale/protobuf/proto";
+
+import "google/protobuf/empty.proto";
+
+// 旧 GenericControl の Popcache 設定系。bind-interface は複数 DP 共通なので
+// DataplaneService 側 (別フェーズ)。値は serverAgent に委譲して parse するため string。
+message PopcacheControlServiceSetCertPathRequest {
+    string path = 1;
+}
+message PopcacheControlServiceSetKeyPathRequest {
+    string path = 1;
+}
+message PopcacheControlServiceSetHttpPortRequest {
+    string port = 1;
+}
+message PopcacheControlServiceSetHttpsPortRequest {
+    string port = 1;
+}
+message PopcacheControlServiceSetHttp3PortRequest {
+    string port = 1;
+}
+message PopcacheControlServiceSetOriginRequest {
+    string origin = 1;
+}
+message PopcacheControlServiceSetQlogEnabledRequest {
+    string enabled = 1;
+}
+
+// ApplyConfig sets the popcache live config in one call — the combined-setter the
+// popcache_config resource's reconcile drives. Empty origin / zero port leave that
+// setting unchanged (it internally calls SetOrigin / SetHttpPort).
+message PopcacheControlServiceApplyConfigRequest {
+    string origin = 1;
+    uint32 port = 2;
+    uint32 https_port = 3;
+    uint32 http3_port = 4;
+    bool qlog_enabled = 5;
+    string cert_path = 6;
+    string key_path = 7;
+    // Per-module wasm compute budget knobs (declarative, always applied;
+    // 0 = built-in default). default_ms is what modules get when they don't
+    // declare a budget; max_ms is the ceiling module-declared budgets are
+    // clamped to (unset = the default is also the ceiling).
+    uint32 wasm_compute_default_ms = 8;
+    uint32 wasm_compute_max_ms = 9;
+}
+
+service PopcacheControlService {
+    rpc ApplyConfig(PopcacheControlServiceApplyConfigRequest) returns (google.protobuf.Empty);
+    rpc SetCertPath(PopcacheControlServiceSetCertPathRequest) returns (google.protobuf.Empty);
+    rpc SetKeyPath(PopcacheControlServiceSetKeyPathRequest) returns (google.protobuf.Empty);
+    rpc SetHttpPort(PopcacheControlServiceSetHttpPortRequest) returns (google.protobuf.Empty);
+    rpc SetHttpsPort(PopcacheControlServiceSetHttpsPortRequest) returns (google.protobuf.Empty);
+    rpc SetHttp3Port(PopcacheControlServiceSetHttp3PortRequest) returns (google.protobuf.Empty);
+    rpc SetOrigin(PopcacheControlServiceSetOriginRequest) returns (google.protobuf.Empty);
+    rpc SetQlogEnabled(PopcacheControlServiceSetQlogEnabledRequest) returns (google.protobuf.Empty);
+    rpc ReloadTlsCert(google.protobuf.Empty) returns (google.protobuf.Empty);
+}

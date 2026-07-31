@@ -1,0 +1,20 @@
+{
+    "name": "DenySSHPortOpen",
+    "policy": "Deny",
+    "resource": "open_port",
+    "action": [
+        "apply"
+    ],
+    "or": [
+        {
+            "name": "ContainsSSHPortOpen",
+            "description": "Deny opening SSH ports",
+            "or": [
+                {
+                    "name": "Contains tcp:22, tcp:23",
+                    "condition": "$env.args.ports list_contains_any [`tcp:22`,`tcp:23`]"
+                }
+            ]
+        }
+    ]
+}

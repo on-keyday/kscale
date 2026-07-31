@@ -1,0 +1,479 @@
+# Log-heavy variant of healthy: fleet state and probes are identical (all up, no
+# drift), but the scenario carries a per-node log corpus and therefore exposes the
+# mock-only logs_tail tool. Two needles are buried in ~280 mostly-benign lines:
+#   A. s1.popcache: a burst of TLS handshake errors from one client
+#      (remote=203.0.113.199, err="bad certificate") between ~19m and ~14m ago.
+#   B. s2.popcache: "wasm compute budget exceeded" (module 1, /hello) recurring
+#      every ~10 minutes over the last 2 hours.
+# Expected judgement: fleet healthy overall, but both log anomalies surfaced. Also
+# probes whether the model narrows with filters (node/level/contains) instead of
+# re-dumping into the 4000B tool-result truncation.
+name: log-noise
+description: healthy fleet, but a noisy log corpus with two buried anomalies (logs_tail)
+tools:
+  node_list:
+    - result: |
+        {
+          "items": [
+            {"common_name": "s1.popcache.dp.system.kscale.local", "dp_type": "popcache", "connection_id": "conn-8f21aa", "remote_address": "10.3.10.2:39441", "app_status": "Running"},
+            {"common_name": "s2.popcache.dp.system.kscale.local", "dp_type": "popcache", "connection_id": "conn-1c9be2", "remote_address": "10.3.10.3:47210", "app_status": "Running"},
+            {"common_name": "s3.l4lb.dp.system.kscale.local", "dp_type": "l4lb", "connection_id": "conn-e044d7", "remote_address": "10.3.10.4:52801", "app_status": "Running"},
+            {"common_name": "s3.dns.dp.system.kscale.local", "dp_type": "dns", "connection_id": "conn-77a3f0", "remote_address": "10.3.10.4:58122", "app_status": "Running"},
+            {"common_name": "s3.router.dp.system.kscale.local", "dp_type": "router", "connection_id": "conn-b5d219", "remote_address": "10.3.10.4:41977", "app_status": "Running"},
+            {"common_name": "s1.workload.dp.system.kscale.local", "dp_type": "workload", "connection_id": "conn-3aa8c4", "remote_address": "10.3.10.2:36514", "app_status": "Running"}
+          ]
+        }
+  connection_list:
+    - result: |
+        {
+          "items": [
+            {"connection_id": "conn-8f21aa", "remote_address": "10.3.10.2:39441", "common_name": "s1.popcache.dp.system.kscale.local", "age": "26h12m", "active": true},
+            {"connection_id": "conn-1c9be2", "remote_address": "10.3.10.3:47210", "common_name": "s2.popcache.dp.system.kscale.local", "age": "26h11m", "active": true},
+            {"connection_id": "conn-e044d7", "remote_address": "10.3.10.4:52801", "common_name": "s3.l4lb.dp.system.kscale.local", "age": "26h12m", "active": true},
+            {"connection_id": "conn-77a3f0", "remote_address": "10.3.10.4:58122", "common_name": "s3.dns.dp.system.kscale.local", "age": "26h10m", "active": true},
+            {"connection_id": "conn-b5d219", "remote_address": "10.3.10.4:41977", "common_name": "s3.router.dp.system.kscale.local", "age": "26h12m", "active": true},
+            {"connection_id": "conn-3aa8c4", "remote_address": "10.3.10.2:36514", "common_name": "s1.workload.dp.system.kscale.local", "age": "25h58m", "active": true}
+          ]
+        }
+  stats_get:
+    - when: {common_name: s1.popcache}
+      result: |
+        {
+          "stats": [
+            {
+              "common_name": "s1.popcache.dp.system.kscale.local",
+              "dp_type": "popcache",
+              "connection": {"conn_id": "conn-8f21aa", "rtt": 1350},
+              "host_realtime": {"cpu_usages": [0.11, 0.09, 0.14, 0.08], "memory_usage": 3113851289, "disk_usage": 21474836480, "host_uptime": 1123200, "server_uptime": 94320, "load_avg": [0.31, 0.28, 0.25]},
+              "popcache": {"requests_total": 48211, "cache_hits_total": 39102, "cache_misses_total": 9109, "per_method_total_get": 47010, "http_port": 18080, "https_port": 18443, "http3_port": 18443}
+            }
+          ]
+        }
+    - when: {common_name: s2.popcache}
+      result: |
+        {
+          "stats": [
+            {
+              "common_name": "s2.popcache.dp.system.kscale.local",
+              "dp_type": "popcache",
+              "connection": {"conn_id": "conn-1c9be2", "rtt": 1420},
+              "host_realtime": {"cpu_usages": [0.09, 0.12, 0.07, 0.1], "memory_usage": 2987421696, "disk_usage": 19864223744, "host_uptime": 1123150, "server_uptime": 94255, "load_avg": [0.27, 0.31, 0.29]},
+              "popcache": {"requests_total": 45930, "cache_hits_total": 37515, "cache_misses_total": 8415, "per_method_total_get": 44902, "http_port": 18080, "https_port": 18443, "http3_port": 18443}
+            }
+          ]
+        }
+    - when: {common_name: s3.dns}
+      result: |
+        {
+          "stats": [
+            {
+              "common_name": "s3.dns.dp.system.kscale.local",
+              "dp_type": "dns",
+              "connection": {"conn_id": "conn-77a3f0", "rtt": 980},
+              "host_realtime": {"cpu_usages": [0.22, 0.19, 0.25, 0.18, 0.2, 0.21, 0.17, 0.23, 0.19, 0.2, 0.22, 0.18], "memory_usage": 7381975040, "disk_usage": 40265318400, "host_uptime": 1123300, "server_uptime": 94400, "load_avg": [1.42, 1.38, 1.35]},
+              "dns": {"dns_port": 15353, "requests_total": 8102, "responses_total": 8100, "errors_total": 2}
+            }
+          ]
+        }
+    - when: {common_name: s3.l4lb}
+      result: |
+        {
+          "stats": [
+            {
+              "common_name": "s3.l4lb.dp.system.kscale.local",
+              "dp_type": "l4lb",
+              "connection": {"conn_id": "conn-e044d7", "rtt": 1010},
+              "host_realtime": {"cpu_usages": [0.22, 0.19, 0.25, 0.18, 0.2, 0.21, 0.17, 0.23, 0.19, 0.2, 0.22, 0.18], "memory_usage": 7381975040, "disk_usage": 40265318400, "host_uptime": 1123300, "server_uptime": 94380, "load_avg": [1.42, 1.38, 1.35]},
+              "l4lb": {"src_ips": "CgMKLmQ=", "packet_sizes": "EJYD", "ebpf_stats": "GLYuIJDIAQ=="}
+            }
+          ]
+        }
+    - result: |
+        {
+          "stats": [
+            {"common_name": "s1.popcache.dp.system.kscale.local", "dp_type": "popcache", "connection": {"conn_id": "conn-8f21aa", "rtt": 1350}, "host_realtime": {"load_avg": [0.31, 0.28, 0.25], "memory_usage": 3113851289}},
+            {"common_name": "s2.popcache.dp.system.kscale.local", "dp_type": "popcache", "connection": {"conn_id": "conn-1c9be2", "rtt": 1420}, "host_realtime": {"load_avg": [0.27, 0.31, 0.29], "memory_usage": 2987421696}},
+            {"common_name": "s3.l4lb.dp.system.kscale.local", "dp_type": "l4lb", "connection": {"conn_id": "conn-e044d7", "rtt": 1010}, "host_realtime": {"load_avg": [1.42, 1.38, 1.35], "memory_usage": 7381975040}},
+            {"common_name": "s3.dns.dp.system.kscale.local", "dp_type": "dns", "connection": {"conn_id": "conn-77a3f0", "rtt": 980}},
+            {"common_name": "s3.router.dp.system.kscale.local", "dp_type": "router", "connection": {"conn_id": "conn-b5d219", "rtt": 1050}},
+            {"common_name": "s1.workload.dp.system.kscale.local", "dp_type": "workload", "connection": {"conn_id": "conn-3aa8c4", "rtt": 1310}}
+          ]
+        }
+  vip_list:
+    - result: |
+        {
+          "items": [
+            {"vip": "10.3.10.100", "icmp_echo": true, "applied_on": ["s3.l4lb.dp.system.kscale.local"]}
+          ]
+        }
+  interface_list:
+    - result: |
+        {
+          "items": [
+            {"node": "s1.popcache.dp.system.kscale.local", "interface": "ens19", "applied_on": ["s1.popcache.dp.system.kscale.local"]},
+            {"node": "s2.popcache.dp.system.kscale.local", "interface": "ens19", "applied_on": ["s2.popcache.dp.system.kscale.local"]}
+          ]
+        }
+  popcache_config_list:
+    - result: |
+        {
+          "items": [
+            {
+              "name": "default",
+              "origin": "https://origin.lab.on-keyday.net:8443",
+              "http_port": 18080,
+              "https_port": 18443,
+              "http3_port": 18443,
+              "wasm_compute_default_ms": 50,
+              "wasm_compute_max_ms": 200,
+              "cert_path": "/var/lib/kscale-popcache/certs/edge.crt",
+              "key_path": "/var/lib/kscale-popcache/certs/edge.key"
+            }
+          ]
+        }
+  open_port_list:
+    - result: |
+        {
+          "items": [
+            {"acl_name": "kscale-dp", "ports": ["9443/udp", "18080/tcp", "18443/tcp", "18443/udp", "15353/udp", "icmp:echo"]}
+          ]
+        }
+  open_port_diff:
+    - result: |
+        {}
+  dns_config_list:
+    - result: |
+        {
+          "items": [
+            {"name": "primary", "port": 15353, "domain": "lab.on-keyday.net", "mail": "hostmaster.lab.on-keyday.net", "api_token": "cf-****", "api_zone_id": "zone-3f9a**"}
+          ]
+        }
+  dns_config_get:
+    - when: {name: primary}
+      result: |
+        {"name": "primary", "port": 15353, "domain": "lab.on-keyday.net", "mail": "hostmaster.lab.on-keyday.net", "api_token": "cf-****", "api_zone_id": "zone-3f9a**"}
+    - result: |
+        error: dns-config "" not found
+  container_list:
+    - result: |
+        {
+          "items": [
+            {"name": "hello-web", "node": "s1.workload.dp.system.kscale.local", "image": "docker.io/library/nginx:1.27", "env": ["LOG_LEVEL=info"], "restart": "always"}
+          ]
+        }
+  container_diff:
+    - result: |
+        {}
+  wasm_list:
+    - result: |
+        {
+          "items": [
+            {"module_id": 1, "file_path": "/var/lib/kscale-popcache/wasm/edge_app.wasm", "method": "GET", "path": "/hello", "match_type": "prefix", "compute_budget_ms": 50}
+          ]
+        }
+  wasm_diff:
+    - result: |
+        {}
+probes:
+  probe_dns:
+    - when: {name: cdn.lab.on-keyday.net}
+      result: |
+        DNS A cdn.lab.on-keyday.net
+          203.0.113.47 (ttl 300)
+    - result: |
+        DNS lookup
+          no such host
+  probe_http:
+    - when: {url: "18443"}
+      result: |
+        HTTP GET https://cdn.lab.on-keyday.net:18443/hello
+          status: 200 OK (HTTP/2.0, 96ms)
+          server: kscale-popcache
+          x-wasm-module: edge_app
+          content-length: 13
+    - when: {url: "18080"}
+      result: |
+        HTTP GET http://cdn.lab.on-keyday.net:18080/hello
+          status: 200 OK (HTTP/1.1, 88ms)
+          server: kscale-popcache
+          x-wasm-module: edge_app
+          content-length: 13
+    - result: |
+        HTTP GET
+          request failed: dial tcp 203.0.113.47: connect: connection refused
+  probe_tls:
+    - when: {port: "18443"}
+      result: |
+        TLS cdn.lab.on-keyday.net:18443 (sni cdn.lab.on-keyday.net)
+          negotiated: TLS 1.3, alpn h2
+          leaf: CN=cdn.lab.on-keyday.net, issuer CN=kscale.local root, valid 2026-06-20 → 2026-09-18
+          system trust: NOT trusted (private CA)
+    - result: |
+        TLS cdn.lab.on-keyday.net:443 (sni cdn.lab.on-keyday.net)
+          connect failed: dial tcp 203.0.113.47:443: connect: connection refused
+  probe_quic:
+    - when: {port: "18443"}
+      result: |
+        QUIC/HTTP3 cdn.lab.on-keyday.net:18443 (sni cdn.lab.on-keyday.net)
+          h3 reachable: status 200 OK (QUICv1, 104ms)
+    - result: |
+        QUIC/HTTP3 cdn.lab.on-keyday.net:443 (sni cdn.lab.on-keyday.net)
+          handshake/request failed: timeout: no recent network activity
+  probe_tcp:
+    - when: {port: "18443"}
+      result: |
+        TCP cdn.lab.on-keyday.net:18443
+          connect ok in 42ms
+    - when: {port: "18080"}
+      result: |
+        TCP cdn.lab.on-keyday.net:18080
+          connect ok in 40ms
+    - result: |
+        TCP cdn.lab.on-keyday.net
+          connect failed: connection refused
+  probe_ping:
+    - result: |
+        PING cdn.lab.on-keyday.net (203.0.113.47)
+          5 packets transmitted, 5 received, 0% loss, rtt min/avg/max = 38.1/41.7/47.2 ms
+  probe_traceroute:
+    - result: |
+        traceroute to cdn.lab.on-keyday.net (203.0.113.47), 12 hops
+          1 192.168.0.1 1.1ms
+          2 100.64.12.1 8.3ms
+          ...
+          11 203.0.113.1 37.9ms
+          12 203.0.113.47 41.2ms
+logs:
+  s1.popcache.dp.system.kscale.local:
+    - '-2h58m48s level=INFO msg="request served" path=/api/v1/items status=200 cache=hit dur_ms=24 remote=198.51.100.23:44427'
+    - '-2h56m51s level=INFO msg="request served" path=/assets/app.js status=200 cache=hit dur_ms=2 remote=198.51.100.23:48705'
+    - '-2h55m30s level=INFO msg="request served" path=/hello/world status=200 cache=hit dur_ms=30 remote=192.0.2.140:31071'
+    - '-2h54m42s level=INFO msg="request served" path=/hello status=404 cache=hit dur_ms=5 remote=198.51.100.23:32179'
+    - '-2h54m41s level=INFO msg="request served" path=/hello/world status=200 cache=miss dur_ms=18 remote=198.51.100.5:48930'
+    - '-2h50m18s level=INFO msg="reconcile push applied" resource=popcache-config rev=41'
+    - '-2h49m32s level=INFO msg="request served" path=/assets/logo.png status=200 cache=hit dur_ms=19 remote=198.51.100.5:31467'
+    - '-2h46m29s level=INFO msg="request served" path=/assets/app.js status=200 cache=miss dur_ms=39 remote=198.51.100.5:41882'
+    - '-2h45m7s level=INFO msg="request served" path=/assets/app.js status=200 cache=hit dur_ms=36 remote=198.51.100.23:52182'
+    - '-2h42m50s level=INFO msg="request served" path=/ status=200 cache=hit dur_ms=31 remote=198.51.100.5:59957'
+    - '-2h41m50s level=INFO msg="request served" path=/hello status=200 cache=hit dur_ms=34 remote=198.51.100.23:48913'
+    - '-2h41m25s level=INFO msg="request served" path=/assets/app.js status=200 cache=hit dur_ms=7 remote=203.0.113.12:43116'
+    - '-2h40m43s level=INFO msg="request served" path=/ status=200 cache=hit dur_ms=28 remote=198.51.100.87:38850'
+    - '-2h37m37s level=INFO msg="request served" path=/api/v1/items status=200 cache=hit dur_ms=33 remote=203.0.113.12:45915'
+    - '-2h36m42s level=INFO msg="request served" path=/ status=200 cache=hit dur_ms=38 remote=198.51.100.5:31910'
+    - '-2h35m41s level=INFO msg="request served" path=/ status=200 cache=hit dur_ms=16 remote=203.0.113.12:56044'
+    - '-2h34m7s level=INFO msg="request served" path=/ status=200 cache=miss dur_ms=11 remote=198.51.100.23:47166'
+    - '-2h28m7s level=INFO msg="request served" path=/assets/app.js status=200 cache=hit dur_ms=15 remote=203.0.113.12:43361'
+    - '-2h22m37s level=INFO msg="request served" path=/ status=200 cache=hit dur_ms=39 remote=192.0.2.140:47575'
+    - '-2h20m18s level=INFO msg="reconcile push applied" resource=popcache-config rev=41'
+    - '-2h18m36s level=INFO msg="request served" path=/assets/app.js status=200 cache=hit dur_ms=21 remote=198.51.100.5:56927'
+    - '-2h12m29s level=INFO msg="request served" path=/assets/app.js status=200 cache=hit dur_ms=28 remote=198.51.100.87:46476'
+    - '-2h11m57s level=INFO msg="request served" path=/assets/logo.png status=200 cache=miss dur_ms=3 remote=198.51.100.87:44334'
+    - '-2h8m60s level=INFO msg="request served" path=/api/v1/items status=200 cache=hit dur_ms=20 remote=198.51.100.5:34650'
+    - '-2h6m35s level=INFO msg="request served" path=/assets/logo.png status=200 cache=hit dur_ms=8 remote=198.51.100.23:39894'
+    - '-2h3m17s level=INFO msg="request served" path=/assets/logo.png status=200 cache=hit dur_ms=20 remote=198.51.100.23:35029'
+    - '-2h2m20s level=INFO msg="request served" path=/hello status=200 cache=hit dur_ms=8 remote=192.0.2.140:39573'
+    - '-1h59m48s level=INFO msg="request served" path=/ status=200 cache=miss dur_ms=32 remote=198.51.100.5:36167'
+    - '-1h59m47s level=INFO msg="request served" path=/api/v1/items status=200 cache=miss dur_ms=10 remote=192.0.2.140:41408'
+    - '-1h55m4s level=INFO msg="request served" path=/ status=200 cache=miss dur_ms=24 remote=198.51.100.5:35441'
+    - '-1h50m18s level=INFO msg="reconcile push applied" resource=popcache-config rev=41'
+    - '-1h46m9s level=INFO msg="request served" path=/assets/logo.png status=200 cache=hit dur_ms=9 remote=198.51.100.87:52162'
+    - '-1h41m34s level=INFO msg="request served" path=/api/v1/items status=200 cache=hit dur_ms=40 remote=192.0.2.140:58858'
+    - '-1h39m58s level=INFO msg="request served" path=/assets/app.js status=200 cache=hit dur_ms=18 remote=198.51.100.87:51316'
+    - '-1h39m1s level=INFO msg="request served" path=/ status=200 cache=hit dur_ms=34 remote=203.0.113.12:49051'
+    - '-1h38m27s level=INFO msg="request served" path=/api/v1/items status=200 cache=hit dur_ms=14 remote=192.0.2.140:59026'
+    - '-1h36m19s level=INFO msg="request served" path=/hello/world status=304 cache=hit dur_ms=13 remote=198.51.100.87:46392'
+    - '-1h36m13s level=INFO msg="request served" path=/hello status=200 cache=hit dur_ms=27 remote=192.0.2.140:56112'
+    - '-1h35m1s level=INFO msg="request served" path=/hello/world status=200 cache=hit dur_ms=11 remote=198.51.100.5:53679'
+    - '-1h34m53s level=INFO msg="request served" path=/hello status=200 cache=miss dur_ms=33 remote=198.51.100.23:35725'
+    - '-1h20m18s level=INFO msg="reconcile push applied" resource=popcache-config rev=41'
+    - '-1h18m16s level=INFO msg="request served" path=/assets/logo.png status=304 cache=hit dur_ms=8 remote=198.51.100.5:32587'
+    - '-1h18m9s level=INFO msg="request served" path=/assets/logo.png status=200 cache=hit dur_ms=6 remote=198.51.100.5:56062'
+    - '-1h14m48s level=INFO msg="request served" path=/api/v1/items status=200 cache=miss dur_ms=13 remote=198.51.100.5:49779'
+    - '-1h13m6s level=INFO msg="request served" path=/hello status=200 cache=hit dur_ms=6 remote=203.0.113.12:54138'
+    - '-1h12m23s level=INFO msg="request served" path=/api/v1/items status=200 cache=hit dur_ms=23 remote=198.51.100.23:58083'
+    - '-1h9m30s level=INFO msg="request served" path=/ status=304 cache=miss dur_ms=12 remote=198.51.100.87:41912'
+    - '-1h7m8s level=INFO msg="request served" path=/assets/logo.png status=200 cache=hit dur_ms=8 remote=198.51.100.87:56182'
+    - '-1h4m31s level=INFO msg="request served" path=/ status=200 cache=hit dur_ms=28 remote=198.51.100.5:47486'
+    - '-1h4m1s level=INFO msg="request served" path=/hello/world status=200 cache=hit dur_ms=18 remote=198.51.100.87:37400'
+    - '-56m38s level=INFO msg="request served" path=/ status=200 cache=hit dur_ms=38 remote=198.51.100.23:53983'
+    - '-56m37s level=INFO msg="request served" path=/hello status=200 cache=hit dur_ms=31 remote=203.0.113.12:31877'
+    - '-54m3s level=INFO msg="request served" path=/hello/world status=200 cache=hit dur_ms=31 remote=198.51.100.87:50091'
+    - '-53m53s level=INFO msg="request served" path=/hello status=200 cache=miss dur_ms=39 remote=198.51.100.87:32323'
+    - '-52m2s level=INFO msg="request served" path=/api/v1/items status=200 cache=hit dur_ms=40 remote=203.0.113.12:49521'
+    - '-50m18s level=INFO msg="reconcile push applied" resource=popcache-config rev=41'
+    - '-46m1s level=INFO msg="request served" path=/assets/app.js status=200 cache=hit dur_ms=28 remote=198.51.100.87:30600'
+    - '-41m49s level=INFO msg="request served" path=/assets/logo.png status=200 cache=miss dur_ms=2 remote=198.51.100.23:37895'
+    - '-41m37s level=INFO msg="request served" path=/api/v1/items status=200 cache=hit dur_ms=40 remote=203.0.113.12:33286'
+    - '-40m12s level=INFO msg="request served" path=/ status=200 cache=hit dur_ms=26 remote=203.0.113.12:54414'
+    - '-39m19s level=INFO msg="request served" path=/api/v1/items status=200 cache=miss dur_ms=25 remote=192.0.2.140:46184'
+    - '-36m54s level=INFO msg="request served" path=/assets/logo.png status=200 cache=hit dur_ms=33 remote=203.0.113.12:31142'
+    - '-36m16s level=INFO msg="request served" path=/ status=200 cache=hit dur_ms=27 remote=192.0.2.140:45046'
+    - '-34m17s level=INFO msg="request served" path=/hello status=200 cache=hit dur_ms=3 remote=203.0.113.12:40851'
+    - '-33m26s level=INFO msg="request served" path=/assets/logo.png status=304 cache=hit dur_ms=26 remote=198.51.100.23:57309'
+    - '-31m56s level=INFO msg="request served" path=/api/v1/items status=304 cache=miss dur_ms=31 remote=203.0.113.12:31857'
+    - '-30m17s level=INFO msg="request served" path=/assets/app.js status=200 cache=hit dur_ms=12 remote=198.51.100.87:35921'
+    - '-23m47s level=INFO msg="request served" path=/hello status=200 cache=hit dur_ms=16 remote=198.51.100.87:40954'
+    - '-21m51s level=INFO msg="request served" path=/hello status=200 cache=hit dur_ms=38 remote=198.51.100.87:49365'
+    - '-20m18s level=INFO msg="reconcile push applied" resource=popcache-config rev=41'
+    - '-20m7s level=INFO msg="request served" path=/hello status=200 cache=hit dur_ms=8 remote=192.0.2.140:38822'
+    - '-19m level=WARN msg="tls handshake error" listener=:18443 remote=203.0.113.199:47653 err="remote error: tls: bad certificate"'
+    - '-18m36s level=WARN msg="tls handshake error" listener=:18443 remote=203.0.113.199:48852 err="remote error: tls: bad certificate"'
+    - '-18m12s level=WARN msg="tls handshake error" listener=:18443 remote=203.0.113.199:57557 err="remote error: tls: bad certificate"'
+    - '-17m48s level=WARN msg="tls handshake error" listener=:18443 remote=203.0.113.199:42447 err="remote error: tls: bad certificate"'
+    - '-17m24s level=WARN msg="tls handshake error" listener=:18443 remote=203.0.113.199:58560 err="remote error: tls: bad certificate"'
+    - '-17m level=WARN msg="tls handshake error" listener=:18443 remote=203.0.113.199:42094 err="remote error: tls: bad certificate"'
+    - '-16m36s level=WARN msg="tls handshake error" listener=:18443 remote=203.0.113.199:42679 err="remote error: tls: bad certificate"'
+    - '-16m12s level=WARN msg="tls handshake error" listener=:18443 remote=203.0.113.199:41864 err="remote error: tls: bad certificate"'
+    - '-15m48s level=WARN msg="tls handshake error" listener=:18443 remote=203.0.113.199:58528 err="remote error: tls: bad certificate"'
+    - '-15m24s level=WARN msg="tls handshake error" listener=:18443 remote=203.0.113.199:50209 err="remote error: tls: bad certificate"'
+    - '-15m level=WARN msg="tls handshake error" listener=:18443 remote=203.0.113.199:56811 err="remote error: tls: bad certificate"'
+    - '-14m36s level=WARN msg="tls handshake error" listener=:18443 remote=203.0.113.199:48165 err="remote error: tls: bad certificate"'
+    - '-14m23s level=INFO msg="request served" path=/hello/world status=200 cache=hit dur_ms=7 remote=198.51.100.87:58559'
+    - '-9m3s level=INFO msg="request served" path=/hello status=304 cache=hit dur_ms=26 remote=192.0.2.140:42049'
+    - '-7m37s level=INFO msg="request served" path=/ status=200 cache=miss dur_ms=23 remote=203.0.113.12:32889'
+    - '-2m34s level=INFO msg="request served" path=/api/v1/items status=200 cache=hit dur_ms=16 remote=198.51.100.23:43359'
+    - '-1m34s level=INFO msg="request served" path=/api/v1/items status=200 cache=hit dur_ms=18 remote=198.51.100.23:53671'
+  s2.popcache.dp.system.kscale.local:
+    - '-2h57m57s level=INFO msg="request served" path=/ status=200 cache=hit dur_ms=6 remote=198.51.100.23:33125'
+    - '-2h55m13s level=INFO msg="request served" path=/hello/world status=304 cache=hit dur_ms=19 remote=192.0.2.140:54394'
+    - '-2h53m45s level=INFO msg="request served" path=/assets/logo.png status=200 cache=hit dur_ms=40 remote=203.0.113.12:42926'
+    - '-2h52m13s level=INFO msg="request served" path=/api/v1/items status=200 cache=miss dur_ms=15 remote=203.0.113.12:48355'
+    - '-2h50m42s level=INFO msg="reconcile push applied" resource=popcache-config rev=41'
+    - '-2h50m37s level=INFO msg="request served" path=/assets/app.js status=200 cache=hit dur_ms=9 remote=198.51.100.5:45037'
+    - '-2h49m13s level=INFO msg="request served" path=/hello status=404 cache=hit dur_ms=34 remote=198.51.100.87:58314'
+    - '-2h40m10s level=INFO msg="request served" path=/hello status=200 cache=hit dur_ms=6 remote=198.51.100.87:30810'
+    - '-2h39m58s level=INFO msg="request served" path=/hello status=200 cache=miss dur_ms=18 remote=203.0.113.12:37857'
+    - '-2h39m22s level=INFO msg="request served" path=/ status=200 cache=miss dur_ms=32 remote=198.51.100.23:56357'
+    - '-2h39m14s level=INFO msg="request served" path=/ status=200 cache=miss dur_ms=9 remote=198.51.100.23:52762'
+    - '-2h39m10s level=INFO msg="request served" path=/hello status=200 cache=hit dur_ms=35 remote=192.0.2.140:49509'
+    - '-2h33m21s level=INFO msg="request served" path=/ status=200 cache=hit dur_ms=5 remote=203.0.113.12:45200'
+    - '-2h33m20s level=INFO msg="request served" path=/hello/world status=200 cache=hit dur_ms=31 remote=203.0.113.12:30766'
+    - '-2h33m5s level=INFO msg="request served" path=/assets/logo.png status=200 cache=hit dur_ms=27 remote=198.51.100.23:42090'
+    - '-2h30m42s level=INFO msg="request served" path=/hello status=200 cache=hit dur_ms=40 remote=198.51.100.5:31932'
+    - '-2h25m32s level=INFO msg="request served" path=/hello/world status=200 cache=miss dur_ms=32 remote=198.51.100.87:42489'
+    - '-2h20m42s level=INFO msg="reconcile push applied" resource=popcache-config rev=41'
+    - '-2h18m32s level=INFO msg="request served" path=/assets/app.js status=304 cache=hit dur_ms=13 remote=198.51.100.5:32358'
+    - '-2h17m30s level=INFO msg="request served" path=/hello status=200 cache=hit dur_ms=28 remote=198.51.100.5:30275'
+    - '-2h15m56s level=INFO msg="request served" path=/hello status=200 cache=hit dur_ms=8 remote=198.51.100.87:53428'
+    - '-2h14m1s level=INFO msg="request served" path=/assets/app.js status=404 cache=miss dur_ms=9 remote=198.51.100.5:54687'
+    - '-2h8m30s level=INFO msg="request served" path=/api/v1/items status=200 cache=hit dur_ms=35 remote=198.51.100.87:56191'
+    - '-2h5m8s level=INFO msg="request served" path=/hello status=200 cache=hit dur_ms=39 remote=198.51.100.87:42223'
+    - '-2h3m41s level=INFO msg="request served" path=/assets/app.js status=200 cache=hit dur_ms=40 remote=192.0.2.140:56186'
+    - '-2h1m39s level=INFO msg="request served" path=/api/v1/items status=404 cache=hit dur_ms=30 remote=198.51.100.23:50101'
+    - '-2h level=WARN msg="wasm compute budget exceeded" module=1 path=/hello budget_ms=50 took_ms=157 action=aborted'
+    - '-1h59m23s level=INFO msg="request served" path=/assets/logo.png status=200 cache=hit dur_ms=36 remote=203.0.113.12:36563'
+    - '-1h59m12s level=INFO msg="request served" path=/hello/world status=200 cache=hit dur_ms=5 remote=198.51.100.23:58591'
+    - '-1h58m30s level=INFO msg="request served" path=/hello/world status=200 cache=hit dur_ms=12 remote=198.51.100.23:33570'
+    - '-1h51m48s level=INFO msg="request served" path=/assets/app.js status=200 cache=hit dur_ms=12 remote=198.51.100.87:36581'
+    - '-1h51m22s level=WARN msg="wasm compute budget exceeded" module=1 path=/hello budget_ms=50 took_ms=194 action=aborted'
+    - '-1h50m42s level=INFO msg="reconcile push applied" resource=popcache-config rev=41'
+    - '-1h49m47s level=INFO msg="request served" path=/hello/world status=200 cache=miss dur_ms=13 remote=198.51.100.87:33610'
+    - '-1h49m31s level=INFO msg="request served" path=/ status=200 cache=hit dur_ms=3 remote=198.51.100.87:56109'
+    - '-1h47m49s level=INFO msg="request served" path=/hello status=304 cache=hit dur_ms=37 remote=203.0.113.12:40019'
+    - '-1h47m7s level=INFO msg="request served" path=/assets/logo.png status=200 cache=hit dur_ms=23 remote=203.0.113.12:47356'
+    - '-1h44m41s level=INFO msg="request served" path=/assets/logo.png status=200 cache=hit dur_ms=37 remote=203.0.113.12:37305'
+    - '-1h44m28s level=INFO msg="request served" path=/api/v1/items status=200 cache=hit dur_ms=14 remote=198.51.100.23:32436'
+    - '-1h41m16s level=WARN msg="wasm compute budget exceeded" module=1 path=/hello budget_ms=50 took_ms=181 action=aborted'
+    - '-1h36m8s level=INFO msg="request served" path=/assets/app.js status=304 cache=hit dur_ms=23 remote=192.0.2.140:50068'
+    - '-1h33m35s level=INFO msg="request served" path=/assets/app.js status=200 cache=hit dur_ms=24 remote=192.0.2.140:53308'
+    - '-1h31m6s level=INFO msg="request served" path=/hello status=200 cache=hit dur_ms=20 remote=198.51.100.5:53198'
+    - '-1h30m53s level=WARN msg="wasm compute budget exceeded" module=1 path=/hello budget_ms=50 took_ms=197 action=aborted'
+    - '-1h29m25s level=INFO msg="request served" path=/assets/app.js status=200 cache=hit dur_ms=21 remote=203.0.113.12:59448'
+    - '-1h22m34s level=INFO msg="request served" path=/assets/app.js status=200 cache=miss dur_ms=7 remote=203.0.113.12:54249'
+    - '-1h22m10s level=WARN msg="wasm compute budget exceeded" module=1 path=/hello budget_ms=50 took_ms=199 action=aborted'
+    - '-1h20m48s level=INFO msg="request served" path=/assets/logo.png status=304 cache=hit dur_ms=15 remote=192.0.2.140:35539'
+    - '-1h20m42s level=INFO msg="reconcile push applied" resource=popcache-config rev=41'
+    - '-1h19m39s level=INFO msg="request served" path=/ status=200 cache=hit dur_ms=12 remote=203.0.113.12:53508'
+    - '-1h16m13s level=INFO msg="request served" path=/api/v1/items status=200 cache=hit dur_ms=37 remote=198.51.100.5:52651'
+    - '-1h15m9s level=INFO msg="request served" path=/api/v1/items status=200 cache=hit dur_ms=20 remote=198.51.100.5:32527'
+    - '-1h14m50s level=INFO msg="request served" path=/hello status=404 cache=hit dur_ms=10 remote=192.0.2.140:33415'
+    - '-1h14m23s level=INFO msg="request served" path=/api/v1/items status=200 cache=hit dur_ms=23 remote=192.0.2.140:36787'
+    - '-1h13m30s level=WARN msg="wasm compute budget exceeded" module=1 path=/hello budget_ms=50 took_ms=172 action=aborted'
+    - '-1h11m56s level=INFO msg="request served" path=/ status=200 cache=miss dur_ms=10 remote=198.51.100.5:36139'
+    - '-1h11m56s level=INFO msg="request served" path=/hello/world status=200 cache=hit dur_ms=27 remote=198.51.100.87:44243'
+    - '-1h11m28s level=INFO msg="request served" path=/hello/world status=200 cache=hit dur_ms=8 remote=198.51.100.23:38131'
+    - '-1h10m2s level=INFO msg="request served" path=/assets/app.js status=200 cache=hit dur_ms=6 remote=203.0.113.12:36767'
+    - '-1h6m53s level=INFO msg="request served" path=/hello/world status=200 cache=hit dur_ms=29 remote=198.51.100.5:46906'
+    - '-1h4m9s level=INFO msg="request served" path=/assets/app.js status=200 cache=hit dur_ms=5 remote=198.51.100.87:50398'
+    - '-1h2m15s level=WARN msg="wasm compute budget exceeded" module=1 path=/hello budget_ms=50 took_ms=204 action=aborted'
+    - '-1h2m3s level=INFO msg="request served" path=/ status=200 cache=hit dur_ms=32 remote=198.51.100.23:49554'
+    - '-52m47s level=INFO msg="request served" path=/hello status=200 cache=hit dur_ms=16 remote=203.0.113.12:47540'
+    - '-52m5s level=INFO msg="request served" path=/api/v1/items status=200 cache=hit dur_ms=9 remote=198.51.100.87:52554'
+    - '-51m24s level=WARN msg="wasm compute budget exceeded" module=1 path=/hello budget_ms=50 took_ms=201 action=aborted'
+    - '-50m42s level=INFO msg="reconcile push applied" resource=popcache-config rev=41'
+    - '-48m15s level=INFO msg="request served" path=/hello/world status=200 cache=hit dur_ms=35 remote=198.51.100.23:40163'
+    - '-44m5s level=INFO msg="request served" path=/assets/app.js status=200 cache=hit dur_ms=15 remote=198.51.100.23:55982'
+    - '-43m16s level=INFO msg="request served" path=/hello/world status=200 cache=miss dur_ms=28 remote=198.51.100.87:43211'
+    - '-40m57s level=INFO msg="request served" path=/hello/world status=304 cache=hit dur_ms=5 remote=192.0.2.140:31355'
+    - '-40m52s level=WARN msg="wasm compute budget exceeded" module=1 path=/hello budget_ms=50 took_ms=183 action=aborted'
+    - '-39m14s level=INFO msg="request served" path=/ status=200 cache=hit dur_ms=10 remote=198.51.100.23:54695'
+    - '-38m22s level=INFO msg="request served" path=/api/v1/items status=200 cache=miss dur_ms=21 remote=198.51.100.23:42306'
+    - '-37m54s level=INFO msg="request served" path=/assets/logo.png status=200 cache=hit dur_ms=16 remote=192.0.2.140:51949'
+    - '-33m7s level=INFO msg="request served" path=/api/v1/items status=200 cache=miss dur_ms=6 remote=198.51.100.5:31107'
+    - '-31m14s level=WARN msg="wasm compute budget exceeded" module=1 path=/hello budget_ms=50 took_ms=216 action=aborted'
+    - '-30m36s level=INFO msg="request served" path=/assets/logo.png status=200 cache=hit dur_ms=13 remote=198.51.100.87:47150'
+    - '-22m40s level=INFO msg="request served" path=/assets/app.js status=200 cache=hit dur_ms=26 remote=192.0.2.140:57808'
+    - '-20m42s level=INFO msg="reconcile push applied" resource=popcache-config rev=41'
+    - '-20m2s level=INFO msg="request served" path=/api/v1/items status=404 cache=miss dur_ms=15 remote=198.51.100.87:38273'
+    - '-19m50s level=WARN msg="wasm compute budget exceeded" module=1 path=/hello budget_ms=50 took_ms=214 action=aborted'
+    - '-19m26s level=INFO msg="request served" path=/hello/world status=200 cache=hit dur_ms=40 remote=192.0.2.140:52065'
+    - '-19m4s level=INFO msg="request served" path=/hello/world status=200 cache=miss dur_ms=12 remote=203.0.113.12:33950'
+    - '-17m45s level=INFO msg="request served" path=/assets/logo.png status=200 cache=hit dur_ms=16 remote=198.51.100.87:52690'
+    - '-8m38s level=WARN msg="wasm compute budget exceeded" module=1 path=/hello budget_ms=50 took_ms=211 action=aborted'
+    - '-8m20s level=INFO msg="request served" path=/assets/logo.png status=304 cache=hit dur_ms=20 remote=198.51.100.23:44290'
+    - '-6m22s level=INFO msg="request served" path=/ status=200 cache=hit dur_ms=33 remote=192.0.2.140:34489'
+  s3.l4lb.dp.system.kscale.local:
+    - '-2h55m level=INFO msg="vip announced" vip=10.3.10.100 state=active'
+    - '-2h45m18s level=INFO msg="stats snapshot" rx_pps=836 encap_pps=848 drops=0'
+    - '-2h39m1s level=INFO msg="stats snapshot" rx_pps=1042 encap_pps=976 drops=0'
+    - '-2h30m38s level=INFO msg="stats snapshot" rx_pps=975 encap_pps=1089 drops=0'
+    - '-2h28m5s level=INFO msg="stats snapshot" rx_pps=1020 encap_pps=950 drops=0'
+    - '-2h13m19s level=INFO msg="stats snapshot" rx_pps=1399 encap_pps=1089 drops=0'
+    - '-2h3m20s level=INFO msg="stats snapshot" rx_pps=1246 encap_pps=902 drops=0'
+    - '-1h55m10s level=INFO msg="stats snapshot" rx_pps=1382 encap_pps=972 drops=0'
+    - '-1h55m level=INFO msg="vip announced" vip=10.3.10.100 state=active'
+    - '-1h50m3s level=INFO msg="stats snapshot" rx_pps=1114 encap_pps=1091 drops=0'
+    - '-1h46m31s level=INFO msg="stats snapshot" rx_pps=1078 encap_pps=1189 drops=0'
+    - '-1h26m24s level=INFO msg="stats snapshot" rx_pps=918 encap_pps=927 drops=0'
+    - '-1h15m43s level=INFO msg="stats snapshot" rx_pps=1268 encap_pps=887 drops=0'
+    - '-1h12m17s level=INFO msg="stats snapshot" rx_pps=1373 encap_pps=1091 drops=0'
+    - '-1h11m1s level=INFO msg="stats snapshot" rx_pps=1113 encap_pps=836 drops=0'
+    - '-1h6m43s level=INFO msg="stats snapshot" rx_pps=1175 encap_pps=1257 drops=0'
+    - '-55m level=INFO msg="vip announced" vip=10.3.10.100 state=active'
+    - '-50m40s level=INFO msg="stats snapshot" rx_pps=990 encap_pps=1302 drops=0'
+    - '-32m9s level=INFO msg="stats snapshot" rx_pps=1014 encap_pps=1195 drops=0'
+    - '-19m28s level=INFO msg="stats snapshot" rx_pps=971 encap_pps=1378 drops=0'
+    - '-13m42s level=INFO msg="stats snapshot" rx_pps=1133 encap_pps=1175 drops=0'
+    - '-10m41s level=INFO msg="stats snapshot" rx_pps=932 encap_pps=1184 drops=0'
+    - '-4m30s level=INFO msg="stats snapshot" rx_pps=1148 encap_pps=919 drops=0'
+  s3.dns.dp.system.kscale.local:
+    - '-2h55m28s level=INFO msg="query" name=cdn.lab.on-keyday.net type=A rcode=NOERROR dur_ms=8'
+    - '-2h45m50s level=INFO msg="query" name=origin.lab.on-keyday.net type=A rcode=NOERROR dur_ms=9'
+    - '-2h43m45s level=INFO msg="query" name=cdn.lab.on-keyday.net type=A rcode=NOERROR dur_ms=3'
+    - '-2h10m37s level=INFO msg="query" name=cdn.lab.on-keyday.net type=A rcode=NOERROR dur_ms=4'
+    - '-2h3m46s level=INFO msg="query" name=origin.lab.on-keyday.net type=A rcode=NOERROR dur_ms=1'
+    - '-1h59m16s level=INFO msg="query" name=origin.lab.on-keyday.net type=A rcode=NOERROR dur_ms=3'
+    - '-1h49m53s level=INFO msg="query" name=origin.lab.on-keyday.net type=A rcode=NOERROR dur_ms=6'
+    - '-1h35m8s level=INFO msg="query" name=origin.lab.on-keyday.net type=A rcode=NOERROR dur_ms=3'
+    - '-1h32m27s level=INFO msg="query" name=origin.lab.on-keyday.net type=A rcode=NOERROR dur_ms=7'
+    - '-1h32m19s level=INFO msg="query" name=cdn.lab.on-keyday.net type=A rcode=NOERROR dur_ms=1'
+    - '-1h21m26s level=INFO msg="query" name=cdn.lab.on-keyday.net type=A rcode=NOERROR dur_ms=4'
+    - '-1h14m50s level=INFO msg="query" name=cdn.lab.on-keyday.net type=A rcode=NOERROR dur_ms=4'
+    - '-1h4m8s level=INFO msg="query" name=cdn.lab.on-keyday.net type=A rcode=NOERROR dur_ms=4'
+    - '-47m59s level=INFO msg="query" name=origin.lab.on-keyday.net type=A rcode=NOERROR dur_ms=5'
+    - '-47m26s level=INFO msg="query" name=cdn.lab.on-keyday.net type=A rcode=NOERROR dur_ms=1'
+    - '-36m34s level=INFO msg="query" name=cdn.lab.on-keyday.net type=A rcode=NOERROR dur_ms=9'
+    - '-33m1s level=INFO msg="query" name=origin.lab.on-keyday.net type=A rcode=NOERROR dur_ms=3'
+    - '-23m47s level=INFO msg="query" name=origin.lab.on-keyday.net type=A rcode=NOERROR dur_ms=4'
+    - '-19m28s level=INFO msg="query" name=origin.lab.on-keyday.net type=A rcode=NOERROR dur_ms=2'
+    - '-15m33s level=INFO msg="query" name=cdn.lab.on-keyday.net type=A rcode=NOERROR dur_ms=9'
+    - '-15m17s level=INFO msg="query" name=cdn.lab.on-keyday.net type=A rcode=NOERROR dur_ms=9'
+    - '-14m36s level=INFO msg="query" name=cdn.lab.on-keyday.net type=A rcode=NOERROR dur_ms=6'
+  s3.router.dp.system.kscale.local:
+    - '-2h40m level=INFO msg="acl sync ok" acl=kscale-dp rules=6'
+    - '-1h40m level=INFO msg="acl sync ok" acl=kscale-dp rules=6'
+    - '-40m level=INFO msg="acl sync ok" acl=kscale-dp rules=6'
+  s1.workload.dp.system.kscale.local:
+    - '-2h30m level=INFO msg="container healthy" name=hello-web image=docker.io/library/nginx:1.27'
+    - '-1h30m level=INFO msg="container healthy" name=hello-web image=docker.io/library/nginx:1.27'
+    - '-30m level=INFO msg="container healthy" name=hello-web image=docker.io/library/nginx:1.27'

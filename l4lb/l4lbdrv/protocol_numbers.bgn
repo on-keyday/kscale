@@ -1,0 +1,34 @@
+config.go.package = "l4lbdrv"
+enum ProtocolNumber:
+    :u8
+    HOPOPT = 0
+    ICMP = 1
+    IGMP = 2
+    GGP = 3
+    IPV4 = 4
+    ST = 5
+    TCP = 6
+    CBT = 7
+    EGP = 8
+    IGP = 9
+    BBN_RCC_MON = 10
+    NVP_II = 11
+    PUP = 12
+    ARGUS = 13
+    EMCON = 14
+    XNET = 15
+    CHAOS = 16
+    UDP = 17
+    MUX = 18
+    DCN_MEAS = 19
+    HMP = 20
+    PRM = 21
+    XNS_IDP = 22
+    TRUNK_1 = 23
+    TRUNK_2 = 24
+    RoutingHeader = 43
+    ESP = 50
+    AH = 51
+    ICMPV6 = 58
+    OSPF = 89
+    Ethernet = 143

@@ -1,0 +1,6 @@
+[workspace]
+members = [
+    "api",
+    "wasm_module",
+    "acme"
+]

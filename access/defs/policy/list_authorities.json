@@ -1,0 +1,30 @@
+{
+    "name": "AllowListAuthorities",
+    "policy": "Allow",
+    "resource": "user_hierarchy_authority",
+    "action": [
+        "list",
+        "get",
+        "watch"
+    ],
+    "or": [
+        {
+            "name": "CanListAuthorities",
+            "and": [
+                {
+                    "name": "UserAuthorityIsCAManager",
+                    "condition": "$user.authority.full_name suffix $env.authority.admin.ca.manager."
+                },
+                {
+                    "name": "UserHasRequiredRole",
+                    "or": [
+                        {
+                            "name": "HumanUserHasManagementRole",
+                            "condition": "$user.roles list_contains `admin`"
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+}

@@ -1,0 +1,55 @@
+config.go.package = "hpack"
+
+
+enum FieldType:
+    index
+    index_literal_insert
+    index_literal_never_indexed
+    index_literal_no_insert
+    dyn_table_update
+    unknown
+
+fn fieldPrefixLen(t :FieldType) -> u8:
+    return match t:
+        FieldType.index => 7
+        FieldType.index_literal_insert => 6
+        FieldType.index_literal_never_indexed => 4
+        FieldType.index_literal_no_insert => 4
+        FieldType.dyn_table_update => 5
+        .. => 0xff
+
+fn maskFieldType(t :FieldType) -> u8:
+    return match t:
+        FieldType.index => 0x80
+        FieldType.index_literal_insert => 0xC0
+        FieldType.index_literal_never_indexed => 0xF0
+        FieldType.index_literal_no_insert => 0xF0
+        FieldType.dyn_table_update => 0xE0
+        .. => 0x0f
+
+fn matchFieldType(t :FieldType) -> u8:
+    return match t:
+        FieldType.index => 0x80
+        FieldType.index_literal_insert => 0x40
+        FieldType.index_literal_never_indexed => 0x10
+        FieldType.index_literal_no_insert => 0x00
+        FieldType.dyn_table_update => 0x20
+        .. => 0xf0
+
+fn isFieldType(t :u8,m :FieldType) -> bool: 
+    return maskFieldType(m) & t == matchFieldType(m)
+
+
+fn getFieldType(t :u8) -> FieldType:
+    return match:
+        isFieldType(t,FieldType.index) => FieldType.index
+        isFieldType(t,FieldType.index_literal_insert) => FieldType.index_literal_insert
+        isFieldType(t,FieldType.index_literal_never_indexed) => FieldType.index_literal_never_indexed
+        isFieldType(t,FieldType.index_literal_no_insert) => FieldType.index_literal_no_insert
+        isFieldType(t,FieldType.dyn_table_update) => FieldType.dyn_table_update
+        .. => FieldType.unknown
+
+
+
+fn sizeOfField(key_len :u64,value_len :u64) -> u64:
+    return key_len + value_len + 32

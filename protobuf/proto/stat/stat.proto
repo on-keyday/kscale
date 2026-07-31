@@ -1,0 +1,25 @@
+syntax = "proto3";
+
+package ksdk.stat;
+
+import "proto/stat/typed_stats.proto";
+
+option go_package = "github.com/on-keyday/kscale/protobuf/proto/stat";
+
+// Stat report streaming framing (A1)。A4-cleanup phase α で body を typed
+// pbstat.Stats に置換 (ObjectMap-encoded bytes 廃止)。
+
+// realtimeWatcher (StreamMagicStat) 経路でストリーム冒頭に一度だけ送る型タグ。
+message StatStreamHeader {
+    string type = 1;
+}
+
+// realtimeWatcher 経路の per-tick batch。
+message StatBatch {
+    repeated Stats stats = 1;
+}
+
+// statReportAgent.Report (StreamMagicDsta) 経路の per-message envelope。
+message StatReport {
+    Stats body = 1;
+}

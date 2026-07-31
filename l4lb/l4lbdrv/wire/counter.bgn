@@ -1,0 +1,54 @@
+config.go.package = "wire"
+
+# Ad-hoc binary serialization for l4lb traffic counters carried inside
+# protobuf stat reports (pbstat.L4lbStat.{src_ips,packet_sizes,
+# isn_least_significant_bytes} are opaque `bytes` envelopes for these).
+# The hand-written predecessors lived in l4lb/l4lbdrv/ip_counter.go and
+# were written before brgen could express LEB128 — now that
+# wire/varint.bgn is shared, the schemas are expressible.
+#
+# Wire format is intentionally byte-for-byte compatible with the old
+# hand-written encoders (TestWireCompat asserts this); changing it would
+# break stat-report consumers that already speak the old shape.
+#
+# Sort order is the caller's responsibility (the old encoders sorted
+# before concatenating); the schema is just a flat sequence of entries
+# terminated by stream end.
+
+varint ::= config.import("varint.bgn")
+
+enum Family:
+    :u8
+    ipv4 = 1
+    ipv6 = 2
+
+# One source-ip × protocol × dest-port × count entry. ipv6 carries only
+# the upper 8 bytes (= the /64 prefix) — full 16-byte address is not
+# preserved by the old wire and we keep that.
+format SrcIPCountEntry:
+    protocol  :u8
+    family    :Family
+    dest_port :ub16
+    match family:
+        Family.ipv4 => prefix4 :[4]u8
+        Family.ipv6 => prefix6 :[8]u8
+    count :varint.Varint
+
+format SrcIPCount:
+    entries :[..]SrcIPCountEntry
+
+# One packet-size × count entry.
+format PacketSizeEntry:
+    size  :ub32
+    count :varint.Varint
+
+format PacketSizeDist:
+    entries :[..]PacketSizeEntry
+
+# One ISN-LSB × count entry.
+format ISNEntry:
+    byte  :u8
+    count :varint.Varint
+
+format ISNLeastSignificantByteMap:
+    entries :[..]ISNEntry

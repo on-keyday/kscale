@@ -1,0 +1,40 @@
+{
+    "magic": [
+        {
+            "magic": "FILE",
+            "description": "File data stream"
+        },
+        {
+            "magic": "LOGS",
+            "description": "Log data stream"
+        },
+        {
+            "magic": "stat",
+            "description": "Statistics data stream"
+        },
+        {
+            "magic": "dsta",
+            "description": "Dataplane Statistics data upload stream"
+        },
+        {
+            "magic": "EXEC",
+            "description": "Dataplane execute command stream for dataplane"
+        },
+        {
+            "magic": "EXEM",
+            "description": "Dataplane execute command stream for manager"
+        },
+        {
+            "magic": "MAIN",
+            "description": "Main control stream"
+        },
+        {
+            "magic": "HTTP",
+            "description": "HTTP proxy stream"
+        },
+        {
+            "magic": "RPCS",
+            "description": "RPC service stream"
+        }
+    ]
+}

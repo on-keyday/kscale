@@ -1,0 +1,67 @@
+syntax = "proto3";
+
+package ksdk.rpc;
+
+option go_package = "github.com/on-keyday/kscale/protobuf/proto";
+
+import "google/protobuf/empty.proto";
+import "proto/ksdkpb/ksdk_options.proto";
+
+// 個別 popcache 上の WASM モジュール情報。
+message WasmInfo {
+    uint32 id = 1;
+    string binary_path = 2;
+    uint64 binary_size = 3;
+    string method = 4;
+    string path = 5;
+    // match_type: "exact" (default; empty == exact) or "prefix".
+    string match_type = 6;
+    // allowed_hosts: destinations the module's outbound fetch host call may
+    // reach (default-deny: empty = fetch disabled). Each entry is
+    // [scheme://]host[:port][/path-prefix]; see resource.yaml wasm_module.
+    repeated string allowed_hosts = 7;
+    // compute_budget_ms: per-hook wasm compute budget (0 = node default);
+    // clamped to the node ceiling (popcache_config.wasm_compute_budget_ms).
+    uint32 compute_budget_ms = 8;
+}
+
+// 個別 peer のレスポンスをラップする per-peer エントリ。集約レスポンス内で並ぶ。
+message WasmInfoArrayFromPeer {
+    string peer = 1 [(ksdk.hold) = "github.com/on-keyday/objtrsf/objproto.ConnectionID"];
+    repeated WasmInfo info = 2;
+}
+
+// control plane が複数 popcache から ListAttached を集約してクライアントに返す型。
+message WasmListResponse {
+    repeated WasmInfoArrayFromPeer states = 1;
+}
+
+message WasmServiceRegisterRequest {
+    uint32 id = 1;
+    string binary_path = 2;
+    string method = 3;
+    string path = 4;
+    // match_type: "exact" (default; empty == exact) or "prefix".
+    string match_type = 5;
+    // allowed_hosts: destinations the module's outbound fetch host call may
+    // reach (default-deny: empty = fetch disabled). Each entry is
+    // [scheme://]host[:port][/path-prefix]; see resource.yaml wasm_module.
+    repeated string allowed_hosts = 6;
+    // compute_budget_ms: per-hook wasm compute budget (0 = node default);
+    // clamped to the node ceiling (popcache_config.wasm_compute_budget_ms).
+    uint32 compute_budget_ms = 7;
+}
+
+message WasmServiceUnregisterRequest {
+    uint32 id = 1;
+}
+
+message WasmServiceListAttachedResponse {
+    repeated WasmInfo info = 1;
+}
+
+service WasmService {
+    rpc Register(WasmServiceRegisterRequest) returns (google.protobuf.Empty);
+    rpc Unregister(WasmServiceUnregisterRequest) returns (google.protobuf.Empty);
+    rpc ListAttached(google.protobuf.Empty) returns (WasmServiceListAttachedResponse);
+}

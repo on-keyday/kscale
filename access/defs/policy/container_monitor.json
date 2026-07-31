@@ -1,0 +1,26 @@
+{
+    "name": "ContainerMonitor",
+    "policy": "Allow",
+    "description": "Read-only monitoring access for the nodewatch agent's `monitor` role. Lets the monitor LLM observe declared container workloads (list/get) and their actual-vs-desired CRI drift (diff, a read-only dry query); mutating actions (apply/delete) stay admin-only in ContainerManager.",
+    "resource": "container",
+    "action": [
+        "list",
+        "get",
+        "diff"
+    ],
+    "or": [
+        {
+            "name": "CanContainerMonitor",
+            "and": [
+                {
+                    "name": "UserAuthorityIsManager",
+                    "condition": "$user.authority.full_name suffix $env.authority.admin.ca.manager."
+                },
+                {
+                    "name": "UserHasMonitorRole",
+                    "condition": "$user.roles list_contains `monitor`"
+                }
+            ]
+        }
+    ]
+}

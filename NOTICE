@@ -1,0 +1,7 @@
+kscale
+Copyright 2026 on-keyday
+
+This product includes protobuf definitions derived from the Kubernetes
+Container Runtime Interface (CRI) API (protobuf/proto/cri/cri_api.proto),
+Copyright The Kubernetes Authors, licensed under the Apache License,
+Version 2.0.

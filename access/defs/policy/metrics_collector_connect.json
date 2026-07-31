@@ -1,0 +1,49 @@
+{
+    "name": "AllowConnectMetricsTarget",
+    "policy": "Allow",
+    "resource": "http_proxy",
+    "action": [
+        "connect_to_target"
+    ],
+    "or": [
+        {
+            "name": "CanConnectToTarget",
+            "and": [
+                {
+                    "name": "UserAuthorityIsCollectPrometheus",
+                    "condition": "$user.authority.full_name suffix $env.authority.system.metrics.prometheus."
+                },
+                {
+                    "name": "UserHasRequiredRole",
+                    "or": [
+                        {
+                            "name": "UserHasMetricsRole",
+                            "condition": "$user.roles list_contains `metrics`"
+                        }
+                    ]
+                },
+                {
+                    "name": "TargetNameIsAllowed",
+                    "or": [
+                        {
+                            "name": "TargetIsL4LB",
+                            "condition": "$env.args.target suffix $env.authority.system.dp.l4lb."
+                        },
+                        {
+                            "name": "TargetIsPoPCache",
+                            "condition": "$env.args.target suffix $env.authority.system.dp.popcache."
+                        },
+                        {
+                            "name": "TargetIsDNS",
+                            "condition": "$env.args.target suffix $env.authority.system.dp.dns."
+                        },
+                        {
+                            "name": "TargetIsRouter",
+                            "condition": "$env.args.target suffix $env.authority.system.dp.router."
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+}

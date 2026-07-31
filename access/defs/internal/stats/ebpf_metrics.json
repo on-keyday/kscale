@@ -1,0 +1,704 @@
+{
+ "prometheus": [
+	{
+		"metric_name": "ksdk_l4lb_ebpf_rx_hook_call_count",
+		"help": "Number of times the XDP hook is called.",
+		"long_name": "L4lbEbpfRxHookCallCount",
+		"value_type": "counter",
+		"source_metric": "ebpf_stats",
+		"hold_type": "uint64",
+		"to_prometheus": "$dst = $src.RxHookCallCount",
+		"labels": [
+			{"name": "instance"}
+		],
+		"optional": true,
+		"optional_condtition": "$self.L4lbEbpfEnabled"
+	},
+	{
+		"metric_name": "ksdk_l4lb_ebpf_rx_byte_total",
+		"help": "Total number of bytes received. (including not handled)",
+		"long_name": "L4lbEbpfRxByteTotal",
+		"value_type": "counter",
+		"source_metric": "ebpf_stats",
+		"hold_type": "uint64",
+		"to_prometheus": "$dst = $src.RxByteTotal",
+		"labels": [
+			{"name": "instance"}
+		],
+		"optional": true,
+		"optional_condtition": "$self.L4lbEbpfEnabled"
+	},
+	{
+		"metric_name": "ksdk_l4lb_ebpf_rx_packet_total",
+		"help": "Number of packets received against known VIPs.",
+		"long_name": "L4lbEbpfRxPacketTotal",
+		"value_type": "counter",
+		"source_metric": "ebpf_stats",
+		"hold_type": "uint64",
+		"to_prometheus": "$dst = $src.RxPacketTotal",
+		"labels": [
+			{"name": "instance"}
+		],
+		"optional": true,
+		"optional_condtition": "$self.L4lbEbpfEnabled"
+	},
+	{
+		"metric_name": "ksdk_l4lb_ebpf_rx_total_size",
+		"help": "Total size of packets received against known VIPs.",
+		"long_name": "L4lbEbpfRxTotalSize",
+		"value_type": "counter",
+		"source_metric": "ebpf_stats",
+		"hold_type": "uint64",
+		"to_prometheus": "$dst = $src.RxTotalSize",
+		"labels": [
+			{"name": "instance"}
+		],
+		"optional": true,
+		"optional_condtition": "$self.L4lbEbpfEnabled"
+	},
+	{
+		"metric_name": "ksdk_l4lb_ebpf_too_short_packet_total",
+		"help": "Number of packets dropped due to being too short.",
+		"long_name": "L4lbEbpfTooShortPacketTotal",
+		"value_type": "counter",
+		"source_metric": "ebpf_stats",
+		"hold_type": "uint64",
+		"to_prometheus": "$dst = $src.TooShortPacketTotal",
+		"labels": [
+			{"name": "instance"}
+		],
+		"optional": true,
+		"optional_condtition": "$self.L4lbEbpfEnabled"
+	},
+	{
+		"metric_name": "ksdk_l4lb_ebpf_non_ipv4_packet_total",
+		"help": "Number of packets dropped due to their IP protocol version not v4.",
+		"long_name": "L4lbEbpfNonIpv4PacketTotal",
+		"value_type": "counter",
+		"source_metric": "ebpf_stats",
+		"hold_type": "uint64",
+		"to_prometheus": "$dst = $src.NonIpv4PacketTotal",
+		"labels": [
+			{"name": "instance"}
+		],
+		"optional": true,
+		"optional_condtition": "$self.L4lbEbpfEnabled"
+	},
+	{
+		"metric_name": "ksdk_l4lb_ebpf_non_ipv6_packet_total",
+		"help": "Number of packets dropped due to their IP protocol version not v6.",
+		"long_name": "L4lbEbpfNonIpv6PacketTotal",
+		"value_type": "counter",
+		"source_metric": "ebpf_stats",
+		"hold_type": "uint64",
+		"to_prometheus": "$dst = $src.NonIpv6PacketTotal",
+		"labels": [
+			{"name": "instance"}
+		],
+		"optional": true,
+		"optional_condtition": "$self.L4lbEbpfEnabled"
+	},
+	{
+		"metric_name": "ksdk_l4lb_ebpf_ip_option_packet_total",
+		"help": "Number of packets dropped due to their IP header having options. (currently not supported)",
+		"long_name": "L4lbEbpfIpOptionPacketTotal",
+		"value_type": "counter",
+		"source_metric": "ebpf_stats",
+		"hold_type": "uint64",
+		"to_prometheus": "$dst = $src.IpOptionPacketTotal",
+		"labels": [
+			{"name": "instance"}
+		],
+		"optional": true,
+		"optional_condtition": "$self.L4lbEbpfEnabled"
+	},
+	{
+		"metric_name": "ksdk_l4lb_ebpf_non_supported_proto_packet_total",
+		"help": "Number of packets dropped due to their protocol not being TCP.",
+		"long_name": "L4lbEbpfNonSupportedProtoPacketTotal",
+		"value_type": "counter",
+		"source_metric": "ebpf_stats",
+		"hold_type": "uint64",
+		"to_prometheus": "$dst = $src.NonSupportedProtoPacketTotal",
+		"labels": [
+			{"name": "instance"}
+		],
+		"optional": true,
+		"optional_condtition": "$self.L4lbEbpfEnabled"
+	},
+	{
+		"metric_name": "ksdk_l4lb_ebpf_arp_packet_total",
+		"help": "Number of ARP packets received.",
+		"long_name": "L4lbEbpfArpPacketTotal",
+		"value_type": "counter",
+		"source_metric": "ebpf_stats",
+		"hold_type": "uint64",
+		"to_prometheus": "$dst = $src.ArpPacketTotal",
+		"labels": [
+			{"name": "instance"}
+		],
+		"optional": true,
+		"optional_condtition": "$self.L4lbEbpfEnabled"
+	},
+	{
+		"metric_name": "ksdk_l4lb_ebpf_no_vip_match_total",
+		"help": "Number of packets dropped due to their dest IP address not matching any known VIP.",
+		"long_name": "L4lbEbpfNoVipMatchTotal",
+		"value_type": "counter",
+		"source_metric": "ebpf_stats",
+		"hold_type": "uint64",
+		"to_prometheus": "$dst = $src.NoVipMatchTotal",
+		"labels": [
+			{"name": "instance"}
+		],
+		"optional": true,
+		"optional_condtition": "$self.L4lbEbpfEnabled"
+	},
+	{
+		"metric_name": "ksdk_l4lb_ebpf_failed_adjust_head_total",
+		"help": "Number of xdp_adjust_head failures.",
+		"long_name": "L4lbEbpfFailedAdjustHeadTotal",
+		"value_type": "counter",
+		"source_metric": "ebpf_stats",
+		"hold_type": "uint64",
+		"to_prometheus": "$dst = $src.FailedAdjustHeadTotal",
+		"labels": [
+			{"name": "instance"}
+		],
+		"optional": true,
+		"optional_condtition": "$self.L4lbEbpfEnabled"
+	},
+	{
+		"metric_name": "ksdk_l4lb_ebpf_failed_adjust_tail_total",
+		"help": "Number of xdp_adjust_tail failures.",
+		"long_name": "L4lbEbpfFailedAdjustTailTotal",
+		"value_type": "counter",
+		"source_metric": "ebpf_stats",
+		"hold_type": "uint64",
+		"to_prometheus": "$dst = $src.FailedAdjustTailTotal",
+		"labels": [
+			{"name": "instance"}
+		],
+		"optional": true,
+		"optional_condtition": "$self.L4lbEbpfEnabled"
+	},
+	{
+		"metric_name": "ksdk_l4lb_ebpf_tcp_packet_total",
+		"help": "Number of TCP packets received.",
+		"long_name": "L4lbEbpfTcpPacketTotal",
+		"value_type": "counter",
+		"source_metric": "ebpf_stats",
+		"hold_type": "uint64",
+		"to_prometheus": "$dst = $src.TcpPacketTotal",
+		"labels": [
+			{"name": "instance"}
+		],
+		"optional": true,
+		"optional_condtition": "$self.L4lbEbpfEnabled"
+	},
+	{
+		"metric_name": "ksdk_l4lb_ebpf_mtu_exceeded_total",
+		"help": "Number of packets dropped due to MTU exceeded.",
+		"long_name": "L4lbEbpfMtuExceededTotal",
+		"value_type": "counter",
+		"source_metric": "ebpf_stats",
+		"hold_type": "uint64",
+		"to_prometheus": "$dst = $src.MtuExceededTotal",
+		"labels": [
+			{"name": "instance"}
+		],
+		"optional": true,
+		"optional_condtition": "$self.L4lbEbpfEnabled"
+	},
+	{
+		"metric_name": "ksdk_l4lb_ebpf_tcp_no_dest_entry_total",
+		"help": "Number of packets dropped due to no backend available.",
+		"long_name": "L4lbEbpfTcpNoDestEntryTotal",
+		"value_type": "counter",
+		"source_metric": "ebpf_stats",
+		"hold_type": "uint64",
+		"to_prometheus": "$dst = $src.TcpNoDestEntryTotal",
+		"labels": [
+			{"name": "instance"}
+		],
+		"optional": true,
+		"optional_condtition": "$self.L4lbEbpfEnabled"
+	},
+	{
+		"metric_name": "ksdk_l4lb_ebpf_tcp_syn_packet_total",
+		"help": "Number of TCP SYN packets received.",
+		"long_name": "L4lbEbpfTcpSynPacketTotal",
+		"value_type": "counter",
+		"source_metric": "ebpf_stats",
+		"hold_type": "uint64",
+		"to_prometheus": "$dst = $src.TcpSynPacketTotal",
+		"labels": [
+			{"name": "instance"}
+		],
+		"optional": true,
+		"optional_condtition": "$self.L4lbEbpfEnabled"
+	},
+	{
+		"metric_name": "ksdk_l4lb_ebpf_tcp_synack_packet_total",
+		"help": "Number of TCP SYN-ACK packets received.",
+		"long_name": "L4lbEbpfTcpSynackPacketTotal",
+		"value_type": "counter",
+		"source_metric": "ebpf_stats",
+		"hold_type": "uint64",
+		"to_prometheus": "$dst = $src.TcpSynackPacketTotal",
+		"labels": [
+			{"name": "instance"}
+		],
+		"optional": true,
+		"optional_condtition": "$self.L4lbEbpfEnabled"
+	},
+	{
+		"metric_name": "ksdk_l4lb_ebpf_tcp_rst_packet_total",
+		"help": "Number of TCP RST packets received.",
+		"long_name": "L4lbEbpfTcpRstPacketTotal",
+		"value_type": "counter",
+		"source_metric": "ebpf_stats",
+		"hold_type": "uint64",
+		"to_prometheus": "$dst = $src.TcpRstPacketTotal",
+		"labels": [
+			{"name": "instance"}
+		],
+		"optional": true,
+		"optional_condtition": "$self.L4lbEbpfEnabled"
+	},
+	{
+		"metric_name": "ksdk_l4lb_ebpf_tcp_ack_packet_total",
+		"help": "Number of TCP ACK packets received.",
+		"long_name": "L4lbEbpfTcpAckPacketTotal",
+		"value_type": "counter",
+		"source_metric": "ebpf_stats",
+		"hold_type": "uint64",
+		"to_prometheus": "$dst = $src.TcpAckPacketTotal",
+		"labels": [
+			{"name": "instance"}
+		],
+		"optional": true,
+		"optional_condtition": "$self.L4lbEbpfEnabled"
+	},
+	{
+		"metric_name": "ksdk_l4lb_ebpf_tcp_fin_packet_total",
+		"help": "Number of TCP FIN packets received.",
+		"long_name": "L4lbEbpfTcpFinPacketTotal",
+		"value_type": "counter",
+		"source_metric": "ebpf_stats",
+		"hold_type": "uint64",
+		"to_prometheus": "$dst = $src.TcpFinPacketTotal",
+		"labels": [
+			{"name": "instance"}
+		],
+		"optional": true,
+		"optional_condtition": "$self.L4lbEbpfEnabled"
+	},
+	{
+		"metric_name": "ksdk_l4lb_ebpf_tcp_urg_packet_total",
+		"help": "Number of TCP URG packets received.",
+		"long_name": "L4lbEbpfTcpUrgPacketTotal",
+		"value_type": "counter",
+		"source_metric": "ebpf_stats",
+		"hold_type": "uint64",
+		"to_prometheus": "$dst = $src.TcpUrgPacketTotal",
+		"labels": [
+			{"name": "instance"}
+		],
+		"optional": true,
+		"optional_condtition": "$self.L4lbEbpfEnabled"
+	},
+	{
+		"metric_name": "ksdk_l4lb_ebpf_tcp_psh_packet_total",
+		"help": "Number of TCP PSH packets received.",
+		"long_name": "L4lbEbpfTcpPshPacketTotal",
+		"value_type": "counter",
+		"source_metric": "ebpf_stats",
+		"hold_type": "uint64",
+		"to_prometheus": "$dst = $src.TcpPshPacketTotal",
+		"labels": [
+			{"name": "instance"}
+		],
+		"optional": true,
+		"optional_condtition": "$self.L4lbEbpfEnabled"
+	},
+	{
+		"metric_name": "ksdk_l4lb_ebpf_tcp_ece_packet_total",
+		"help": "Number of TCP ECE packets received.",
+		"long_name": "L4lbEbpfTcpEcePacketTotal",
+		"value_type": "counter",
+		"source_metric": "ebpf_stats",
+		"hold_type": "uint64",
+		"to_prometheus": "$dst = $src.TcpEcePacketTotal",
+		"labels": [
+			{"name": "instance"}
+		],
+		"optional": true,
+		"optional_condtition": "$self.L4lbEbpfEnabled"
+	},
+	{
+		"metric_name": "ksdk_l4lb_ebpf_tcp_cwr_packet_total",
+		"help": "Number of TCP CWR packets received.",
+		"long_name": "L4lbEbpfTcpCwrPacketTotal",
+		"value_type": "counter",
+		"source_metric": "ebpf_stats",
+		"hold_type": "uint64",
+		"to_prometheus": "$dst = $src.TcpCwrPacketTotal",
+		"labels": [
+			{"name": "instance"}
+		],
+		"optional": true,
+		"optional_condtition": "$self.L4lbEbpfEnabled"
+	},
+	{
+		"metric_name": "ksdk_l4lb_ebpf_tcp_other_flag_packet_total",
+		"help": "Number of TCP packets received with other flags.",
+		"long_name": "L4lbEbpfTcpOtherFlagPacketTotal",
+		"value_type": "counter",
+		"source_metric": "ebpf_stats",
+		"hold_type": "uint64",
+		"to_prometheus": "$dst = $src.TcpOtherFlagPacketTotal",
+		"labels": [
+			{"name": "instance"}
+		],
+		"optional": true,
+		"optional_condtition": "$self.L4lbEbpfEnabled"
+	},
+	{
+		"metric_name": "ksdk_l4lb_ebpf_tcp_no_flag_packet_total",
+		"help": "Number of TCP packets received without any flags.",
+		"long_name": "L4lbEbpfTcpNoFlagPacketTotal",
+		"value_type": "counter",
+		"source_metric": "ebpf_stats",
+		"hold_type": "uint64",
+		"to_prometheus": "$dst = $src.TcpNoFlagPacketTotal",
+		"labels": [
+			{"name": "instance"}
+		],
+		"optional": true,
+		"optional_condtition": "$self.L4lbEbpfEnabled"
+	},
+	{
+		"metric_name": "ksdk_l4lb_ebpf_udp_packet_total",
+		"help": "Number of UDP packets received.  ",
+		"long_name": "L4lbEbpfUdpPacketTotal",
+		"value_type": "counter",
+		"source_metric": "ebpf_stats",
+		"hold_type": "uint64",
+		"to_prometheus": "$dst = $src.UdpPacketTotal",
+		"labels": [
+			{"name": "instance"}
+		],
+		"optional": true,
+		"optional_condtition": "$self.L4lbEbpfEnabled"
+	},
+	{
+		"metric_name": "ksdk_l4lb_ebpf_quiclb_no_dest_port_match_total",
+		"help": "Number of QUIC-LB packets received without matching destination port.",
+		"long_name": "L4lbEbpfQuiclbNoDestPortMatchTotal",
+		"value_type": "counter",
+		"source_metric": "ebpf_stats",
+		"hold_type": "uint64",
+		"to_prometheus": "$dst = $src.QuiclbNoDestPortMatchTotal",
+		"labels": [
+			{"name": "instance"}
+		],
+		"optional": true,
+		"optional_condtition": "$self.L4lbEbpfEnabled"
+	},
+	{
+		"metric_name": "ksdk_l4lb_ebpf_quiclb_short_packet_total",
+		"help": "Number of QUIC-LB short packets received.",
+		"long_name": "L4lbEbpfQuiclbShortPacketTotal",
+		"value_type": "counter",
+		"source_metric": "ebpf_stats",
+		"hold_type": "uint64",
+		"to_prometheus": "$dst = $src.QuiclbShortPacketTotal",
+		"labels": [
+			{"name": "instance"}
+		],
+		"optional": true,
+		"optional_condtition": "$self.L4lbEbpfEnabled"
+	},
+	{
+		"metric_name": "ksdk_l4lb_ebpf_quiclb_long_packet_total",
+		"help": "Number of QUIC-LB long packets received.",
+		"long_name": "L4lbEbpfQuiclbLongPacketTotal",
+		"value_type": "counter",
+		"source_metric": "ebpf_stats",
+		"hold_type": "uint64",
+		"to_prometheus": "$dst = $src.QuiclbLongPacketTotal",
+		"labels": [
+			{"name": "instance"}
+		],
+		"optional": true,
+		"optional_condtition": "$self.L4lbEbpfEnabled"
+	},
+	{
+		"metric_name": "ksdk_l4lb_ebpf_quiclb_initial_routing_packet_total",
+		"help": "Number of QUIC-LB initial routing packets received.",
+		"long_name": "L4lbEbpfQuiclbInitialRoutingPacketTotal",
+		"value_type": "counter",
+		"source_metric": "ebpf_stats",
+		"hold_type": "uint64",
+		"to_prometheus": "$dst = $src.QuiclbInitialRoutingPacketTotal",
+		"labels": [
+			{"name": "instance"}
+		],
+		"optional": true,
+		"optional_condtition": "$self.L4lbEbpfEnabled"
+	},
+	{
+		"metric_name": "ksdk_l4lb_ebpf_quiclb_too_short_long_packet_total",
+		"help": "Number of QUIC-LB short-long packets received.",
+		"long_name": "L4lbEbpfQuiclbTooShortLongPacketTotal",
+		"value_type": "counter",
+		"source_metric": "ebpf_stats",
+		"hold_type": "uint64",
+		"to_prometheus": "$dst = $src.QuiclbTooShortLongPacketTotal",
+		"labels": [
+			{"name": "instance"}
+		],
+		"optional": true,
+		"optional_condtition": "$self.L4lbEbpfEnabled"
+	},
+	{
+		"metric_name": "ksdk_l4lb_ebpf_quiclb_no_connection_id_total",
+		"help": "Number of QUIC-LB packets received without connection ID.",
+		"long_name": "L4lbEbpfQuiclbNoConnectionIdTotal",
+		"value_type": "counter",
+		"source_metric": "ebpf_stats",
+		"hold_type": "uint64",
+		"to_prometheus": "$dst = $src.QuiclbNoConnectionIdTotal",
+		"labels": [
+			{"name": "instance"}
+		],
+		"optional": true,
+		"optional_condtition": "$self.L4lbEbpfEnabled"
+	},
+	{
+		"metric_name": "ksdk_l4lb_ebpf_quiclb_no_dest_entry_total",
+		"help": "Number of QUIC-LB packets received without destination entry.",
+		"long_name": "L4lbEbpfQuiclbNoDestEntryTotal",
+		"value_type": "counter",
+		"source_metric": "ebpf_stats",
+		"hold_type": "uint64",
+		"to_prometheus": "$dst = $src.QuiclbNoDestEntryTotal",
+		"labels": [
+			{"name": "instance"}
+		],
+		"optional": true,
+		"optional_condtition": "$self.L4lbEbpfEnabled"
+	},
+	{
+		"metric_name": "ksdk_l4lb_ebpf_quiclb_invalid_crypto_context_total",
+		"help": "Number of QUIC-LB packets received with invalid crypto context.",
+		"long_name": "L4lbEbpfQuiclbInvalidCryptoContextTotal",
+		"value_type": "counter",
+		"source_metric": "ebpf_stats",
+		"hold_type": "uint64",
+		"to_prometheus": "$dst = $src.QuiclbInvalidCryptoContextTotal",
+		"labels": [
+			{"name": "instance"}
+		],
+		"optional": true,
+		"optional_condtition": "$self.L4lbEbpfEnabled"
+	},
+	{
+		"metric_name": "ksdk_l4lb_ebpf_quiclb_encrypt_success_call_total",
+		"help": "Number of QUIC-LB packets that called bpf_crypto_encrypt.",
+		"long_name": "L4lbEbpfQuiclbEncryptSuccessCallTotal",
+		"value_type": "counter",
+		"source_metric": "ebpf_stats",
+		"hold_type": "uint64",
+		"to_prometheus": "$dst = $src.QuiclbEncryptSuccessCallTotal",
+		"labels": [
+			{"name": "instance"}
+		],
+		"optional": true,
+		"optional_condtition": "$self.L4lbEbpfEnabled"
+	},
+	{
+		"metric_name": "ksdk_l4lb_ebpf_quiclb_decrypt_success_call_total",
+		"help": "Number of QUIC-LB packets that called bpf_crypto_decrypt.",
+		"long_name": "L4lbEbpfQuiclbDecryptSuccessCallTotal",
+		"value_type": "counter",
+		"source_metric": "ebpf_stats",
+		"hold_type": "uint64",
+		"to_prometheus": "$dst = $src.QuiclbDecryptSuccessCallTotal",
+		"labels": [
+			{"name": "instance"}
+		],
+		"optional": true,
+		"optional_condtition": "$self.L4lbEbpfEnabled"
+	},
+	{
+		"metric_name": "ksdk_l4lb_ebpf_quiclb_connid_cache_hit_total",
+		"help": "Number of QUIC-LB connection ID cache hits.",
+		"long_name": "L4lbEbpfQuiclbConnidCacheHitTotal",
+		"value_type": "counter",
+		"source_metric": "ebpf_stats",
+		"hold_type": "uint64",
+		"to_prometheus": "$dst = $src.QuiclbConnidCacheHitTotal",
+		"labels": [
+			{"name": "instance"}
+		],
+		"optional": true,
+		"optional_condtition": "$self.L4lbEbpfEnabled"
+	},
+	{
+		"metric_name": "ksdk_l4lb_ebpf_quiclb_version_negotiation_total",
+		"help": "Number of QUIC-LB version negotiation packets received.",
+		"long_name": "L4lbEbpfQuiclbVersionNegotiationTotal",
+		"value_type": "counter",
+		"source_metric": "ebpf_stats",
+		"hold_type": "uint64",
+		"to_prometheus": "$dst = $src.QuiclbVersionNegotiationTotal",
+		"labels": [
+			{"name": "instance"}
+		],
+		"optional": true,
+		"optional_condtition": "$self.L4lbEbpfEnabled"
+	},
+	{
+		"metric_name": "ksdk_l4lb_ebpf_quiclb_version_1_total",
+		"help": "Number of QUIC-LB version 1 packets received.",
+		"long_name": "L4lbEbpfQuiclbVersion1Total",
+		"value_type": "counter",
+		"source_metric": "ebpf_stats",
+		"hold_type": "uint64",
+		"to_prometheus": "$dst = $src.QuiclbVersion1Total",
+		"labels": [
+			{"name": "instance"}
+		],
+		"optional": true,
+		"optional_condtition": "$self.L4lbEbpfEnabled"
+	},
+	{
+		"metric_name": "ksdk_l4lb_ebpf_quiclb_version_2_total",
+		"help": "Number of QUIC-LB version 2 packets received.",
+		"long_name": "L4lbEbpfQuiclbVersion2Total",
+		"value_type": "counter",
+		"source_metric": "ebpf_stats",
+		"hold_type": "uint64",
+		"to_prometheus": "$dst = $src.QuiclbVersion2Total",
+		"labels": [
+			{"name": "instance"}
+		],
+		"optional": true,
+		"optional_condtition": "$self.L4lbEbpfEnabled"
+	},
+	{
+		"metric_name": "ksdk_l4lb_ebpf_quiclb_other_version_total",
+		"help": "Number of QUIC-LB packets received with other versions.",
+		"long_name": "L4lbEbpfQuiclbOtherVersionTotal",
+		"value_type": "counter",
+		"source_metric": "ebpf_stats",
+		"hold_type": "uint64",
+		"to_prometheus": "$dst = $src.QuiclbOtherVersionTotal",
+		"labels": [
+			{"name": "instance"}
+		],
+		"optional": true,
+		"optional_condtition": "$self.L4lbEbpfEnabled"
+	},
+	{
+		"metric_name": "ksdk_l4lb_ebpf_quiclb_initial_packet_total",
+		"help": "Number of QUIC-LB initial packets received.",
+		"long_name": "L4lbEbpfQuiclbInitialPacketTotal",
+		"value_type": "counter",
+		"source_metric": "ebpf_stats",
+		"hold_type": "uint64",
+		"to_prometheus": "$dst = $src.QuiclbInitialPacketTotal",
+		"labels": [
+			{"name": "instance"}
+		],
+		"optional": true,
+		"optional_condtition": "$self.L4lbEbpfEnabled"
+	},
+	{
+		"metric_name": "ksdk_l4lb_ebpf_quiclb_zero_rtt_packet_total",
+		"help": "Number of QUIC-LB 0-RTT packets received.",
+		"long_name": "L4lbEbpfQuiclbZeroRttPacketTotal",
+		"value_type": "counter",
+		"source_metric": "ebpf_stats",
+		"hold_type": "uint64",
+		"to_prometheus": "$dst = $src.QuiclbZeroRttPacketTotal",
+		"labels": [
+			{"name": "instance"}
+		],
+		"optional": true,
+		"optional_condtition": "$self.L4lbEbpfEnabled"
+	},
+	{
+		"metric_name": "ksdk_l4lb_ebpf_quiclb_handshake_packet_total",
+		"help": "Number of QUIC-LB handshake packets received.",
+		"long_name": "L4lbEbpfQuiclbHandshakePacketTotal",
+		"value_type": "counter",
+		"source_metric": "ebpf_stats",
+		"hold_type": "uint64",
+		"to_prometheus": "$dst = $src.QuiclbHandshakePacketTotal",
+		"labels": [
+			{"name": "instance"}
+		],
+		"optional": true,
+		"optional_condtition": "$self.L4lbEbpfEnabled"
+	},
+	{
+		"metric_name": "ksdk_l4lb_ebpf_quiclb_retry_packet_total",
+		"help": "Number of QUIC-LB retry packets received. (this may bug or attack)",
+		"long_name": "L4lbEbpfQuiclbRetryPacketTotal",
+		"value_type": "counter",
+		"source_metric": "ebpf_stats",
+		"hold_type": "uint64",
+		"to_prometheus": "$dst = $src.QuiclbRetryPacketTotal",
+		"labels": [
+			{"name": "instance"}
+		],
+		"optional": true,
+		"optional_condtition": "$self.L4lbEbpfEnabled"
+	},
+	{
+		"metric_name": "ksdk_l4lb_ebpf_buggy_dest_ip_zero_total",
+		"help": "Number of times a destination entry with IP address 0 is encountered (indicating a bug).",
+		"long_name": "L4lbEbpfBuggyDestIpZeroTotal",
+		"value_type": "counter",
+		"source_metric": "ebpf_stats",
+		"hold_type": "uint64",
+		"to_prometheus": "$dst = $src.BuggyDestIpZeroTotal",
+		"labels": [
+			{"name": "instance"}
+		],
+		"optional": true,
+		"optional_condtition": "$self.L4lbEbpfEnabled"
+	},
+	{
+		"metric_name": "ksdk_l4lb_ebpf_icmp_echo_reply_total",
+		"help": "Number of ICMPv4 echo replies sent for VIP-destined echo requests.",
+		"long_name": "L4lbEbpfIcmpEchoReplyTotal",
+		"value_type": "counter",
+		"source_metric": "ebpf_stats",
+		"hold_type": "uint64",
+		"to_prometheus": "$dst = $src.IcmpEchoReplyTotal",
+		"labels": [
+			{"name": "instance"}
+		],
+		"optional": true,
+		"optional_condtition": "$self.L4lbEbpfEnabled"
+	},
+	{
+		"metric_name": "ksdk_l4lb_ebpf_icmp_dropped_total",
+		"help": "Number of VIP-destined ICMPv4 packets dropped (echo requests when reply mode is off, plus every non-echo ICMP to the VIP).",
+		"long_name": "L4lbEbpfIcmpDroppedTotal",
+		"value_type": "counter",
+		"source_metric": "ebpf_stats",
+		"hold_type": "uint64",
+		"to_prometheus": "$dst = $src.IcmpDroppedTotal",
+		"labels": [
+			{"name": "instance"}
+		],
+		"optional": true,
+		"optional_condtition": "$self.L4lbEbpfEnabled"
+	}
+ ] 
+}

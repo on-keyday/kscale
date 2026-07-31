@@ -1,0 +1,38 @@
+{
+    "name": "ConnectionViewer",
+    "policy": "Allow",
+    "description": "List every live transport connection on the control plane endpoint (connection churn / leak view). Read-only; granted to the manager roles.",
+    "resource": "connection",
+    "action": [
+        "list",
+        "get"
+    ],
+    "or": [
+        {
+            "name": "CanViewConnections",
+            "and": [
+                {
+                    "name": "UserAuthorityIsManager",
+                    "condition": "$user.authority.full_name suffix $env.authority.admin.ca.manager."
+                },
+                {
+                    "name": "UserHasManagerRole",
+                    "or": [
+                        {
+                            "name": "AdminRole",
+                            "condition": "$user.roles list_contains `admin`"
+                        },
+                        {
+                            "name": "ViewerRole",
+                            "condition": "$user.roles list_contains `viewer`"
+                        },
+                        {
+                            "name": "MonitorRole",
+                            "condition": "$user.roles list_contains `monitor`"
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+}

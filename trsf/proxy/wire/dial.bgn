@@ -1,0 +1,20 @@
+config.go.package = "wire"
+
+# Ad-hoc framing for HTTP proxy dial preface (trsf/proxy)。
+# 1 proxy stream = 1 trsf.BidirectionalStream:
+#   trsf-level magic (consts.StreamMagicHTTP, 4B) → 呼出側で trsf.DecodeMagic
+#   client -> server: DialPrefaceFrame, 続いて生 HTTP request bytes
+#   server -> client: 生 HTTP response bytes
+#
+# magic は trsf-level で消費済前提のため frame には含めない。DialPreface
+# 本体は protobuf message (protobuf/proto/trsf_proxy/dial.proto)。本 frame
+# はその length-prefixed envelope を提供する。
+#
+# Varint は project 共通の wire/varint.bgn (protobuf-style LEB128) を import。
+
+varint ::= config.import("varint.bgn")
+
+# 1 preface = body_len + body。body は protobuf-encoded DialPreface bytes。
+format DialPrefaceFrame:
+    body_len :varint.Varint
+    body     :[body_len.value]u8

@@ -1,0 +1,41 @@
+{
+    "name": "AllowCollectMetrics",
+    "policy": "Allow",
+    "resource": "http_proxy",
+    "action": [
+        "request_via_proxy"
+    ],
+    "or": [
+        {
+            "name": "CanCollectMetrics",
+            "and": [
+                {
+                    "name": "UserAuthorityIsCollectPrometheus",
+                    "condition": "$user.authority.full_name suffix $env.authority.system.metrics.prometheus."
+                },
+                {
+                    "name": "UserHasRequiredRole",
+                    "or": [
+                        {
+                            "name": "UserHasMetricsRole",
+                            "condition": "$user.roles list_contains `metrics`"
+                        }
+                    ]
+                },
+                {
+                    "name": "RequestIsAllowed",
+                    "and": [
+                        {
+                            "name": "MethodIsGET",
+                            "condition": "$env.args.method == `GET`"
+                        },
+                        {
+                            "name": "PathIsMetrics",
+                            "condition": "$env.args.url == `/metrics`"
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+}

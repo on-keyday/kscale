@@ -1,0 +1,96 @@
+{
+    "controls": [
+        {
+            "name": "set-server-id",
+            "description": "Set the server ID for load balancing. (internal call)"
+        },
+        {
+            "name": "bind-interface",
+            "description": "Bind the server to a specific network interface. (L4LB and Popcache only)"
+        },
+        {
+            "name": "update-mtu",
+            "description": "Update the MTU (Maximum Transmission Unit) size for network packets. (L4LB only)"
+        },
+        {
+            "name": "set-cert-path",
+            "description": "Set the path to the TLS/SSL certificate file. (Popcache only)"
+        },
+        {
+            "name": "set-key-path",
+            "description": "Set the path to the TLS/SSL key file. (Popcache only)"
+        },
+        {
+            "name": "reload-tls-cert",
+            "description": "Reload the TLS/SSL certificate and key from the specified file paths."
+        },
+        {
+            "name": "set-http-port",
+            "description": "Set the HTTP port number for the server. (Popcache only)"
+        },
+        {
+            "name": "set-https-port",
+            "description": "Set the HTTPS port number for the server. (Popcache only)"
+        },
+        {
+            "name": "set-http3-port",
+            "description": "Set the HTTP/3 port number for the server. (Popcache only)"
+        },
+        {
+            "name": "set-qlog-enabled",
+            "description": "Enable or disable QUIC logging (qlog). (Popcache only)"
+        },
+        {
+            "name": "set-origin",
+            "description": "Set the origin server. (Popcache only)"
+        },
+        {
+            "name": "challenge-dns",
+            "description": "Handle ACME DNS-01 challenge for domain validation. (DNS only)"
+        },
+        {
+            "name": "cleanup-dns",
+            "description": "Clean up ACME DNS-01 challenge records after validation. (DNS only)"
+        },
+        {
+            "name": "set-dns-port",
+            "description": "Set the DNS port number for the server. (DNS only)"
+        },
+        {
+            "name": "set-dns-domain",
+            "description": "Set the DNS domain name for the server. (DNS only)"
+        },
+        {
+            "name": "set-dns-mail",
+            "description": "Set the DNS mail address for the server. (DNS only)"
+        },
+        {
+            "name": "set-dns-api-token",
+            "description": "Set the API token for external DNS server management. (DNS only)"
+        },
+        {
+            "name": "set-dns-api-zone-id",
+            "description": "Set the API zone ID for external DNS server management. (DNS only)"
+        },
+        {
+            "name": "set-router-hostname",
+            "description": "Set the hostname of the router. (Router only)"
+        },
+        {
+            "name": "set-router-username",
+            "description": "Set the username for router authentication. (Router only)"
+        },
+        {
+            "name": "set-router-password",
+            "description": "Set the password for router authentication. (Router only)"
+        },
+        {
+            "name": "reset-dns-acme",
+            "description": "Reset all ACME DNS-01 challenge records. (DNS only)"
+        },
+        {
+            "name": "init",
+            "description": "Initialize the application-specific agent."
+        }
+    ]
+}

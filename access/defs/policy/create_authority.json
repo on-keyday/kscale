@@ -1,0 +1,51 @@
+{
+    "name": "AllowCreateAuthority",
+    "policy": "Allow",
+    "resource": "user_hierarchy_authority",
+    "action": [
+        "create",
+        "apply"
+    ],
+    "or": [
+        {
+            "name": "CanCreateAuthority",
+            "and": [
+                {
+                    "name": "UserAuthorityIsCAManager",
+                    "condition": "$user.authority.full_name suffix $env.authority.admin.ca.manager."
+                },
+                {
+                    "name": "AuthorityNameIsAllowed",
+                    "description": "Confine NEW authorities to a known hierarchy. Domain-less, label-anchored suffix on the authority path (e.g. s1.popcache.dp.system) — a literal, NOT $env.authority, because the authority being created does not exist yet (env resolution would force seeding its parent). The leading dot anchors at a label boundary (evil.dp.system passes as a system.dp child, but x.dp.systemX does not).",
+                    "or": [
+                        {
+                            "name": "CreatingCAManagerAuthority",
+                            "condition": "$env.args.authority_name suffix `.ca.admin`"
+                        },
+                        {
+                            "name": "CreatingDataplaneManagerAuthority",
+                            "condition": "$env.args.authority_name suffix `.dp.admin`"
+                        },
+                        {
+                            "name": "CreatingDataplaneAuthority",
+                            "condition": "$env.args.authority_name suffix `.dp.system`"
+                        },
+                        {
+                            "name": "CreatingMetricsAuthority",
+                            "condition": "$env.args.authority_name suffix `.metrics.system`"
+                        }
+                    ]
+                },
+                {
+                    "name": "UserHasRequiredRole",
+                    "or": [
+                        {
+                            "name": "HumanUserHasManagementRole",
+                            "condition": "$user.roles list_contains `admin`"
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+}

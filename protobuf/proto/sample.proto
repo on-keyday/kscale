@@ -1,0 +1,46 @@
+syntax = "proto3";
+
+// 生成されるGoコードのパッケージパスを指定
+option go_package = "github.com/on-keyday/kscale/protobuf/proto";
+
+package sample;
+
+// 様々なWire Typeを含むメッセージ
+message Sample {
+  // Wire Type 0: Varint
+  int32 id = 1;
+  bool active = 2;
+
+  // Wire Type 2: Length-delimited
+  string name = 3;
+  bytes payload = 4;
+
+  // Wire Type 1: Fixed64
+  fixed64 big_val = 5;
+  double score = 6;
+
+  // Wire Type 5: Fixed32
+  fixed32 small_val = 7;
+  float ratio = 8;
+
+  // 入れ子のメッセージ (Wire Type 2)
+  InnerMessage inner = 9;
+
+  // 繰り返しフィールド (Packedの場合は Wire Type 2)
+  repeated int32 numbers = 10;
+
+  repeated InnerMessage help = 11;
+
+  oneof item {
+    float why = 12;
+    InnerMessage hage = 13;
+  }
+
+  optional float boke = 14;
+
+  map<string,InnerMessage> demo = 15;
+}
+
+message InnerMessage {
+  string detail = 1;
+}

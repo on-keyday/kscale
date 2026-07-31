@@ -1,0 +1,68 @@
+{
+    "prometheus": [
+        {
+            "metric_name": "ksdk_dns_dns_port",
+            "help": "Dns metric dns_port",
+            "long_name": "DnsDnsPort",
+            "value_type": "gauge",
+            "hold_type": "uint16",
+            "source_metric": "dns_stats",
+            "optional": true,
+            "optional_condtition": "$self.DnsEnabled",
+            "to_prometheus": "$dst = uint16($src.DnsPort)",
+            "labels": [
+                {
+                    "name": "instance"
+                }
+            ]
+        },
+        {
+            "metric_name": "ksdk_dns_requests_total",
+            "help": "Dns metric requests_total",
+            "long_name": "DnsRequestsTotal",
+            "value_type": "counter",
+            "hold_type": "uint64",
+            "source_metric": "dns_stats",
+            "optional": true,
+            "optional_condtition": "$self.DnsEnabled",
+            "to_prometheus": "$dst = uint64($src.RequestsTotal)",
+            "labels": [
+                {
+                    "name": "instance"
+                }
+            ]
+        },
+        {
+            "metric_name": "ksdk_dns_responses_total",
+            "help": "Dns metric responses_total",
+            "long_name": "DnsResponsesTotal",
+            "value_type": "counter",
+            "hold_type": "uint64",
+            "source_metric": "dns_stats",
+            "optional": true,
+            "optional_condtition": "$self.DnsEnabled",
+            "to_prometheus": "$dst = uint64($src.ResponsesTotal)",
+            "labels": [
+                {
+                    "name": "instance"
+                }
+            ]
+        },
+        {
+            "metric_name": "ksdk_dns_errors_total",
+            "help": "Dns metric errors_total",
+            "long_name": "DnsErrorsTotal",
+            "value_type": "counter",
+            "hold_type": "uint64",
+            "source_metric": "dns_stats",
+            "optional": true,
+            "optional_condtition": "$self.DnsEnabled",
+            "to_prometheus": "$dst = uint64($src.ErrorsTotal)",
+            "labels": [
+                {
+                    "name": "instance"
+                }
+            ]
+        }
+    ]
+}

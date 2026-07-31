@@ -1,0 +1,95 @@
+{
+    "name": "AllowIssueBootstrapToken",
+    "policy": "Allow",
+    "resource": "bootstrap_token",
+    "action": [
+        "issue"
+    ],
+    "or": [
+        {
+            "name": "CanIssueBootstrapToken",
+            "and": [
+                {
+                    "name": "ArgumentsHaveDesiredValues",
+                    "condition": "$env.args.duration duration_lte `5m` and $env.args.appName in [`admin`,`monitor`,`popcache`, `l4lb`, `metrics`, `dns`, `router`, `workload`]"
+                },
+                {
+                    "name": "CertificateExpiresPeriodIsValid",
+                    "or": [
+                        {
+                            "name": "ExpiresPeriodIsLessThan24HoursForMachine",
+                            "condition": "$env.args.domain suffix $env.authority.system. and $env.args.expires_period duration_lte `24h`"
+                        },
+                        {
+                            "name": "ExpiresPeriodIsLessThan1WeekForAdmin",
+                            "condition": "$env.args.domain suffix $env.authority.admin. and $env.args.expires_period duration_lte `168h`"
+                        }
+                    ]
+                },
+                {
+                    "name": "UserAuthorityIsCAManager",
+                    "condition": "$user.authority.full_name suffix $env.authority.admin.ca.manager."
+                },
+                {
+                    "name": "DomainIsAllowed",
+                    "or": [
+                        {
+                            "name": "DomainIsCAManager",
+                            "condition": "$env.args.domain == $env.authority.admin.ca.manager"
+                        },
+                        {
+                            "name": "DomainIsDataplaneManager",
+                            "condition": "$env.args.domain == $env.authority.admin.dp.manager"
+                        },
+                        {
+                            "name": "DomainIsL4LB",
+                            "condition": "$env.args.domain == $env.authority.system.dp.l4lb"
+                        },
+                        {
+                            "name": "DomainIsPoPCache",
+                            "condition": "$env.args.domain == $env.authority.system.dp.popcache"
+                        },
+                        {
+                            "name": "DomainIsMetrics",
+                            "condition": "$env.args.domain == $env.authority.system.metrics.prometheus"
+                        },
+                        {
+                            "name": "DomainIsDNS",
+                            "condition": "$env.args.domain == $env.authority.system.dp.dns"
+                        },
+                        {
+                            "name": "DomainIsRouter",
+                            "condition": "$env.args.domain == $env.authority.system.dp.router"
+                        },
+                        {
+                            "name": "DomainIsWorkload",
+                            "condition": "$env.args.domain == $env.authority.system.dp.workload"
+                        }
+                    ]
+                },
+                {
+                    "name": "UserHasRequiredRole",
+                    "or": [
+                        {
+                            "name": "HumanUserHasManagementRole",
+                            "condition": "$user.roles list_contains `admin`"
+                        },
+                        {
+                            "name": "SystemBotIfNoBootstrapToken",
+                            "and": [
+                                {
+                                    "name": "IsSystemBot",
+                                    "condition": "$user.roles list_contains `root_issuer_bot`"
+                                },
+                                {
+                                    "name": "InitialSystemSetup",
+                                    "condition": "$env.ca.bootstrap_tokens.count == 0 and $env.ca.admins.count == 0"
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+}

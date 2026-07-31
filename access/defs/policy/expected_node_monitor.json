@@ -1,0 +1,25 @@
+{
+    "name": "ExpectedNodeMonitor",
+    "policy": "Allow",
+    "description": "Read-only declared-inventory access for the monitor role: nodewatch cross-checks node_list against what should exist.",
+    "resource": "expected_node",
+    "action": [
+        "list",
+        "get"
+    ],
+    "or": [
+        {
+            "name": "CanExpectedNodeMonitor",
+            "and": [
+                {
+                    "name": "UserAuthorityIsManager",
+                    "condition": "$user.authority.full_name suffix $env.authority.admin.ca.manager."
+                },
+                {
+                    "name": "UserHasMonitorRole",
+                    "condition": "$user.roles list_contains `monitor`"
+                }
+            ]
+        }
+    ]
+}

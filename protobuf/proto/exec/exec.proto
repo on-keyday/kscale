@@ -1,0 +1,25 @@
+syntax = "proto3";
+
+package ksdk.exec;
+
+option go_package = "github.com/on-keyday/kscale/protobuf/proto/exec";
+
+// EXEC stream の冒頭 1 message。trsf-level magic (consts.StreamMagicEXEC)
+// 消費後、続いてこの ExecCommand が length-prefixed で送られる。受け手は decode
+// して process を spawn し、以降は objtrsf/exec/frame の入出力 (stdin/stdout/
+// stderr/control) に切り替わる。
+//
+// 旧 wire は objproto.ObjectMap{cmd, args, pty} だったが、A4 で typed proto に
+// 置換。
+message ExecCommand {
+    string cmd = 1;
+    repeated string args = 2;
+    bool pty = 3;
+    // Routing fields — read by the control plane to relay the EXEC stream to a
+    // target dataplane peer; ignored by the dp that actually runs the command.
+    string dp_type = 4; // target dataplane type, e.g. "popcache"
+    // target transport ConnectionID ("udp:host:port-id"); identical to the
+    // `connection` resource's connection_id for that peer. Empty for a
+    // cplane_execute_command (run on the control plane itself).
+    string address = 5;
+}

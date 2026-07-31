@@ -1,0 +1,36 @@
+{
+    "name": "DenyControlPortOpen",
+    "policy": "Deny",
+    "resource": "open_port",
+    "action": [
+        "apply"
+    ],
+    "or": [
+        {
+            "name": "ContainsControlPortOpen",
+            "description": "Deny opening control ports",
+            "or": [
+                {
+                    "name": "Contains kscale control ports",
+                    "description": "Current stack: CP transport (udp:9443), CP WebSocket (tcp:9444), metricsgw (tcp:9091)",
+                    "condition": "$env.args.ports list_contains_any [`udp:9443`,`tcp:9444`,`tcp:9091`]"
+                },
+                {
+                    "name": "Contains TCP dataplane control ports",
+                    "description": "ksdk-era CP ports (udp:8443 listen, tcp:8080 websocket); nothing listens there in kscale, kept as defense-in-depth",
+                    "condition": "$env.args.ports list_contains_any [`udp:8443`,`tcp:8080`]"
+                },
+                {
+                    "name": "Contains UDP dataplane control ports",
+                    "description": "ksdk-era dataplane agent client ports; kept as defense-in-depth",
+                    "condition": "$env.args.ports list_contains_any [`udp:10100`,`udp:10101`,`udp:10102`,`udp:10103`,`udp:10104`]"
+                },
+                {
+                    "name": "Contains Golang pprof ports",
+                    "description": "ksdk-era pprof ports (kscale has no pprof listener); kept as defense-in-depth",
+                    "condition": "$env.args.ports list_contains_any [`tcp:6060`,`tcp:6061`,`tcp:6062`,`tcp:6063`,`tcp:6064`]"
+                }
+            ]
+        }
+    ]
+}

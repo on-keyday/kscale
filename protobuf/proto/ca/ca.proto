@@ -1,0 +1,52 @@
+syntax = "proto3";
+
+package ksdk.ca;
+
+option go_package = "github.com/on-keyday/kscale/protobuf/proto/ca";
+
+// CA / bootstrap protocol messages (A3)。
+// 旧 objproto.ObjectMap ベースの key-value 構造を proto 化したもの。
+// HandshakeRequest は bootstrap / 通常 (cert ベース) を兼ねる flat schema。
+// role により設定される field が変わる:
+//   role == "bootstrap" → pubkey_kind, pubkey, common_name, token, sig
+//   role 通常 (update_cert / その他) → x509, sig
+// unset field は proto3 default (空 string / 空 bytes) となる。
+
+message HandshakeRequest {
+    string role = 1;        // "bootstrap" / "update_cert" / その他 (アプリ固有)
+    string app = 2;         // app name (cert 用途識別)
+    bytes sig = 3;          // 署名 (transcript + 役割固有データに対して)
+
+    // bootstrap path only
+    string pubkey_kind = 4;
+    bytes pubkey = 5;
+    string common_name = 6;
+    bytes token = 7;
+
+    // non-bootstrap path (証明書ベース)
+    bytes x509 = 8;
+}
+
+message HandshakeResponse {
+    string role = 1;
+    bytes x509 = 2;         // sender (CA / peer) の証明書 DER
+    bytes sig = 3;          // transcript への署名
+    bool self_signed = 4;   // bootstrap response の場合 true
+}
+
+// update_cert flow で client が新公開鍵を CA に登録する際のリクエスト。
+message UpdateCertRequest {
+    string pubkey_kind = 1;
+    bytes pubkey = 2;
+    bytes sig = 3;
+}
+
+// CA → client への発行/更新後の証明書配送。
+message Certificate {
+    bytes x509 = 1;
+}
+
+service CAService {
+    rpc Handshake(HandshakeRequest) returns (HandshakeResponse);
+    rpc UpdateCert(UpdateCertRequest) returns (Certificate);
+}

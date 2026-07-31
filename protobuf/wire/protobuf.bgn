@@ -1,0 +1,112 @@
+config.go.package = "wire"
+input.endian = config.endian.little
+
+fn zigzagEncode64(x :i64) -> u64:
+    return u64((x << 1) ^ (x >> 63))
+
+fn zigzagDecode64(x :u64) -> i64:
+    return i64(x >> 1) ^ -i64(x & 1) 
+
+fn zigzagEncode32(x :i32) -> u32:
+    return u32((x << 1) ^ (x >> 31))
+
+fn zigzagDecode32(x :u32) -> i32:
+    return i32(x >> 1) ^ -i32(x & 1) 
+
+format Fixed32:
+    value :u32
+
+format Fixed64:
+    value :u64
+
+format Varint:
+    len :u8
+    value :u64
+
+    fn decode():
+        value = 0
+        len = 0
+        for:
+            len <= 9
+            v := input.get()
+            value |= u64(v & 0x7f) << (7 * len)
+            len += 1
+            if v < 0x80:
+                return
+      
+
+    fn encode():
+        value_copy := value
+        counter := 0
+        for:
+            v := u8(value_copy & 0x7f)
+            value_copy = value_copy >> 7
+            if value_copy == 0 && (len == 0 || counter + 1 >= len):
+                output.put(v)
+                return
+            output.put(v | 0x80)
+            counter += 1
+
+
+enum WireType:
+    Varint = 0
+    Fixed64 = 1
+    LengthDelimited = 2
+    StartGroup = 3
+    EndGroup = 4
+    Fixed32 = 5
+
+format Tag:
+    tag :Varint
+    fn type() -> WireType:
+        return WireType(tag.value & 0x7)
+    fn set_type(w :WireType):
+        tag.value = tag.value & 0xfffffffffffffff8
+        tag.value = tag.value | u64(w) & 0x7
+    fn number() -> u64:
+        return tag.value >> 3
+    fn set_number(x :u64):
+        tag.value = tag.value & 0x7
+        tag.value = tag.value | x << 3
+
+format Field:
+    tag :Tag
+    config.go.union = "noheap"
+
+    
+    match tag.type():
+        WireType.Varint => value_vi :Varint
+        WireType.Fixed64 => value_64 :Fixed64
+        WireType.LengthDelimited:
+            length :Varint
+            value_data :[length.value]u8
+        WireType.StartGroup => ..
+        WireType.EndGroup => ..
+        WireType.Fixed32 => value_32 :Fixed32
+        .. => error("unexpected wire type")
+
+format Message:
+    fields :[..]Field
+
+format GRPCHeader:
+    compress :u8
+    len :ub32
+
+config.url = "https://github.com/containerd/ttrpc/blob/main/PROTOCOL.md"
+
+format TTRPCHeader:
+    len :u32 
+    stream_id :u32
+    msg_type :TTRPCMessageType
+    
+format TTRPCFlags:
+    reserved :u5
+    no_data :u1
+    remote_open :u1
+    remote_closed :u1
+
+enum TTRPCMessageType:
+    :u8 
+    request
+    response
+    data 

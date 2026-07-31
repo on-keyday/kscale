@@ -1,0 +1,22 @@
+{
+    "apps": [
+        {
+            "name": "admin"
+        },
+        {
+            "name": "l4lb"
+        },
+        {
+            "name": "popcache"
+        },
+        {
+            "name": "metrics"
+        },
+        {
+            "name": "dns"
+        },
+        {
+            "name": "router"
+        }
+    ]
+}

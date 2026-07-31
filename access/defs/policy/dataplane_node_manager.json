@@ -1,0 +1,33 @@
+{
+    "name": "DataplaneNodeManager",
+    "policy": "Allow",
+    "resource": "dataplane_node",
+    "action": [
+        "list",
+        "get",
+        "watch",
+        "start",
+        "stop"
+    ],
+    "or": [
+        {
+            "name": "CanManageDataplaneNodes",
+            "description": "Demo grants the CA-manager admin; the real owner is the dataplane manager.",
+            "and": [
+                {
+                    "name": "UserAuthorityIsManager",
+                    "condition": "$user.authority.full_name suffix $env.authority.admin.ca.manager."
+                },
+                {
+                    "name": "UserHasRequiredRole",
+                    "or": [
+                        {
+                            "name": "HumanUserHasManagementRole",
+                            "condition": "$user.roles list_contains `admin`"
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+}

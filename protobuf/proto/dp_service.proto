@@ -1,0 +1,234 @@
+syntax = "proto3";
+
+package ksdk.rpc;
+
+option go_package = "github.com/on-keyday/kscale/protobuf/proto";
+
+import "google/protobuf/empty.proto";
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/duration.proto";
+import "proto/ksdkpb/ksdk_options.proto";
+import "proto/stat/stat.proto";
+
+message FileInfo {
+    string name = 1;
+    // .rpc: uint64 size @hold("int64") — wire は uint64、Go では int64 (fs.FileSize 慣例)
+    uint64 size = 2 [(ksdk.hold) = "int64"];
+    google.protobuf.Timestamp modified_at = 3 [(ksdk.hold) = "time.Time"];
+    uint32 mode = 4 [(ksdk.hold) = "io/fs.FileMode"];
+}
+
+// Per-peer wrapper for FileInfo array (was: FileInfoFrom).
+message FileInfoFromPeer {
+    string peer = 1 [(ksdk.hold) = "github.com/on-keyday/objtrsf/objproto.ConnectionID"];
+    repeated FileInfo files = 2;
+}
+
+// 集約レスポンス (was: FilesList).
+message FilesList {
+    repeated FileInfoFromPeer files = 1;
+}
+
+message SentPacket {
+    // packet kind tag used by trsf for retransmission tracking. Originally
+    // packet.ValueKind; C-phase 統合で wire.ApplicationPayloadKind に統一。
+    uint32 packet_type = 1 [(ksdk.hold) = "github.com/on-keyday/objtrsf/trsf/wire.ApplicationPayloadKind"];
+    uint64 stream_id = 2 [(ksdk.hold) = "github.com/on-keyday/objtrsf/trsf.StreamID"];
+    google.protobuf.Timestamp sent_at = 3 [(ksdk.hold) = "time.Time"];
+    uint64 size = 4;
+    bool is_mtu_probe = 5;
+}
+
+message TransferInternalState {
+    uint64 active_send_streams = 1;
+    uint64 active_receive_streams = 2;
+    uint64 current_mtu = 3;
+    uint64 send_queue_length = 4;
+    uint64 receive_queue_length = 5;
+    uint64 send_action_count = 6;
+    uint64 update_window_count = 7;
+    uint64 cancel_stream_count = 8;
+    uint64 bytes_in_flight = 9;
+    uint64 congestion_window = 10;
+    google.protobuf.Duration smoothed_rtt = 11 [(ksdk.hold) = "time.Duration"];
+    google.protobuf.Duration rtt_variance = 12 [(ksdk.hold) = "time.Duration"];
+    repeated SentPacket sent_packets = 13;
+}
+
+// Per-peer wrapper (was: StateFrom[TransferInternalState]).
+message TransferInternalStateFromPeer {
+    string peer = 1 [(ksdk.hold) = "github.com/on-keyday/objtrsf/objproto.ConnectionID"];
+    TransferInternalState state = 2;
+}
+
+// 集約 (was: PeerStates[TransferInternalState] aka TransferInternalStates).
+message TransferInternalStates {
+    repeated TransferInternalStateFromPeer states = 1;
+}
+
+message DataplaneServiceListFilesRequest {
+    string dir = 1;
+}
+
+message DataplaneServiceListFilesResponse {
+    repeated FileInfo files = 1;
+}
+
+message DataplaneServiceRemoveFileRequest {
+    string file = 1;
+}
+
+message DataplaneServiceRemoveDirRequest {
+    string dir = 1;
+}
+
+message DataplaneServiceGetTransferStateResponse {
+    TransferInternalState state = 1;
+}
+
+// UpdateVip コマンド (旧 AgentControl_UpdateVip)。vip は VIP アドレスの文字列表現。
+// 成否は RPCStatus / RPCError で返るため response は Empty。
+message DataplaneServiceUpdateVipRequest {
+    string vip = 1;
+    // icmp_echo: answer VIP-destined ICMPv4 echo requests in the l4lb XDP data
+    // plane (l4lb only; other dp_types ignore it). Default off.
+    bool icmp_echo = 2;
+}
+
+// Destination は l4lb の eBPF dest table 1 エントリ (backend popcache node)。
+// server_id=QUIC-LB routing index, hardware_addr=宛先 MAC, ip_addr=宛先 IP。
+message Destination {
+    uint32 server_id = 1;
+    bytes hardware_addr = 2;
+    string ip_addr = 3;
+}
+
+// UpdateDestinations は CP が membership 駆動の reconcile で算出した dest 集合を
+// l4lb node に push する (ksdk は agent 側で算出し driver を直叩きしていた)。
+message DataplaneServiceUpdateDestinationsRequest {
+    repeated Destination dests = 1;
+}
+
+// UpdateRemote は逆方向 peering: CP が l4lb front {ip,mac} 集合を popcache node に
+// push し、popcache は各 remote への IPIP decap tunnel を張る (Destination を再利用、
+// server_id は未使用)。l4lb/dns/router は no-op。
+message DataplaneServiceUpdateRemoteRequest {
+    repeated Destination remotes = 1;
+}
+
+// SyncSecret は QUIC-LB connection ID 用の派生共有鍵を運ぶ (旧 AgentControl_SyncSecret)。
+message DataplaneServiceSyncSecretRequest {
+    bytes shared_secret = 1;
+}
+
+// 旧 GenericControl の複数 DP 共通 command。bind-interface は L4LB+Popcache、
+// update-mtu は L4LB+Router が実装し、非対応 DP は unknown command エラーを返す。
+// 値は receiver に委譲して parse するため string。
+message DataplaneServiceBindInterfaceRequest {
+    string interface = 1;
+}
+message DataplaneServiceUpdateMtuRequest {
+    string mtu = 1;
+}
+
+// SendFile (旧 AgentControl_SendFilePullFile)。control plane → dataplane に
+// 「file_name を取得して save_as として保存せよ」を通知する。dataplane 側は
+// これを受けて control plane へ DownloadFile (逆 pull) を発行する。成否は
+// RPCStatus / RPCError で返るため response は Empty。
+message DataplaneServiceSendFileRequest {
+    string file_name = 1;
+    string save_as = 2;
+    // The file content, pushed inline (unary). Small files only (config / WASM ~
+    // 100s of KB); a large-blob path would stream instead.
+    bytes content = 3;
+}
+
+// LogAttr is one structured slog attribute (key plus the value rendered to its
+// canonical string form). Group attributes arrive as dotted keys.
+message LogAttr {
+    string key = 1;
+    string value = 2;
+}
+
+// LogRecord is one structured log entry captured from slog — shipped with its
+// fields intact (no flattening to a text line) so the northbound viewer keeps the
+// structure. time is the record's timestamp in unix nanoseconds.
+message LogRecord {
+    int64 time_unix_nano = 1;
+    string level = 2;
+    string message = 3;
+    repeated LogAttr attrs = 4;
+}
+
+// SetLogLevel switches the node's live log verbosity (debug/info/warn/error).
+message DataplaneServiceSetLogLevelRequest {
+    string level = 1;
+}
+
+// TailLogs asks for the newest matching records from the process's retained log
+// ring. Filters run on the node so only matches cross the wire.
+message DataplaneServiceTailLogsRequest {
+    string level = 1;    // minimum level (debug/info/warn/error); "" = all levels
+    string contains = 2; // substring of the message or any attr key/value; "" = all
+    int32 lines = 3;     // max newest records returned (0 = the whole ring)
+}
+
+// TailLogs response: the matching records, oldest first.
+message DataplaneServiceTailLogsResponse {
+    repeated LogRecord records = 1;
+}
+
+// GetLogLevel reports the node's current live log verbosity.
+message DataplaneServiceGetLogLevelResponse {
+    string level = 1;
+}
+
+// SetBalancerObject configures which eBPF objects an l4lb node loads — by file name in
+// the node's file store (shipped there via node_file / dp-file SendFile). Applied at the
+// next StartDataplane; reloaded live if the dataplane is already running. No-op on
+// non-l4lb nodes.
+message DataplaneServiceSetBalancerObjectRequest {
+    string object = 1;        // XDP balancer object file name (e.g. lb.o)
+    string crypto_object = 2; // crypto eBPF object file name (e.g. init_crypto.o)
+    string pin_dir = 3;       // eBPF pin directory (e.g. /sys/fs/bpf)
+}
+
+service DataplaneService {
+    rpc ListFiles(DataplaneServiceListFilesRequest) returns (DataplaneServiceListFilesResponse);
+    rpc RemoveFile(DataplaneServiceRemoveFileRequest) returns (google.protobuf.Empty);
+    rpc RemoveDir(DataplaneServiceRemoveDirRequest) returns (google.protobuf.Empty);
+    rpc GetTransferState(google.protobuf.Empty) returns (DataplaneServiceGetTransferStateResponse);
+    rpc UpdateVip(DataplaneServiceUpdateVipRequest) returns (google.protobuf.Empty);
+    rpc UpdateDestinations(DataplaneServiceUpdateDestinationsRequest) returns (google.protobuf.Empty);
+    rpc UpdateRemote(DataplaneServiceUpdateRemoteRequest) returns (google.protobuf.Empty);
+    // StartDataplane / StopDataplane は signal-only (旧 AgentControl_Start/StopDataplane)。
+    rpc StartDataplane(google.protobuf.Empty) returns (google.protobuf.Empty);
+    rpc StopDataplane(google.protobuf.Empty) returns (google.protobuf.Empty);
+    rpc SyncSecret(DataplaneServiceSyncSecretRequest) returns (google.protobuf.Empty);
+    rpc BindInterface(DataplaneServiceBindInterfaceRequest) returns (google.protobuf.Empty);
+    rpc UpdateMtu(DataplaneServiceUpdateMtuRequest) returns (google.protobuf.Empty);
+    rpc SendFile(DataplaneServiceSendFileRequest) returns (google.protobuf.Empty);
+    // SetLogLevel switches this node's live slog level (the control plane calls it
+    // when an admin sets the logs set-level action for the node).
+    rpc SetLogLevel(DataplaneServiceSetLogLevelRequest) returns (google.protobuf.Empty);
+    // GetLogLevel reports this node's current live slog level.
+    rpc GetLogLevel(google.protobuf.Empty) returns (DataplaneServiceGetLogLevelResponse);
+    // SetBalancerObject configures which eBPF objects an l4lb node loads (l4lb_object
+    // resource). No-op on non-l4lb nodes.
+    rpc SetBalancerObject(DataplaneServiceSetBalancerObjectRequest) returns (google.protobuf.Empty);
+    // StreamLogs is the southbound log path: the control plane (the RPC client)
+    // opens it on a node when an admin subscribes (the stream lifecycle IS the
+    // on/off toggle — no separate enable flag), and the node (the server) streams
+    // its structured slog records until the CP closes it.
+    rpc StreamLogs(google.protobuf.Empty) returns (stream LogRecord);
+    // TailLogs is StreamLogs's bounded companion: the newest matching records from
+    // the process's retained ring (~200), filtered node-side. Backs the northbound
+    // logs tail action (the monitor LLM's log tool — a stream never returns within
+    // its loop step).
+    rpc TailLogs(DataplaneServiceTailLogsRequest) returns (DataplaneServiceTailLogsResponse);
+    // StreamStats is the southbound stat-reporting path: the control plane (the
+    // RPC client) opens it on each connected node, and the node (the server)
+    // streams a StatBatch every interval. The CP caches the latest per node for
+    // the northbound Stats resource (get/watch).
+    rpc StreamStats(google.protobuf.Empty) returns (stream ksdk.stat.StatBatch);
+}

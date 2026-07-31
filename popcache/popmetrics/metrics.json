@@ -1,0 +1,136 @@
+{
+    "metrics": [
+        {
+            "name": "requests_total",
+            "type": "uint64"
+        },
+        {
+            "name": "requests_end_total",
+            "type": "uint64"
+        },
+        {
+            "name": "connect_total",
+            "type": "uint64"
+        },
+        {
+            "name": "cache_hits_total",
+            "type": "uint64"
+        },
+        {
+            "name": "cache_misses_total",
+            "type": "uint64"
+        },
+        {
+            "name": "close_total",
+            "type": "uint64"
+        },
+        {
+            "name": "hijacked_total",
+            "type": "uint64"
+        },
+        {
+            "name": "per_method_total",
+            "type": "uint64",
+            "label_name": "method",
+            "labels": [
+                {
+                    "name": "get",
+                    "label": "GET"
+                },
+                {
+                    "name": "head",
+                    "label": "HEAD"
+                },
+                {
+                    "name": "post",
+                    "label": "POST"
+                },
+                {
+                    "name": "put",
+                    "label": "PUT"
+                },
+                {
+                    "name": "delete",
+                    "label": "DELETE"
+                },
+                {
+                    "name": "patch",
+                    "label": "PATCH"
+                },
+                {
+                    "name": "options",
+                    "label": "OPTIONS"
+                },
+                {
+                    "name": "trace",
+                    "label": "TRACE"
+                },
+                {
+                    "name": "connect",
+                    "label": "CONNECT"
+                },
+                {
+                    "name": "other",
+                    "label": "OTHER"
+                }
+            ]
+        },
+        {
+            "name": "per_protocol_total",
+            "type": "uint64",
+            "label_name": "protocol",
+            "labels": [
+                {
+                    "name": "http10_plain",
+                    "label": "HTTP1.0(plain)"
+                },
+                {
+                    "name": "http10",
+                    "label": "HTTP1.0"
+                },
+                {
+                    "name": "http11_plain",
+                    "label": "HTTP1.1(plain)"
+                },
+                {
+                    "name": "http11",
+                    "label": "HTTP1.1"
+                },
+                {
+                    "name": "http2",
+                    "label": "HTTP2"
+                },
+                {
+                    "name": "http3",
+                    "label": "HTTP3"
+                },
+                {
+                    "name": "other_plain",
+                    "label": "OTHER(plain)"
+                },
+                {
+                    "name": "other",
+                    "label": "OTHER"
+                }
+            ]
+        },
+        {
+            "name": "http_port",
+            "type": "uint16",
+            "hold_type": "uint32",
+            "kind": "gauge"
+        },
+        {
+            "name": "https_port",
+            "type": "uint16",
+            "hold_type": "uint32",
+            "kind": "gauge"
+        },
+        {
+            "name": "http3_port",
+            "type": "uint16",
+            "hold_type": "uint32",
+            "kind": "gauge"
+        }
+    ]
+}

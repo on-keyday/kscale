@@ -1,0 +1,19 @@
+{
+    "name": "AllowRemoteShellCommandExecution",
+    "policy": "Allow",
+    "resource": "remote_shell",
+    "action": [
+        "dp_execute_command",
+        "cplane_execute_command"
+    ],
+    "and": [
+        {
+            "name": "AdminManagerCanExecuteCommands",
+            "condition": "$user.authority.full_name suffix $env.authority.admin.ca.manager."
+        },
+        {
+            "name": "FewSecondsAfterLogin",
+            "condition": "$user.login_time.since duration_lt `10s`"
+        }
+    ]
+}

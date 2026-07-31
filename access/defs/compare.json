@@ -1,0 +1,845 @@
+{
+    "precompile": [
+        {
+            "name": "timePrecompile",
+            "go_type": "time.Time",
+            "placeholder": "$1",
+            "method": "time.Parse(time.RFC3339, $1)"
+        },
+        {
+            "name": "durationPrecompile",
+            "go_type": "time.Duration",
+            "placeholder": "$1",
+            "method": "time.ParseDuration($1)"
+        },
+        {
+            "name": "timePrecompile",
+            "go_type": "time.Time",
+            "placeholder": "$1",
+            "method": "time.Parse(time.RFC3339, $1)"
+        },
+        {
+            "name": "stringSetPrecompile",
+            "go_type": "map[string]struct{}",
+            "placeholder": "$1",
+            "method": "makeStringSet($1)"
+        },
+        {
+            "name": "regexPrecompile",
+            "go_type": "*regexp.Regexp",
+            "placeholder": "$1",
+            "method": "regexp.Compile($1)"
+        },
+        {
+            "name": "ipPrecompile",
+            "go_type": "netip.Addr",
+            "placeholder": "$1",
+            "method": "netip.ParseAddr($1)"
+        },
+        {
+            "name": "cidrPrecompile",
+            "go_type": "netip.Prefix",
+            "placeholder": "$1",
+            "method": "netip.ParsePrefix($1)"
+        }
+    ],
+    "compare": [
+        {
+            "//_category": "=== STRING OPERATORS ===",
+            "id": "StringEquals",
+            "alias": [
+                "string_equal",
+                "str_eq"
+            ],
+            "description": "文字列の完全一致",
+            "target_go_type": "string",
+            "imports": [],
+            "arguments": [
+                {
+                    "placeholder": "$1",
+                    "go_type": "string",
+                    "name": "value"
+                }
+            ],
+            "logic_expression": "$Target == $1"
+        },
+        {
+            "id": "StringNotEquals",
+            "alias": [
+                "string_not_equal",
+                "str_neq"
+            ],
+            "description": "文字列の不一致",
+            "target_go_type": "string",
+            "imports": [],
+            "arguments": [
+                {
+                    "placeholder": "$1",
+                    "go_type": "string",
+                    "name": "value"
+                }
+            ],
+            "logic_expression": "$Target != $1"
+        },
+        {
+            "id": "StringPrefix",
+            "alias": [
+                "startswith",
+                "prefix"
+            ],
+            "description": "文字列の前方一致",
+            "target_go_type": "string",
+            "imports": [
+                "strings"
+            ],
+            "arguments": [
+                {
+                    "placeholder": "$1",
+                    "go_type": "string",
+                    "name": "prefix"
+                }
+            ],
+            "logic_expression": "strings.HasPrefix($Target, $1)"
+        },
+        {
+            "id": "StringSuffix",
+            "alias": [
+                "endswith",
+                "suffix"
+            ],
+            "description": "文字列の後方一致",
+            "target_go_type": "string",
+            "imports": [
+                "strings"
+            ],
+            "arguments": [
+                {
+                    "placeholder": "$1",
+                    "go_type": "string",
+                    "name": "suffix"
+                }
+            ],
+            "logic_expression": "strings.HasSuffix($Target, $1)"
+        },
+        {
+            "id": "StringContains",
+            "alias": [
+                "substring",
+                "contains"
+            ],
+            "description": "文字列の部分一致（含む）",
+            "target_go_type": "string",
+            "imports": [
+                "strings"
+            ],
+            "arguments": [
+                {
+                    "placeholder": "$1",
+                    "go_type": "string",
+                    "name": "substr"
+                }
+            ],
+            "logic_expression": "strings.Contains($Target, $1)"
+        },
+        {
+            "id": "StringGlob",
+            "alias": [
+                "wildcard",
+                "glob"
+            ],
+            "description": "ワイルドカード一致 (例: foo*)",
+            "target_go_type": "string",
+            "imports": [
+                "path/filepath"
+            ],
+            "arguments": [
+                {
+                    "placeholder": "$1",
+                    "go_type": "string",
+                    "name": "pattern"
+                }
+            ],
+            "logic_expression": "filepath.Match($Target, $1)",
+            "logic_has_error": true
+        },
+        {
+            "id": "StringRegex",
+            "alias": [
+                "regex"
+            ],
+            "description": "正規表現一致",
+            "target_go_type": "string",
+            "imports": [
+                "regexp"
+            ],
+            "arguments": [
+                {
+                    "placeholder": "$1",
+                    "go_type": "string",
+                    "name": "pattern",
+                    "precompile": "regexPrecompile"
+                }
+            ],
+            "logic_expression": "regexMatch($Target, $1)"
+        },
+        {
+            "//_category": "=== NUMERIC OPERATORS ===",
+            "id": "NumericEquals",
+            "alias": [
+                "num_equal",
+                "num_eq"
+            ],
+            "description": "数値の一致 (浮動小数点)",
+            "target_go_type": "float64",
+            "imports": [],
+            "arguments": [
+                {
+                    "placeholder": "$1",
+                    "go_type": "float64",
+                    "name": "value"
+                }
+            ],
+            "logic_expression": "$Target == $1"
+        },
+        {
+            "id": "NumericNotEquals",
+            "alias": [
+                "num_not_equal",
+                "num_neq"
+            ],
+            "description": "数値の不一致 (浮動小数点)",
+            "target_go_type": "float64",
+            "imports": [],
+            "arguments": [
+                {
+                    "placeholder": "$1",
+                    "go_type": "float64",
+                    "name": "value"
+                }
+            ],
+            "logic_expression": "$Target != $1"
+        },
+        {
+            "id": "NumericGreaterThan",
+            "alias": [
+                "num_greater_than",
+                "num_gt"
+            ],
+            "description": "大なり (>) (浮動小数点)",
+            "target_go_type": "float64",
+            "imports": [],
+            "arguments": [
+                {
+                    "placeholder": "$1",
+                    "go_type": "float64",
+                    "name": "threshold"
+                }
+            ],
+            "logic_expression": "$Target > $1"
+        },
+        {
+            "id": "NumericGreaterThanOrEqual",
+            "alias": [
+                "num_greater_than_or_equal",
+                "num_gte"
+            ],
+            "description": "以上 (>=) (浮動小数点)",
+            "target_go_type": "float64",
+            "imports": [],
+            "arguments": [
+                {
+                    "placeholder": "$1",
+                    "go_type": "float64",
+                    "name": "threshold"
+                }
+            ],
+            "logic_expression": "$Target >= $1"
+        },
+        {
+            "id": "NumericLessThan",
+            "alias": [
+                "num_less_than",
+                "num_lt"
+            ],
+            "description": "小なり (<) (浮動小数点)",
+            "target_go_type": "float64",
+            "imports": [],
+            "arguments": [
+                {
+                    "placeholder": "$1",
+                    "go_type": "float64",
+                    "name": "threshold"
+                }
+            ],
+            "logic_expression": "$Target < $1"
+        },
+        {
+            "id": "NumericLessThanOrEqual",
+            "alias": [
+                "num_less_than_or_equal",
+                "num_lte"
+            ],
+            "description": "以下 (<=) (浮動小数点)",
+            "target_go_type": "float64",
+            "imports": [],
+            "arguments": [
+                {
+                    "placeholder": "$1",
+                    "go_type": "float64",
+                    "name": "threshold"
+                }
+            ],
+            "logic_expression": "$Target <= $1"
+        },
+        {
+            "id": "NumericBetween",
+            "alias": [
+                "num_between"
+            ],
+            "description": "数値範囲 (Min <= X <= Max) (浮動小数点)",
+            "target_go_type": "float64",
+            "imports": [],
+            "arguments": [
+                {
+                    "placeholder": "$1",
+                    "go_type": "float64",
+                    "name": "min"
+                },
+                {
+                    "placeholder": "$2",
+                    "go_type": "float64",
+                    "name": "max"
+                }
+            ],
+            "logic_expression": "$Target >= $1 && $Target <= $2"
+        },
+        {
+            "id": "IntegerEquals",
+            "alias": [
+                "int_equal",
+                "int_eq"
+            ],
+            "description": "数値の一致 (整数)",
+            "target_go_type": "int64",
+            "imports": [],
+            "arguments": [
+                {
+                    "placeholder": "$1",
+                    "go_type": "int64",
+                    "name": "value"
+                }
+            ],
+            "logic_expression": "$Target == $1"
+        },
+        {
+            "id": "IntegerNotEquals",
+            "alias": [
+                "int_not_equal",
+                "int_neq"
+            ],
+            "description": "数値の不一致 (整数)",
+            "target_go_type": "int64",
+            "imports": [],
+            "arguments": [
+                {
+                    "placeholder": "$1",
+                    "go_type": "int64",
+                    "name": "value"
+                }
+            ],
+            "logic_expression": "$Target != $1"
+        },
+        {
+            "id": "IntegerGreaterThan",
+            "alias": [
+                "int_greater_than",
+                "int_gt"
+            ],
+            "description": "大なり (>) (整数)",
+            "target_go_type": "int64",
+            "imports": [],
+            "arguments": [
+                {
+                    "placeholder": "$1",
+                    "go_type": "int64",
+                    "name": "threshold"
+                }
+            ],
+            "logic_expression": "$Target > $1"
+        },
+        {
+            "id": "IntegerGreaterThanOrEqual",
+            "alias": [
+                "int_greater_than_or_equal",
+                "int_gte"
+            ],
+            "description": "以上 (>=) (整数)",
+            "target_go_type": "int64",
+            "imports": [],
+            "arguments": [
+                {
+                    "placeholder": "$1",
+                    "go_type": "int64",
+                    "name": "threshold"
+                }
+            ],
+            "logic_expression": "$Target >= $1"
+        },
+        {
+            "id": "IntegerLessThan",
+            "alias": [
+                "int_less_than",
+                "int_lt"
+            ],
+            "description": "小なり (<) (整数)",
+            "target_go_type": "int64",
+            "imports": [],
+            "arguments": [
+                {
+                    "placeholder": "$1",
+                    "go_type": "int64",
+                    "name": "threshold"
+                }
+            ],
+            "logic_expression": "$Target < $1"
+        },
+        {
+            "id": "IntegerLessThanOrEqual",
+            "alias": [
+                "int_less_than_or_equal",
+                "int_lte"
+            ],
+            "description": "以下 (<=) (整数)",
+            "target_go_type": "int64",
+            "imports": [],
+            "arguments": [
+                {
+                    "placeholder": "$1",
+                    "go_type": "int64",
+                    "name": "threshold"
+                }
+            ],
+            "logic_expression": "$Target <= $1"
+        },
+        {
+            "id": "IntegerBetween",
+            "alias": [
+                "int_between"
+            ],
+            "description": "数値範囲 (Min <= X <= Max) (整数)",
+            "target_go_type": "int64",
+            "imports": [],
+            "arguments": [
+                {
+                    "placeholder": "$1",
+                    "go_type": "int64",
+                    "name": "min"
+                },
+                {
+                    "placeholder": "$2",
+                    "go_type": "int64",
+                    "name": "max"
+                }
+            ],
+            "logic_expression": "$Target >= $1 && $Target <= $2"
+        },
+        {
+            "id": "DurationEquals",
+            "alias": [
+                "duration_equal",
+                "duration_eq"
+            ],
+            "description": "期間の一致",
+            "target_go_type": "time.Duration",
+            "imports": [
+                "time"
+            ],
+            "arguments": [
+                {
+                    "placeholder": "$1",
+                    "go_type": "string",
+                    "name": "duration",
+                    "precompile": "durationPrecompile"
+                }
+            ],
+            "logic_expression": "$Target == $1"
+        },
+        {
+            "id": "DurationNotEquals",
+            "alias": [
+                "duration_not_equal",
+                "duration_neq"
+            ],
+            "description": "期間の不一致",
+            "target_go_type": "time.Duration",
+            "imports": [
+                "time"
+            ],
+            "arguments": [
+                {
+                    "placeholder": "$1",
+                    "go_type": "string",
+                    "name": "duration",
+                    "precompile": "durationPrecompile"
+                }
+            ],
+            "logic_expression": "$Target != $1"
+        },
+        {
+            "id": "DurationLessThan",
+            "alias": [
+                "duration_less_than",
+                "duration_lt"
+            ],
+            "description": "期間の小なり (<)",
+            "target_go_type": "time.Duration",
+            "imports": [
+                "time"
+            ],
+            "arguments": [
+                {
+                    "placeholder": "$1",
+                    "go_type": "string",
+                    "name": "duration",
+                    "precompile": "durationPrecompile"
+                }
+            ],
+            "logic_expression": "$Target < $1"
+        },
+        {
+            "id": "DurationLessThanOrEqual",
+            "alias": [
+                "duration_less_than_or_equal",
+                "duration_lte"
+            ],
+            "description": "期間の以下 (<=)",
+            "target_go_type": "time.Duration",
+            "imports": [
+                "time"
+            ],
+            "arguments": [
+                {
+                    "placeholder": "$1",
+                    "go_type": "string",
+                    "name": "duration",
+                    "precompile": "durationPrecompile"
+                }
+            ],
+            "logic_expression": "$Target <= $1"
+        },
+        {
+            "id": "DurationGreaterThan",
+            "alias": [
+                "duration_greater_than",
+                "duration_gt"
+            ],
+            "description": "期間の大なり (>)",
+            "target_go_type": "time.Duration",
+            "imports": [
+                "time"
+            ],
+            "arguments": [
+                {
+                    "placeholder": "$1",
+                    "go_type": "string",
+                    "name": "duration",
+                    "precompile": "durationPrecompile"
+                }
+            ],
+            "logic_expression": "$Target > $1"
+        },
+        {
+            "id": "DurationGreaterThanOrEqual",
+            "alias": [
+                "duration_greater_than_or_equal",
+                "duration_gte"
+            ],
+            "description": "期間の以上 (>=)",
+            "target_go_type": "time.Duration",
+            "imports": [
+                "time"
+            ],
+            "arguments": [
+                {
+                    "placeholder": "$1",
+                    "go_type": "string",
+                    "name": "duration",
+                    "precompile": "durationPrecompile"
+                }
+            ],
+            "logic_expression": "$Target >= $1"
+        },
+        {
+            "id": "DurationBetween",
+            "alias": [
+                "duration_between"
+            ],
+            "description": "期間範囲 (Min <= X <= Max)",
+            "target_go_type": "time.Duration",
+            "imports": [
+                "time"
+            ],
+            "arguments": [
+                {
+                    "placeholder": "$1",
+                    "go_type": "string",
+                    "name": "min",
+                    "precompile": "durationPrecompile"
+                },
+                {
+                    "placeholder": "$2",
+                    "go_type": "string",
+                    "name": "max",
+                    "precompile": "durationPrecompile"
+                }
+            ],
+            "logic_expression": "$Target >= $1 && $Target <= $2"
+        },
+        {
+            "id": "TimeEquals",
+            "alias": [
+                "time_equal",
+                "time_eq"
+            ],
+            "description": "時刻の一致",
+            "target_go_type": "time.Time",
+            "imports": [
+                "time"
+            ],
+            "arguments": [
+                {
+                    "placeholder": "$1",
+                    "go_type": "string",
+                    "name": "time",
+                    "precompile": "timePrecompile"
+                }
+            ],
+            "logic_expression": "$Target.Equal($1)"
+        },
+        {
+            "id": "TimeNotEquals",
+            "alias": [
+                "time_not_equal",
+                "time_neq"
+            ],
+            "description": "時刻の不一致",
+            "target_go_type": "time.Time",
+            "imports": [
+                "time"
+            ],
+            "arguments": [
+                {
+                    "placeholder": "$1",
+                    "go_type": "string",
+                    "name": "time",
+                    "precompile": "timePrecompile"
+                }
+            ],
+            "logic_expression": "!$Target.Equal($1)"
+        },
+        {
+            "id": "TimeBefore",
+            "alias": [
+                "time_before"
+            ],
+            "description": "時刻が指定時刻より前であるか",
+            "target_go_type": "time.Time",
+            "imports": [
+                "time"
+            ],
+            "arguments": [
+                {
+                    "placeholder": "$1",
+                    "go_type": "string",
+                    "name": "time",
+                    "precompile": "timePrecompile"
+                }
+            ],
+            "logic_expression": "$Target.Before($1)"
+        },
+        {
+            "id": "TimeAfter",
+            "alias": [
+                "time_after"
+            ],
+            "description": "時刻が指定時刻より後であるか",
+            "target_go_type": "time.Time",
+            "imports": [
+                "time"
+            ],
+            "arguments": [
+                {
+                    "placeholder": "$1",
+                    "go_type": "string",
+                    "name": "time",
+                    "precompile": "timePrecompile"
+                }
+            ],
+            "logic_expression": "$Target.After($1)"
+        },
+        {
+            "id": "TimeBetween",
+            "alias": [
+                "time_between"
+            ],
+            "description": "時刻範囲 (Start <= X <= End)",
+            "target_go_type": "time.Time",
+            "imports": [
+                "time"
+            ],
+            "arguments": [
+                {
+                    "placeholder": "$1",
+                    "go_type": "string",
+                    "name": "start",
+                    "precompile": "timePrecompile"
+                },
+                {
+                    "placeholder": "$2",
+                    "go_type": "string",
+                    "name": "end",
+                    "precompile": "timePrecompile"
+                }
+            ],
+            "logic_expression": "!$Target.Before($1) && !$Target.After($2)"
+        },
+        {
+            "//_category": "=== LIST/COLLECTION OPERATORS ===",
+            "id": "StringListContains",
+            "alias": [
+                "list_contains"
+            ],
+            "description": "リスト(Target)の中に値($1)が含まれるか",
+            "target_go_type": "[]string",
+            "imports": [
+                "slices"
+            ],
+            "arguments": [
+                {
+                    "placeholder": "$1",
+                    "go_type": "string",
+                    "name": "item"
+                }
+            ],
+            "logic_expression": "slices.Contains($Target, $1)"
+        },
+        {
+            "id": "StringInList",
+            "alias": [
+                "str_in_list",
+                "in"
+            ],
+            "description": "値(Target)がリスト($1)の中に含まれるか",
+            "target_go_type": "string",
+            "imports": [],
+            "arguments": [
+                {
+                    "placeholder": "$1",
+                    "go_type": "[]string",
+                    "name": "allowedList"
+                }
+            ],
+            "logic_expression": "slices.Contains($1, $Target)"
+        },
+        {
+            "id": "StringListContainsAny",
+            "alias": [
+                "list_contains_any"
+            ],
+            "description": "リスト(Target)とリスト($1)に共通項があるか",
+            "target_go_type": "[]string",
+            "imports": [],
+            "arguments": [
+                {
+                    "placeholder": "$1",
+                    "go_type": "[]string",
+                    "name": "candidates",
+                    "precompile": "stringSetPrecompile"
+                }
+            ],
+            "logic_expression": "stringListContainsAny($Target, $1)"
+        },
+        {
+            "id": "StringListContainsAll",
+            "description": "リスト(Target)がリスト($1)の要素を全て含んでいるか",
+            "target_go_type": "[]string",
+            "imports": [],
+            "arguments": [
+                {
+                    "placeholder": "$1",
+                    "go_type": "[]string",
+                    "name": "requiredItems"
+                }
+            ],
+            "logic_expression": "stringListContainsAll($Target, $1)"
+        },
+        {
+            "id": "StringListIsEmpty",
+            "description": "リストが空であるか",
+            "target_go_type": "[]string",
+            "imports": [],
+            "arguments": [],
+            "logic_expression": "len($Target) == 0"
+        },
+        {
+            "//_category": "=== NETWORK OPERATORS ===",
+            "id": "IPEquals",
+            "description": "IPアドレスの一致",
+            "target_go_type": "netip.Addr",
+            "imports": [
+                "net/netip"
+            ],
+            "arguments": [
+                {
+                    "placeholder": "$1",
+                    "go_type": "string",
+                    "name": "ip",
+                    "precompile": "ipPrecompile"
+                }
+            ],
+            "logic_expression": "$Target == $1",
+            "logic_has_error": false
+        },
+        {
+            "id": "IPInCIDR",
+            "description": "IPアドレスがCIDR範囲内か",
+            "target_go_type": "netip.Addr",
+            "imports": [
+                "net/netip"
+            ],
+            "arguments": [
+                {
+                    "placeholder": "$1",
+                    "go_type": "string",
+                    "name": "cidr",
+                    "precompile": "cidrPrecompile"
+                }
+            ],
+            "logic_expression": "$1.Contains($Target)",
+            "logic_has_error": false
+        },
+        {
+            "//_category": "=== PRESENCE OPERATORS ===",
+            "id": "Exists",
+            "alias": [
+                "exists"
+            ],
+            "description": "値が存在する(nilでない)",
+            "target_go_type": "any",
+            "imports": [],
+            "arguments": [],
+            "logic_expression": "$Target != nil"
+        },
+        {
+            "id": "NotExists",
+            "alias": [
+                "not_exists"
+            ],
+            "description": "値が存在しない(nilである)",
+            "target_go_type": "any",
+            "imports": [],
+            "arguments": [],
+            "logic_expression": "$Target == nil"
+        }
+    ]
+}

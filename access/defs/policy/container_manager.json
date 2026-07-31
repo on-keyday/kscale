@@ -1,0 +1,28 @@
+{
+    "name": "ContainerManager",
+    "policy": "Allow",
+    "description": "Declare container workloads that should run on nodes (reconciled to the node's container runtime over CRI). The runtime socket is node-root-equivalent, so admin only.",
+    "resource": "container",
+    "action": [
+        "apply",
+        "get",
+        "list",
+        "delete",
+        "diff"
+    ],
+    "or": [
+        {
+            "name": "CanManageContainers",
+            "and": [
+                {
+                    "name": "UserAuthorityIsManager",
+                    "condition": "$user.authority.full_name suffix $env.authority.admin.ca.manager."
+                },
+                {
+                    "name": "UserHasAdminRole",
+                    "condition": "$user.roles list_contains `admin`"
+                }
+            ]
+        }
+    ]
+}

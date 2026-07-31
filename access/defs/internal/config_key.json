@@ -1,0 +1,78 @@
+{
+    "config": [
+        {
+            "name": "DataPlaneManager",
+            "type": "agent.BrokerAgent",
+            "imports": [
+                "github.com/on-keyday/kscale/agent"
+            ]
+        },
+        {
+            "name": "DataPlaneFileDir",
+            "type": "*os.Root",
+            "imports": [
+                "os"
+            ]
+        },
+        {
+            "name": "DataPlaneSharedSecret",
+            "type": "[]byte",
+            "imports": []
+        },
+        {
+            "name": "DataPlaneServerID",
+            "type": "uint32"
+        },
+        {
+            "name":"CA",
+            "type":"*ca.CA",
+            "imports":[
+                "github.com/on-keyday/kscale/ca"
+            ]
+        },
+        {
+            "name": "Session",
+            "type": "objproto.Endpoint",
+            "imports": [
+                "github.com/on-keyday/objtrsf/objproto"
+            ]
+        },
+        {
+            "name": "RootContext",
+            "type": "context.Context",
+            "imports": [
+                "context"
+            ]
+        },
+        {
+            "name": "StatsConfig",
+            "type": "*StatsConfig"
+        },
+        {
+            "name": "AppName",
+            "type": "string"
+        },
+        {
+            "name": "StatReporter",
+            "type": "stat.StatReporter",
+            "imports": [
+                "github.com/on-keyday/kscale/stat"
+            ]
+        },
+        {
+            "name": "TimeCollector",
+            "type": "*agent.TimeCollector",
+            "imports": [
+                "github.com/on-keyday/kscale/agent"
+            ]
+        },
+        {
+            "name": "CommonName",
+            "type": "string"
+        },
+        {
+            "name": "CustomStreamListener",
+            "type": "CustomStreamListener"
+        }
+    ]
+}

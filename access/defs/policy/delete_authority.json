@@ -1,0 +1,24 @@
+{
+    "name": "AllowDeleteAuthority",
+    "policy": "Allow",
+    "resource": "user_hierarchy_authority",
+    "action": [
+        "delete"
+    ],
+    "description": "Deleting an authority is cleanup of something that already exists, so — unlike create — it is NOT confined to a hierarchy: a CA-manager admin may delete ANY authority, by whatever name `authority list` shows (domain-full or not; the handler parses either). No $env.args.authority_name condition.",
+    "or": [
+        {
+            "name": "CanDeleteAuthority",
+            "and": [
+                {
+                    "name": "UserAuthorityIsCAManager",
+                    "condition": "$user.authority.full_name suffix $env.authority.admin.ca.manager."
+                },
+                {
+                    "name": "UserHasRequiredRole",
+                    "condition": "$user.roles list_contains `admin`"
+                }
+            ]
+        }
+    ]
+}

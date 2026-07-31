@@ -1,0 +1,28 @@
+{
+    "name": "AllowRevokeBootstrapToken",
+    "policy": "Allow",
+    "resource": "bootstrap_token",
+    "action": [
+        "revoke"
+    ],
+    "or": [
+        {
+            "name": "CanRevokeBootstrapToken",
+            "and": [
+                {
+                    "name": "UserAuthorityIsCAManager",
+                    "condition": "$user.authority.full_name suffix $env.authority.admin.ca.manager."
+                },
+                {
+                    "name": "UserHasRequiredRole",
+                    "or": [
+                        {
+                            "name": "HumanUserHasManagementRole",
+                            "condition": "$user.roles list_contains `admin`"
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+}

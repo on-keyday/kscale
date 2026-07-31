@@ -1,0 +1,44 @@
+config.go.package = "wire"
+
+# Ad-hoc framing for ksdk 内部 RPC stream.
+# 1 RPC = 1 trsf.BidirectionalStream:
+#   trsf-level magic (consts.StreamMagicRPCS, 4B) → 呼出側で trsf.DecodeMagic
+#   client -> server: RPCStreamHeader, RPCMessage(request body)
+#   server -> client: RPCMessage(response body)
+#
+# magic は trsf-level で消費済前提のため frame には含めない。
+#
+# Varint は project 共通の wire/varint.bgn (protobuf-style LEB128) を import。
+
+varint ::= config.import("varint.bgn")
+
+format RPCStreamHeader:
+    service_len :varint.Varint
+    service     :[service_len.value]u8
+    method_len  :varint.Varint
+    method      :[method_len.value]u8
+
+# Request side (client -> server): body は request protobuf bytes。
+format RPCMessage:
+    body_len :varint.Varint
+    body     :[body_len.value]u8
+
+# Status enum (gRPC status code を緩く模倣)。
+# ok / stream_end 以外は body が UTF-8 のエラーメッセージ。
+# stream_end は server-streaming RPC の正常終端マーカ (body 空)。末尾追加で
+# 既存の wire 値 (ok=0..internal=4) を保持する。
+enum RPCStatus:
+    :u8
+    ok
+    unknown
+    unimplemented
+    invalid_argument
+    internal
+    stream_end
+
+# Response side (server -> client): status=ok なら body は response protobuf bytes、
+# 非 ok なら body は UTF-8 のエラーメッセージ。
+format RPCResponseMessage:
+    status   :RPCStatus
+    body_len :varint.Varint
+    body     :[body_len.value]u8

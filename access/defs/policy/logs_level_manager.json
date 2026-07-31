@@ -1,0 +1,25 @@
+{
+    "name": "LogsLevelManager",
+    "policy": "Allow",
+    "description": "Switch & read live log verbosity (control plane / dataplane nodes / monitor agents) via the logs resource. Admin only.",
+    "resource": "logs",
+    "action": [
+        "set_level",
+        "get_level"
+    ],
+    "or": [
+        {
+            "name": "CanManageLogLevel",
+            "and": [
+                {
+                    "name": "UserAuthorityIsManager",
+                    "condition": "$user.authority.full_name suffix $env.authority.admin.ca.manager."
+                },
+                {
+                    "name": "UserHasAdminRole",
+                    "condition": "$user.roles list_contains `admin`"
+                }
+            ]
+        }
+    ]
+}

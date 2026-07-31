@@ -1,0 +1,27 @@
+{
+    "name": "L4lbObjectManager",
+    "policy": "Allow",
+    "description": "Declare which eBPF objects an l4lb node loads. Admin only.",
+    "resource": "l4lb_object",
+    "action": [
+        "apply",
+        "list",
+        "get",
+        "delete"
+    ],
+    "or": [
+        {
+            "name": "CanManageL4lbObjects",
+            "and": [
+                {
+                    "name": "UserAuthorityIsManager",
+                    "condition": "$user.authority.full_name suffix $env.authority.admin.ca.manager."
+                },
+                {
+                    "name": "UserHasAdminRole",
+                    "condition": "$user.roles list_contains `admin`"
+                }
+            ]
+        }
+    ]
+}

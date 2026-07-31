@@ -1,0 +1,24 @@
+{
+    "name": "LogsMonitor",
+    "policy": "Allow",
+    "description": "Bounded log access for the monitor role: nodewatch tails the newest buffered lines via the read-only tail action. The open-ended stream stays admin-only.",
+    "resource": "logs",
+    "action": [
+        "tail"
+    ],
+    "or": [
+        {
+            "name": "CanLogsMonitor",
+            "and": [
+                {
+                    "name": "UserAuthorityIsManager",
+                    "condition": "$user.authority.full_name suffix $env.authority.admin.ca.manager."
+                },
+                {
+                    "name": "UserHasMonitorRole",
+                    "condition": "$user.roles list_contains `monitor`"
+                }
+            ]
+        }
+    ]
+}
