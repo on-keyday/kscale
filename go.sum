@@ -107,8 +107,8 @@ github.com/muesli/termenv v0.16.0 h1:S5AlUN9dENB57rsbnkPyfdGuWIlkmzJjbFf0Tf5FWUc
 github.com/muesli/termenv v0.16.0/go.mod h1:ZRfOIKPFDYQoDFF4Olj7/QJbW60Ol/kL1pU3VfY/Cnk=
 github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822 h1:C3w9PqII01/Oq1c1nUAm88MOHcQC9l5mIlSMApZMrHA=
 github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822/go.mod h1:+n7T8mK8HuQTcFwEeznm/DIxMOiR9yIdICNftLE1DvQ=
-github.com/on-keyday/objtrsf v0.0.0-20260728093100-b684f6696f9b h1:dSLUJEG4BwZvXvAle4mbS98F+vNAkIoctHWH8pDE8Ig=
-github.com/on-keyday/objtrsf v0.0.0-20260728093100-b684f6696f9b/go.mod h1:j6CRtUG9O6xteS+5FJXOs8cUQn4UrgEecTdYPbB4E1w=
+github.com/on-keyday/objtrsf v0.0.0-20260820151510-5b9a39d09646 h1:Vt2hcgyQdyLuJmr3Hko7VrvlqgUczBaKZ6h9reKVl64=
+github.com/on-keyday/objtrsf v0.0.0-20260820151510-5b9a39d09646/go.mod h1:j6CRtUG9O6xteS+5FJXOs8cUQn4UrgEecTdYPbB4E1w=
 github.com/oschwald/geoip2-golang/v2 v2.2.0 h1:gdkhpnHQMiH9ymOI+zSB0QKFGH+n4TntNt7vz+TxGPY=
 github.com/oschwald/geoip2-golang/v2 v2.2.0/go.mod h1:xW4tCeQiNU1gqMD1x7zEH2CDNM3d796Ls50yxYDaX0U=
 github.com/oschwald/maxminddb-golang/v2 v2.3.0 h1:PnXjMGjkSQlwOBSyZ7hk6Fd75t7erkAhJNJgEhA3MQU=

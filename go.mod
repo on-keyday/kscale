@@ -17,7 +17,7 @@ require (
 	github.com/kota-yata/kyache v0.0.3
 	github.com/muesli/reflow v0.3.0
 	github.com/muesli/termenv v0.16.0
-	github.com/on-keyday/objtrsf v0.0.0-20260728093100-b684f6696f9b
+	github.com/on-keyday/objtrsf v0.0.0-20260820151510-5b9a39d09646
 	github.com/oschwald/geoip2-golang/v2 v2.2.0
 	github.com/prometheus/client_golang v1.23.2
 	github.com/prometheus/common v0.66.1
