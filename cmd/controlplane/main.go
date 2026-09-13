@@ -294,19 +294,25 @@ func run(ctx context.Context, logger *slog.Logger, args []string) error {
 	// Let a renewing machine (dataplane) cert pick up the currently configured lifetime.
 	// Without this the period is frozen at enrollment: on 2026-09-13 the fleet's 24h certs
 	// had lapsed during a multi-week CP outage, and raising the lifetime would have meant
-	// re-enrolling every node. Management identities return 0 (= keep the existing period):
-	// the admin's comes from the root-issuer at --admin-cert-exp and the monitors' from a
-	// minted token, and neither should be silently reshaped by a renewal. The tier test is
-	// the same one commonNameToAuthority uses, so "management" means one thing in this file.
+	// re-enrolling every node.
+	//
+	// "Machine" is tested POSITIVELY, as system.* — the same thing the bootstrap policy
+	// means by it ($env.args.domain suffix $env.authority.system.). Everything else returns
+	// 0 and keeps the period it has: the admin's comes from the root-issuer at
+	// --admin-cert-exp, the monitors' from a minted token, and neither should be reshaped by
+	// a renewal. Asking "is it NOT management?" instead would look equivalent and is not —
+	// admin.dp.manager is an admin-tier identity the bootstrap policy issues for, and it
+	// would fall through to the machine period, as would any tier added later. An unknown
+	// CN must keep its lifetime, not inherit the dataplane's.
 	caObj.RenewCertExp = func(_ string, cn string) time.Duration {
 		fn, err := access.ParseCommonNameToFullNameStrict(cn, demo.Domain)
 		if err != nil {
 			return 0 // not a CN we can classify — leave its period alone
 		}
-		if len(fn.Names) >= 3 && fn.Names[0] == "admin" && fn.Names[1] == "ca" && fn.Names[2] == "manager" {
-			return 0
+		if len(fn.Names) >= 1 && fn.Names[0] == "system" {
+			return *machineCertExp
 		}
-		return *machineCertExp
+		return 0
 	}
 
 	// Seed each demo principal as a leaf under admin.ca.manager so its issued cert
