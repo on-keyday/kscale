@@ -109,6 +109,8 @@ github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822 h1:C3w9PqII01/Oq
 github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822/go.mod h1:+n7T8mK8HuQTcFwEeznm/DIxMOiR9yIdICNftLE1DvQ=
 github.com/on-keyday/objtrsf v0.0.0-20260820153246-b8b4d6dcd21d h1:agwMeoVHwxFFyE/VMamriYhT4KD2mwgzCEEZ4+HY7HY=
 github.com/on-keyday/objtrsf v0.0.0-20260820153246-b8b4d6dcd21d/go.mod h1:j6CRtUG9O6xteS+5FJXOs8cUQn4UrgEecTdYPbB4E1w=
+github.com/on-keyday/objtrsf v0.0.0-20260907210744-7db84f609950 h1:n3L1G0kpfLvKgDGfBBx62/SVbhWxHqlK5ijV3I32SUM=
+github.com/on-keyday/objtrsf v0.0.0-20260907210744-7db84f609950/go.mod h1:j6CRtUG9O6xteS+5FJXOs8cUQn4UrgEecTdYPbB4E1w=
 github.com/oschwald/geoip2-golang/v2 v2.2.0 h1:gdkhpnHQMiH9ymOI+zSB0QKFGH+n4TntNt7vz+TxGPY=
 github.com/oschwald/geoip2-golang/v2 v2.2.0/go.mod h1:xW4tCeQiNU1gqMD1x7zEH2CDNM3d796Ls50yxYDaX0U=
 github.com/oschwald/maxminddb-golang/v2 v2.3.0 h1:PnXjMGjkSQlwOBSyZ7hk6Fd75t7erkAhJNJgEhA3MQU=
