@@ -45,6 +45,14 @@ type CA struct {
 
 	bootstrapLock sync.Mutex
 	bootstrapInfo map[string]bootstrapInfo
+
+	// RenewCertExp resolves the validity period a RENEWED certificate gets, from the app
+	// (usage) and CommonName of the one being renewed. Returning 0 — or leaving this nil —
+	// carries the existing certificate's period forward, which is what renewal always did.
+	// Set it after construction; the CA itself holds no policy about who gets how long, so
+	// the control plane injects the decision (cmd/controlplane wires it to its cert-exp
+	// flags). See updateHandshake.
+	RenewCertExp func(app, commonName string) time.Duration
 }
 
 func (ca *CA) GetSuffixCommonNames(suffix string) ([]string, error) {
@@ -780,8 +788,19 @@ func (ca *CA) updateHandshake(ctx context.Context, logger *slog.Logger, active o
 		logger.Error("unsupported pubkey_kind in updated certificate message", "kind", pubKeyKind)
 		return fmt.Errorf("unsupported pubkey_kind in updated certificate message: %s", pubKeyKind)
 	}
-	// TODO: make this updatable
+	// Renewal used to ALWAYS carry the old certificate's period forward, which froze the
+	// issued lifetime at enrollment time: raising it meant re-enrolling every node (discard
+	// its saved cert, mint a fresh token, hope nothing goes wrong while the fleet is out).
+	// RenewCertExp lets the control plane state what a renewed cert should get; 0 (or an
+	// unset hook) keeps the old period, so this is a no-op unless the CP configures it.
 	expiresPeriod := oldCert.NotAfter.Sub(oldCert.NotBefore)
+	if ca.RenewCertExp != nil {
+		if d := ca.RenewCertExp(app, commonName); d > 0 && d != expiresPeriod {
+			logger.Info("renewal period changed by policy", "common_name", commonName,
+				"old", expiresPeriod.String(), "new", d.String())
+			expiresPeriod = d
+		}
+	}
 	updatedCertDER, serial, err := ca.UpdateCertificate(commonName, pubKey, app, expiresPeriod)
 	if err != nil {
 		logger.Error("failed to update certificate", "error", err)

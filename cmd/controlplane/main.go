@@ -281,6 +281,7 @@ func run(ctx context.Context, logger *slog.Logger, args []string) error {
 	demoSeed := fs.Bool("demo", false, "demo mode: unconditionally seed a short-lived bootstrap token for every role (admin/viewer/monitor/l4lb/popcache) at startup so a local CP + agents sharing one --data dir can all enroll. Off (default, production) uses the root-issuer: a first-admin token is auto-issued only while no admin exists; everything else is minted on demand by that admin.")
 	adminTokenTTL := fs.Duration("admin-token-ttl", time.Hour, "validity of the auto-issued first-admin bootstrap token (production mode)")
 	adminCertExp := fs.Duration("admin-cert-exp", 168*time.Hour, "validity of the admin certificate issued from the first-admin token (production mode)")
+	machineCertExp := fs.Duration("machine-cert-exp", 168*time.Hour, "validity a dataplane (machine) certificate adopts on RENEWAL. Renewal used to carry the issued period forward forever, so the only way to change a node's lifetime was to re-enroll it. This does not change what a FRESH enrollment gets — that comes from the expires_period the admin minted the token with, capped by the bootstrap policy.")
 	auditTrace := fs.Bool("audit", false, "print the full ABAC policy evaluation (resolved attribute values + per-condition results + decision) to stderr — use to see why a request is allowed/denied")
 	domainFlag := fs.String("ca-domain", demo.Domain, "CA domain: the authority-tree root + cert CommonName suffix. MUST match every client and dataplane agent's --ca-domain.")
 	_ = fs.Parse(args)
@@ -289,6 +290,23 @@ func run(ctx context.Context, logger *slog.Logger, args []string) error {
 	caObj, err := setupCA(*dataDir)
 	if err != nil {
 		return fmt.Errorf("setup CA: %w", err)
+	}
+	// Let a renewing machine (dataplane) cert pick up the currently configured lifetime.
+	// Without this the period is frozen at enrollment: on 2026-09-13 the fleet's 24h certs
+	// had lapsed during a multi-week CP outage, and raising the lifetime would have meant
+	// re-enrolling every node. Management identities return 0 (= keep the existing period):
+	// the admin's comes from the root-issuer at --admin-cert-exp and the monitors' from a
+	// minted token, and neither should be silently reshaped by a renewal. The tier test is
+	// the same one commonNameToAuthority uses, so "management" means one thing in this file.
+	caObj.RenewCertExp = func(_ string, cn string) time.Duration {
+		fn, err := access.ParseCommonNameToFullNameStrict(cn, demo.Domain)
+		if err != nil {
+			return 0 // not a CN we can classify — leave its period alone
+		}
+		if len(fn.Names) >= 3 && fn.Names[0] == "admin" && fn.Names[1] == "ca" && fn.Names[2] == "manager" {
+			return 0
+		}
+		return *machineCertExp
 	}
 
 	// Seed each demo principal as a leaf under admin.ca.manager so its issued cert

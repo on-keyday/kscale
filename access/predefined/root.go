@@ -718,7 +718,7 @@ var PolicyAllowIssueBootstrapToken = policy.NewAndPolicy("AllowIssueBootstrapTok
 		policy.NewAndPolicy("CanIssueBootstrapToken",
 			policy.MustParsePolicy("ArgumentsHaveDesiredValues", "$env.args.duration duration_lte `5m` and $env.args.appName in [`admin`,`monitor`,`popcache`, `l4lb`, `metrics`, `dns`, `router`, `workload`]"),
 			policy.NewOrPolicy("CertificateExpiresPeriodIsValid",
-				policy.MustParsePolicy("ExpiresPeriodIsLessThan24HoursForMachine", "$env.args.domain suffix $env.authority.system. and $env.args.expires_period duration_lte `24h`"),
+				policy.MustParsePolicy("ExpiresPeriodIsLessThan1WeekForMachine", "$env.args.domain suffix $env.authority.system. and $env.args.expires_period duration_lte `168h`"),
 				policy.MustParsePolicy("ExpiresPeriodIsLessThan1WeekForAdmin", "$env.args.domain suffix $env.authority.admin. and $env.args.expires_period duration_lte `168h`"),
 			),
 			policy.MustParsePolicy("UserAuthorityIsCAManager", "$user.authority.full_name suffix $env.authority.admin.ca.manager."),

@@ -17,8 +17,8 @@
                     "name": "CertificateExpiresPeriodIsValid",
                     "or": [
                         {
-                            "name": "ExpiresPeriodIsLessThan24HoursForMachine",
-                            "condition": "$env.args.domain suffix $env.authority.system. and $env.args.expires_period duration_lte `24h`"
+                            "name": "ExpiresPeriodIsLessThan1WeekForMachine",
+                            "condition": "$env.args.domain suffix $env.authority.system. and $env.args.expires_period duration_lte `168h`"
                         },
                         {
                             "name": "ExpiresPeriodIsLessThan1WeekForAdmin",
