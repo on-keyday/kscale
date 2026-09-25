@@ -4936,387 +4936,6 @@ func (p *DnsStat) Append(w []byte) ([]byte, error) {
 	return w, nil
 }
 
-type WorkloadStat struct {
-	InSteeredTotal  uint64 `json:"in_steered_total,omitempty"`
-	InNotLbSrcTotal uint64 `json:"in_not_lb_src_total,omitempty"`
-	InNoPortTotal   uint64 `json:"in_no_port_total,omitempty"`
-	InErrTotal      uint64 `json:"in_err_total,omitempty"`
-	OutSnatTotal    uint64 `json:"out_snat_total,omitempty"`
-	OutErrTotal     uint64 `json:"out_err_total,omitempty"`
-	SteeredPorts    uint64 `json:"steered_ports,omitempty"`
-}
-
-func (p *WorkloadStat) Read(data io.Reader) error {
-	var field wire.Field
-	for {
-		err := field.Read(data)
-		if err == io.EOF {
-			break
-		}
-		if err != nil {
-			return fmt.Errorf("decode: %w", err)
-		}
-		switch field.Tag.Number() {
-		case 1:
-			val := field.ValueVi()
-			if val == nil {
-				return fmt.Errorf("field InSteeredTotal unexpected wire type. expect Varint but got %s", field.Tag.Type())
-			}
-			p.InSteeredTotal = uint64((*val).Value)
-		case 2:
-			val := field.ValueVi()
-			if val == nil {
-				return fmt.Errorf("field InNotLbSrcTotal unexpected wire type. expect Varint but got %s", field.Tag.Type())
-			}
-			p.InNotLbSrcTotal = uint64((*val).Value)
-		case 3:
-			val := field.ValueVi()
-			if val == nil {
-				return fmt.Errorf("field InNoPortTotal unexpected wire type. expect Varint but got %s", field.Tag.Type())
-			}
-			p.InNoPortTotal = uint64((*val).Value)
-		case 4:
-			val := field.ValueVi()
-			if val == nil {
-				return fmt.Errorf("field InErrTotal unexpected wire type. expect Varint but got %s", field.Tag.Type())
-			}
-			p.InErrTotal = uint64((*val).Value)
-		case 5:
-			val := field.ValueVi()
-			if val == nil {
-				return fmt.Errorf("field OutSnatTotal unexpected wire type. expect Varint but got %s", field.Tag.Type())
-			}
-			p.OutSnatTotal = uint64((*val).Value)
-		case 6:
-			val := field.ValueVi()
-			if val == nil {
-				return fmt.Errorf("field OutErrTotal unexpected wire type. expect Varint but got %s", field.Tag.Type())
-			}
-			p.OutErrTotal = uint64((*val).Value)
-		case 7:
-			val := field.ValueVi()
-			if val == nil {
-				return fmt.Errorf("field SteeredPorts unexpected wire type. expect Varint but got %s", field.Tag.Type())
-			}
-			p.SteeredPorts = uint64((*val).Value)
-		default:
-			// skip unknown
-		}
-	}
-	return nil
-}
-func (p *WorkloadStat) ReadBuffer(data *bytes.Reader) error {
-	var field wire.Field
-	for {
-		err := field.ReadBuffer(data)
-		if err == io.EOF {
-			break
-		}
-		if err != nil {
-			return fmt.Errorf("decode: %w", err)
-		}
-		switch field.Tag.Number() {
-		case 1:
-			val := field.ValueVi()
-			if val == nil {
-				return fmt.Errorf("field InSteeredTotal unexpected wire type. expect Varint but got %s", field.Tag.Type())
-			}
-			p.InSteeredTotal = uint64((*val).Value)
-		case 2:
-			val := field.ValueVi()
-			if val == nil {
-				return fmt.Errorf("field InNotLbSrcTotal unexpected wire type. expect Varint but got %s", field.Tag.Type())
-			}
-			p.InNotLbSrcTotal = uint64((*val).Value)
-		case 3:
-			val := field.ValueVi()
-			if val == nil {
-				return fmt.Errorf("field InNoPortTotal unexpected wire type. expect Varint but got %s", field.Tag.Type())
-			}
-			p.InNoPortTotal = uint64((*val).Value)
-		case 4:
-			val := field.ValueVi()
-			if val == nil {
-				return fmt.Errorf("field InErrTotal unexpected wire type. expect Varint but got %s", field.Tag.Type())
-			}
-			p.InErrTotal = uint64((*val).Value)
-		case 5:
-			val := field.ValueVi()
-			if val == nil {
-				return fmt.Errorf("field OutSnatTotal unexpected wire type. expect Varint but got %s", field.Tag.Type())
-			}
-			p.OutSnatTotal = uint64((*val).Value)
-		case 6:
-			val := field.ValueVi()
-			if val == nil {
-				return fmt.Errorf("field OutErrTotal unexpected wire type. expect Varint but got %s", field.Tag.Type())
-			}
-			p.OutErrTotal = uint64((*val).Value)
-		case 7:
-			val := field.ValueVi()
-			if val == nil {
-				return fmt.Errorf("field SteeredPorts unexpected wire type. expect Varint but got %s", field.Tag.Type())
-			}
-			p.SteeredPorts = uint64((*val).Value)
-		default:
-			// skip unknown
-		}
-	}
-	return nil
-}
-func (p *WorkloadStat) Decode(data []byte) error {
-	var field wire.Field
-	for len(data) > 0 {
-		remain, err := field.Decode(data)
-		if err != nil {
-			return fmt.Errorf("decode: %w", err)
-		}
-		switch field.Tag.Number() {
-		case 1:
-			val := field.ValueVi()
-			if val == nil {
-				return fmt.Errorf("field InSteeredTotal unexpected wire type. expect Varint but got %s", field.Tag.Type())
-			}
-			p.InSteeredTotal = uint64((*val).Value)
-		case 2:
-			val := field.ValueVi()
-			if val == nil {
-				return fmt.Errorf("field InNotLbSrcTotal unexpected wire type. expect Varint but got %s", field.Tag.Type())
-			}
-			p.InNotLbSrcTotal = uint64((*val).Value)
-		case 3:
-			val := field.ValueVi()
-			if val == nil {
-				return fmt.Errorf("field InNoPortTotal unexpected wire type. expect Varint but got %s", field.Tag.Type())
-			}
-			p.InNoPortTotal = uint64((*val).Value)
-		case 4:
-			val := field.ValueVi()
-			if val == nil {
-				return fmt.Errorf("field InErrTotal unexpected wire type. expect Varint but got %s", field.Tag.Type())
-			}
-			p.InErrTotal = uint64((*val).Value)
-		case 5:
-			val := field.ValueVi()
-			if val == nil {
-				return fmt.Errorf("field OutSnatTotal unexpected wire type. expect Varint but got %s", field.Tag.Type())
-			}
-			p.OutSnatTotal = uint64((*val).Value)
-		case 6:
-			val := field.ValueVi()
-			if val == nil {
-				return fmt.Errorf("field OutErrTotal unexpected wire type. expect Varint but got %s", field.Tag.Type())
-			}
-			p.OutErrTotal = uint64((*val).Value)
-		case 7:
-			val := field.ValueVi()
-			if val == nil {
-				return fmt.Errorf("field SteeredPorts unexpected wire type. expect Varint but got %s", field.Tag.Type())
-			}
-			p.SteeredPorts = uint64((*val).Value)
-		default:
-			// skip unknown
-		}
-		data = remain
-	}
-	return nil
-}
-
-func (p *WorkloadStat) Encode(w io.Writer) error {
-	var field wire.Field
-	field.Tag.SetNumber(1)
-	if p.InSteeredTotal != 0 {
-		field.Tag.SetType(wire.WireType_Varint)
-		field.SetValueVi(wire.Varint{Value: uint64(p.InSteeredTotal)})
-		if err := field.Write(w); err != nil {
-			return err
-		}
-	}
-	field.Tag.SetNumber(2)
-	if p.InNotLbSrcTotal != 0 {
-		field.Tag.SetType(wire.WireType_Varint)
-		field.SetValueVi(wire.Varint{Value: uint64(p.InNotLbSrcTotal)})
-		if err := field.Write(w); err != nil {
-			return err
-		}
-	}
-	field.Tag.SetNumber(3)
-	if p.InNoPortTotal != 0 {
-		field.Tag.SetType(wire.WireType_Varint)
-		field.SetValueVi(wire.Varint{Value: uint64(p.InNoPortTotal)})
-		if err := field.Write(w); err != nil {
-			return err
-		}
-	}
-	field.Tag.SetNumber(4)
-	if p.InErrTotal != 0 {
-		field.Tag.SetType(wire.WireType_Varint)
-		field.SetValueVi(wire.Varint{Value: uint64(p.InErrTotal)})
-		if err := field.Write(w); err != nil {
-			return err
-		}
-	}
-	field.Tag.SetNumber(5)
-	if p.OutSnatTotal != 0 {
-		field.Tag.SetType(wire.WireType_Varint)
-		field.SetValueVi(wire.Varint{Value: uint64(p.OutSnatTotal)})
-		if err := field.Write(w); err != nil {
-			return err
-		}
-	}
-	field.Tag.SetNumber(6)
-	if p.OutErrTotal != 0 {
-		field.Tag.SetType(wire.WireType_Varint)
-		field.SetValueVi(wire.Varint{Value: uint64(p.OutErrTotal)})
-		if err := field.Write(w); err != nil {
-			return err
-		}
-	}
-	field.Tag.SetNumber(7)
-	if p.SteeredPorts != 0 {
-		field.Tag.SetType(wire.WireType_Varint)
-		field.SetValueVi(wire.Varint{Value: uint64(p.SteeredPorts)})
-		if err := field.Write(w); err != nil {
-			return err
-		}
-	}
-	return nil
-}
-func (p *WorkloadStat) EncodeBuffer(w *bytes.Buffer) error {
-	var field wire.Field
-	field.Tag.SetNumber(1)
-	if p.InSteeredTotal != 0 {
-		field.Tag.SetType(wire.WireType_Varint)
-		field.SetValueVi(wire.Varint{Value: uint64(p.InSteeredTotal)})
-		if err := field.WriteBuffer(w); err != nil {
-			return err
-		}
-	}
-	field.Tag.SetNumber(2)
-	if p.InNotLbSrcTotal != 0 {
-		field.Tag.SetType(wire.WireType_Varint)
-		field.SetValueVi(wire.Varint{Value: uint64(p.InNotLbSrcTotal)})
-		if err := field.WriteBuffer(w); err != nil {
-			return err
-		}
-	}
-	field.Tag.SetNumber(3)
-	if p.InNoPortTotal != 0 {
-		field.Tag.SetType(wire.WireType_Varint)
-		field.SetValueVi(wire.Varint{Value: uint64(p.InNoPortTotal)})
-		if err := field.WriteBuffer(w); err != nil {
-			return err
-		}
-	}
-	field.Tag.SetNumber(4)
-	if p.InErrTotal != 0 {
-		field.Tag.SetType(wire.WireType_Varint)
-		field.SetValueVi(wire.Varint{Value: uint64(p.InErrTotal)})
-		if err := field.WriteBuffer(w); err != nil {
-			return err
-		}
-	}
-	field.Tag.SetNumber(5)
-	if p.OutSnatTotal != 0 {
-		field.Tag.SetType(wire.WireType_Varint)
-		field.SetValueVi(wire.Varint{Value: uint64(p.OutSnatTotal)})
-		if err := field.WriteBuffer(w); err != nil {
-			return err
-		}
-	}
-	field.Tag.SetNumber(6)
-	if p.OutErrTotal != 0 {
-		field.Tag.SetType(wire.WireType_Varint)
-		field.SetValueVi(wire.Varint{Value: uint64(p.OutErrTotal)})
-		if err := field.WriteBuffer(w); err != nil {
-			return err
-		}
-	}
-	field.Tag.SetNumber(7)
-	if p.SteeredPorts != 0 {
-		field.Tag.SetType(wire.WireType_Varint)
-		field.SetValueVi(wire.Varint{Value: uint64(p.SteeredPorts)})
-		if err := field.WriteBuffer(w); err != nil {
-			return err
-		}
-	}
-	return nil
-}
-func (p *WorkloadStat) Append(w []byte) ([]byte, error) {
-	var field wire.Field
-	field.Tag.SetNumber(1)
-	if p.InSteeredTotal != 0 {
-		field.Tag.SetType(wire.WireType_Varint)
-		field.SetValueVi(wire.Varint{Value: uint64(p.InSteeredTotal)})
-		if appendTmp, err := field.Append(w); err != nil {
-			return nil, err
-		} else {
-			w = appendTmp
-		}
-	}
-	field.Tag.SetNumber(2)
-	if p.InNotLbSrcTotal != 0 {
-		field.Tag.SetType(wire.WireType_Varint)
-		field.SetValueVi(wire.Varint{Value: uint64(p.InNotLbSrcTotal)})
-		if appendTmp, err := field.Append(w); err != nil {
-			return nil, err
-		} else {
-			w = appendTmp
-		}
-	}
-	field.Tag.SetNumber(3)
-	if p.InNoPortTotal != 0 {
-		field.Tag.SetType(wire.WireType_Varint)
-		field.SetValueVi(wire.Varint{Value: uint64(p.InNoPortTotal)})
-		if appendTmp, err := field.Append(w); err != nil {
-			return nil, err
-		} else {
-			w = appendTmp
-		}
-	}
-	field.Tag.SetNumber(4)
-	if p.InErrTotal != 0 {
-		field.Tag.SetType(wire.WireType_Varint)
-		field.SetValueVi(wire.Varint{Value: uint64(p.InErrTotal)})
-		if appendTmp, err := field.Append(w); err != nil {
-			return nil, err
-		} else {
-			w = appendTmp
-		}
-	}
-	field.Tag.SetNumber(5)
-	if p.OutSnatTotal != 0 {
-		field.Tag.SetType(wire.WireType_Varint)
-		field.SetValueVi(wire.Varint{Value: uint64(p.OutSnatTotal)})
-		if appendTmp, err := field.Append(w); err != nil {
-			return nil, err
-		} else {
-			w = appendTmp
-		}
-	}
-	field.Tag.SetNumber(6)
-	if p.OutErrTotal != 0 {
-		field.Tag.SetType(wire.WireType_Varint)
-		field.SetValueVi(wire.Varint{Value: uint64(p.OutErrTotal)})
-		if appendTmp, err := field.Append(w); err != nil {
-			return nil, err
-		} else {
-			w = appendTmp
-		}
-	}
-	field.Tag.SetNumber(7)
-	if p.SteeredPorts != 0 {
-		field.Tag.SetType(wire.WireType_Varint)
-		field.SetValueVi(wire.Varint{Value: uint64(p.SteeredPorts)})
-		if appendTmp, err := field.Append(w); err != nil {
-			return nil, err
-		} else {
-			w = appendTmp
-		}
-	}
-	return w, nil
-}
-
 type CdnAppSpecStat struct {
 	CommonName string `json:"common_name,omitempty"`
 }
@@ -6157,6 +5776,387 @@ func (p *DnsSpecStat) Append(w []byte) ([]byte, error) {
 	return w, nil
 }
 
+type WorkloadStat struct {
+	InSteeredTotal  uint64 `json:"in_steered_total,omitempty"`
+	InNotLbSrcTotal uint64 `json:"in_not_lb_src_total,omitempty"`
+	InNoPortTotal   uint64 `json:"in_no_port_total,omitempty"`
+	InErrTotal      uint64 `json:"in_err_total,omitempty"`
+	OutSnatTotal    uint64 `json:"out_snat_total,omitempty"`
+	OutErrTotal     uint64 `json:"out_err_total,omitempty"`
+	SteeredPorts    uint64 `json:"steered_ports,omitempty"`
+}
+
+func (p *WorkloadStat) Read(data io.Reader) error {
+	var field wire.Field
+	for {
+		err := field.Read(data)
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			return fmt.Errorf("decode: %w", err)
+		}
+		switch field.Tag.Number() {
+		case 1:
+			val := field.ValueVi()
+			if val == nil {
+				return fmt.Errorf("field InSteeredTotal unexpected wire type. expect Varint but got %s", field.Tag.Type())
+			}
+			p.InSteeredTotal = uint64((*val).Value)
+		case 2:
+			val := field.ValueVi()
+			if val == nil {
+				return fmt.Errorf("field InNotLbSrcTotal unexpected wire type. expect Varint but got %s", field.Tag.Type())
+			}
+			p.InNotLbSrcTotal = uint64((*val).Value)
+		case 3:
+			val := field.ValueVi()
+			if val == nil {
+				return fmt.Errorf("field InNoPortTotal unexpected wire type. expect Varint but got %s", field.Tag.Type())
+			}
+			p.InNoPortTotal = uint64((*val).Value)
+		case 4:
+			val := field.ValueVi()
+			if val == nil {
+				return fmt.Errorf("field InErrTotal unexpected wire type. expect Varint but got %s", field.Tag.Type())
+			}
+			p.InErrTotal = uint64((*val).Value)
+		case 5:
+			val := field.ValueVi()
+			if val == nil {
+				return fmt.Errorf("field OutSnatTotal unexpected wire type. expect Varint but got %s", field.Tag.Type())
+			}
+			p.OutSnatTotal = uint64((*val).Value)
+		case 6:
+			val := field.ValueVi()
+			if val == nil {
+				return fmt.Errorf("field OutErrTotal unexpected wire type. expect Varint but got %s", field.Tag.Type())
+			}
+			p.OutErrTotal = uint64((*val).Value)
+		case 7:
+			val := field.ValueVi()
+			if val == nil {
+				return fmt.Errorf("field SteeredPorts unexpected wire type. expect Varint but got %s", field.Tag.Type())
+			}
+			p.SteeredPorts = uint64((*val).Value)
+		default:
+			// skip unknown
+		}
+	}
+	return nil
+}
+func (p *WorkloadStat) ReadBuffer(data *bytes.Reader) error {
+	var field wire.Field
+	for {
+		err := field.ReadBuffer(data)
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			return fmt.Errorf("decode: %w", err)
+		}
+		switch field.Tag.Number() {
+		case 1:
+			val := field.ValueVi()
+			if val == nil {
+				return fmt.Errorf("field InSteeredTotal unexpected wire type. expect Varint but got %s", field.Tag.Type())
+			}
+			p.InSteeredTotal = uint64((*val).Value)
+		case 2:
+			val := field.ValueVi()
+			if val == nil {
+				return fmt.Errorf("field InNotLbSrcTotal unexpected wire type. expect Varint but got %s", field.Tag.Type())
+			}
+			p.InNotLbSrcTotal = uint64((*val).Value)
+		case 3:
+			val := field.ValueVi()
+			if val == nil {
+				return fmt.Errorf("field InNoPortTotal unexpected wire type. expect Varint but got %s", field.Tag.Type())
+			}
+			p.InNoPortTotal = uint64((*val).Value)
+		case 4:
+			val := field.ValueVi()
+			if val == nil {
+				return fmt.Errorf("field InErrTotal unexpected wire type. expect Varint but got %s", field.Tag.Type())
+			}
+			p.InErrTotal = uint64((*val).Value)
+		case 5:
+			val := field.ValueVi()
+			if val == nil {
+				return fmt.Errorf("field OutSnatTotal unexpected wire type. expect Varint but got %s", field.Tag.Type())
+			}
+			p.OutSnatTotal = uint64((*val).Value)
+		case 6:
+			val := field.ValueVi()
+			if val == nil {
+				return fmt.Errorf("field OutErrTotal unexpected wire type. expect Varint but got %s", field.Tag.Type())
+			}
+			p.OutErrTotal = uint64((*val).Value)
+		case 7:
+			val := field.ValueVi()
+			if val == nil {
+				return fmt.Errorf("field SteeredPorts unexpected wire type. expect Varint but got %s", field.Tag.Type())
+			}
+			p.SteeredPorts = uint64((*val).Value)
+		default:
+			// skip unknown
+		}
+	}
+	return nil
+}
+func (p *WorkloadStat) Decode(data []byte) error {
+	var field wire.Field
+	for len(data) > 0 {
+		remain, err := field.Decode(data)
+		if err != nil {
+			return fmt.Errorf("decode: %w", err)
+		}
+		switch field.Tag.Number() {
+		case 1:
+			val := field.ValueVi()
+			if val == nil {
+				return fmt.Errorf("field InSteeredTotal unexpected wire type. expect Varint but got %s", field.Tag.Type())
+			}
+			p.InSteeredTotal = uint64((*val).Value)
+		case 2:
+			val := field.ValueVi()
+			if val == nil {
+				return fmt.Errorf("field InNotLbSrcTotal unexpected wire type. expect Varint but got %s", field.Tag.Type())
+			}
+			p.InNotLbSrcTotal = uint64((*val).Value)
+		case 3:
+			val := field.ValueVi()
+			if val == nil {
+				return fmt.Errorf("field InNoPortTotal unexpected wire type. expect Varint but got %s", field.Tag.Type())
+			}
+			p.InNoPortTotal = uint64((*val).Value)
+		case 4:
+			val := field.ValueVi()
+			if val == nil {
+				return fmt.Errorf("field InErrTotal unexpected wire type. expect Varint but got %s", field.Tag.Type())
+			}
+			p.InErrTotal = uint64((*val).Value)
+		case 5:
+			val := field.ValueVi()
+			if val == nil {
+				return fmt.Errorf("field OutSnatTotal unexpected wire type. expect Varint but got %s", field.Tag.Type())
+			}
+			p.OutSnatTotal = uint64((*val).Value)
+		case 6:
+			val := field.ValueVi()
+			if val == nil {
+				return fmt.Errorf("field OutErrTotal unexpected wire type. expect Varint but got %s", field.Tag.Type())
+			}
+			p.OutErrTotal = uint64((*val).Value)
+		case 7:
+			val := field.ValueVi()
+			if val == nil {
+				return fmt.Errorf("field SteeredPorts unexpected wire type. expect Varint but got %s", field.Tag.Type())
+			}
+			p.SteeredPorts = uint64((*val).Value)
+		default:
+			// skip unknown
+		}
+		data = remain
+	}
+	return nil
+}
+
+func (p *WorkloadStat) Encode(w io.Writer) error {
+	var field wire.Field
+	field.Tag.SetNumber(1)
+	if p.InSteeredTotal != 0 {
+		field.Tag.SetType(wire.WireType_Varint)
+		field.SetValueVi(wire.Varint{Value: uint64(p.InSteeredTotal)})
+		if err := field.Write(w); err != nil {
+			return err
+		}
+	}
+	field.Tag.SetNumber(2)
+	if p.InNotLbSrcTotal != 0 {
+		field.Tag.SetType(wire.WireType_Varint)
+		field.SetValueVi(wire.Varint{Value: uint64(p.InNotLbSrcTotal)})
+		if err := field.Write(w); err != nil {
+			return err
+		}
+	}
+	field.Tag.SetNumber(3)
+	if p.InNoPortTotal != 0 {
+		field.Tag.SetType(wire.WireType_Varint)
+		field.SetValueVi(wire.Varint{Value: uint64(p.InNoPortTotal)})
+		if err := field.Write(w); err != nil {
+			return err
+		}
+	}
+	field.Tag.SetNumber(4)
+	if p.InErrTotal != 0 {
+		field.Tag.SetType(wire.WireType_Varint)
+		field.SetValueVi(wire.Varint{Value: uint64(p.InErrTotal)})
+		if err := field.Write(w); err != nil {
+			return err
+		}
+	}
+	field.Tag.SetNumber(5)
+	if p.OutSnatTotal != 0 {
+		field.Tag.SetType(wire.WireType_Varint)
+		field.SetValueVi(wire.Varint{Value: uint64(p.OutSnatTotal)})
+		if err := field.Write(w); err != nil {
+			return err
+		}
+	}
+	field.Tag.SetNumber(6)
+	if p.OutErrTotal != 0 {
+		field.Tag.SetType(wire.WireType_Varint)
+		field.SetValueVi(wire.Varint{Value: uint64(p.OutErrTotal)})
+		if err := field.Write(w); err != nil {
+			return err
+		}
+	}
+	field.Tag.SetNumber(7)
+	if p.SteeredPorts != 0 {
+		field.Tag.SetType(wire.WireType_Varint)
+		field.SetValueVi(wire.Varint{Value: uint64(p.SteeredPorts)})
+		if err := field.Write(w); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+func (p *WorkloadStat) EncodeBuffer(w *bytes.Buffer) error {
+	var field wire.Field
+	field.Tag.SetNumber(1)
+	if p.InSteeredTotal != 0 {
+		field.Tag.SetType(wire.WireType_Varint)
+		field.SetValueVi(wire.Varint{Value: uint64(p.InSteeredTotal)})
+		if err := field.WriteBuffer(w); err != nil {
+			return err
+		}
+	}
+	field.Tag.SetNumber(2)
+	if p.InNotLbSrcTotal != 0 {
+		field.Tag.SetType(wire.WireType_Varint)
+		field.SetValueVi(wire.Varint{Value: uint64(p.InNotLbSrcTotal)})
+		if err := field.WriteBuffer(w); err != nil {
+			return err
+		}
+	}
+	field.Tag.SetNumber(3)
+	if p.InNoPortTotal != 0 {
+		field.Tag.SetType(wire.WireType_Varint)
+		field.SetValueVi(wire.Varint{Value: uint64(p.InNoPortTotal)})
+		if err := field.WriteBuffer(w); err != nil {
+			return err
+		}
+	}
+	field.Tag.SetNumber(4)
+	if p.InErrTotal != 0 {
+		field.Tag.SetType(wire.WireType_Varint)
+		field.SetValueVi(wire.Varint{Value: uint64(p.InErrTotal)})
+		if err := field.WriteBuffer(w); err != nil {
+			return err
+		}
+	}
+	field.Tag.SetNumber(5)
+	if p.OutSnatTotal != 0 {
+		field.Tag.SetType(wire.WireType_Varint)
+		field.SetValueVi(wire.Varint{Value: uint64(p.OutSnatTotal)})
+		if err := field.WriteBuffer(w); err != nil {
+			return err
+		}
+	}
+	field.Tag.SetNumber(6)
+	if p.OutErrTotal != 0 {
+		field.Tag.SetType(wire.WireType_Varint)
+		field.SetValueVi(wire.Varint{Value: uint64(p.OutErrTotal)})
+		if err := field.WriteBuffer(w); err != nil {
+			return err
+		}
+	}
+	field.Tag.SetNumber(7)
+	if p.SteeredPorts != 0 {
+		field.Tag.SetType(wire.WireType_Varint)
+		field.SetValueVi(wire.Varint{Value: uint64(p.SteeredPorts)})
+		if err := field.WriteBuffer(w); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+func (p *WorkloadStat) Append(w []byte) ([]byte, error) {
+	var field wire.Field
+	field.Tag.SetNumber(1)
+	if p.InSteeredTotal != 0 {
+		field.Tag.SetType(wire.WireType_Varint)
+		field.SetValueVi(wire.Varint{Value: uint64(p.InSteeredTotal)})
+		if appendTmp, err := field.Append(w); err != nil {
+			return nil, err
+		} else {
+			w = appendTmp
+		}
+	}
+	field.Tag.SetNumber(2)
+	if p.InNotLbSrcTotal != 0 {
+		field.Tag.SetType(wire.WireType_Varint)
+		field.SetValueVi(wire.Varint{Value: uint64(p.InNotLbSrcTotal)})
+		if appendTmp, err := field.Append(w); err != nil {
+			return nil, err
+		} else {
+			w = appendTmp
+		}
+	}
+	field.Tag.SetNumber(3)
+	if p.InNoPortTotal != 0 {
+		field.Tag.SetType(wire.WireType_Varint)
+		field.SetValueVi(wire.Varint{Value: uint64(p.InNoPortTotal)})
+		if appendTmp, err := field.Append(w); err != nil {
+			return nil, err
+		} else {
+			w = appendTmp
+		}
+	}
+	field.Tag.SetNumber(4)
+	if p.InErrTotal != 0 {
+		field.Tag.SetType(wire.WireType_Varint)
+		field.SetValueVi(wire.Varint{Value: uint64(p.InErrTotal)})
+		if appendTmp, err := field.Append(w); err != nil {
+			return nil, err
+		} else {
+			w = appendTmp
+		}
+	}
+	field.Tag.SetNumber(5)
+	if p.OutSnatTotal != 0 {
+		field.Tag.SetType(wire.WireType_Varint)
+		field.SetValueVi(wire.Varint{Value: uint64(p.OutSnatTotal)})
+		if appendTmp, err := field.Append(w); err != nil {
+			return nil, err
+		} else {
+			w = appendTmp
+		}
+	}
+	field.Tag.SetNumber(6)
+	if p.OutErrTotal != 0 {
+		field.Tag.SetType(wire.WireType_Varint)
+		field.SetValueVi(wire.Varint{Value: uint64(p.OutErrTotal)})
+		if appendTmp, err := field.Append(w); err != nil {
+			return nil, err
+		} else {
+			w = appendTmp
+		}
+	}
+	field.Tag.SetNumber(7)
+	if p.SteeredPorts != 0 {
+		field.Tag.SetType(wire.WireType_Varint)
+		field.SetValueVi(wire.Varint{Value: uint64(p.SteeredPorts)})
+		if appendTmp, err := field.Append(w); err != nil {
+			return nil, err
+		} else {
+			w = appendTmp
+		}
+	}
+	return w, nil
+}
+
 type Stats struct {
 	L4Lb            *L4LbStat            `json:"l4lb,omitempty"`
 	Connection      *ConnectionStat      `json:"connection,omitempty"`
@@ -6167,13 +6167,13 @@ type Stats struct {
 	CdnAppRealtime  *CdnAppRealtimeStat  `json:"cdn_app_realtime,omitempty"`
 	Popcache        *PopcacheStat        `json:"popcache,omitempty"`
 	Dns             *DnsStat             `json:"dns,omitempty"`
-	Workload        *WorkloadStat        `json:"workload,omitempty"`
 	CdnAppSpec      *CdnAppSpecStat      `json:"cdn_app_spec,omitempty"`
 	HostPhysical    *HostPhysicalStat    `json:"host_physical,omitempty"`
 	PopcacheSpec    *PopcacheSpecStat    `json:"popcache_spec,omitempty"`
 	DnsSpec         *DnsSpecStat         `json:"dns_spec,omitempty"`
 	CommonName      string               `json:"common_name,omitempty"`
 	DpType          string               `json:"dp_type,omitempty"`
+	Workload        *WorkloadStat        `json:"workload,omitempty"`
 }
 
 func (p *Stats) Read(data io.Reader) error {
@@ -6271,22 +6271,13 @@ func (p *Stats) Read(data io.Reader) error {
 		case 10:
 			val := field.ValueData()
 			if val == nil {
-				return fmt.Errorf("field Workload unexpected wire type. expect LengthDelimited but got %s", field.Tag.Type())
-			}
-			p.Workload = new(WorkloadStat)
-			if err := p.Workload.Decode((*val)); err != nil {
-				return err
-			}
-		case 11:
-			val := field.ValueData()
-			if val == nil {
 				return fmt.Errorf("field CdnAppSpec unexpected wire type. expect LengthDelimited but got %s", field.Tag.Type())
 			}
 			p.CdnAppSpec = new(CdnAppSpecStat)
 			if err := p.CdnAppSpec.Decode((*val)); err != nil {
 				return err
 			}
-		case 12:
+		case 11:
 			val := field.ValueData()
 			if val == nil {
 				return fmt.Errorf("field HostPhysical unexpected wire type. expect LengthDelimited but got %s", field.Tag.Type())
@@ -6295,7 +6286,7 @@ func (p *Stats) Read(data io.Reader) error {
 			if err := p.HostPhysical.Decode((*val)); err != nil {
 				return err
 			}
-		case 13:
+		case 12:
 			val := field.ValueData()
 			if val == nil {
 				return fmt.Errorf("field PopcacheSpec unexpected wire type. expect LengthDelimited but got %s", field.Tag.Type())
@@ -6304,7 +6295,7 @@ func (p *Stats) Read(data io.Reader) error {
 			if err := p.PopcacheSpec.Decode((*val)); err != nil {
 				return err
 			}
-		case 14:
+		case 13:
 			val := field.ValueData()
 			if val == nil {
 				return fmt.Errorf("field DnsSpec unexpected wire type. expect LengthDelimited but got %s", field.Tag.Type())
@@ -6313,18 +6304,27 @@ func (p *Stats) Read(data io.Reader) error {
 			if err := p.DnsSpec.Decode((*val)); err != nil {
 				return err
 			}
-		case 15:
+		case 14:
 			val := field.ValueData()
 			if val == nil {
 				return fmt.Errorf("field CommonName unexpected wire type. expect LengthDelimited but got %s", field.Tag.Type())
 			}
 			p.CommonName = unsafe.String(unsafe.SliceData((*val)), len((*val)))
-		case 16:
+		case 15:
 			val := field.ValueData()
 			if val == nil {
 				return fmt.Errorf("field DpType unexpected wire type. expect LengthDelimited but got %s", field.Tag.Type())
 			}
 			p.DpType = unsafe.String(unsafe.SliceData((*val)), len((*val)))
+		case 16:
+			val := field.ValueData()
+			if val == nil {
+				return fmt.Errorf("field Workload unexpected wire type. expect LengthDelimited but got %s", field.Tag.Type())
+			}
+			p.Workload = new(WorkloadStat)
+			if err := p.Workload.Decode((*val)); err != nil {
+				return err
+			}
 		default:
 			// skip unknown
 		}
@@ -6426,22 +6426,13 @@ func (p *Stats) ReadBuffer(data *bytes.Reader) error {
 		case 10:
 			val := field.ValueData()
 			if val == nil {
-				return fmt.Errorf("field Workload unexpected wire type. expect LengthDelimited but got %s", field.Tag.Type())
-			}
-			p.Workload = new(WorkloadStat)
-			if err := p.Workload.Decode((*val)); err != nil {
-				return err
-			}
-		case 11:
-			val := field.ValueData()
-			if val == nil {
 				return fmt.Errorf("field CdnAppSpec unexpected wire type. expect LengthDelimited but got %s", field.Tag.Type())
 			}
 			p.CdnAppSpec = new(CdnAppSpecStat)
 			if err := p.CdnAppSpec.Decode((*val)); err != nil {
 				return err
 			}
-		case 12:
+		case 11:
 			val := field.ValueData()
 			if val == nil {
 				return fmt.Errorf("field HostPhysical unexpected wire type. expect LengthDelimited but got %s", field.Tag.Type())
@@ -6450,7 +6441,7 @@ func (p *Stats) ReadBuffer(data *bytes.Reader) error {
 			if err := p.HostPhysical.Decode((*val)); err != nil {
 				return err
 			}
-		case 13:
+		case 12:
 			val := field.ValueData()
 			if val == nil {
 				return fmt.Errorf("field PopcacheSpec unexpected wire type. expect LengthDelimited but got %s", field.Tag.Type())
@@ -6459,7 +6450,7 @@ func (p *Stats) ReadBuffer(data *bytes.Reader) error {
 			if err := p.PopcacheSpec.Decode((*val)); err != nil {
 				return err
 			}
-		case 14:
+		case 13:
 			val := field.ValueData()
 			if val == nil {
 				return fmt.Errorf("field DnsSpec unexpected wire type. expect LengthDelimited but got %s", field.Tag.Type())
@@ -6468,18 +6459,27 @@ func (p *Stats) ReadBuffer(data *bytes.Reader) error {
 			if err := p.DnsSpec.Decode((*val)); err != nil {
 				return err
 			}
-		case 15:
+		case 14:
 			val := field.ValueData()
 			if val == nil {
 				return fmt.Errorf("field CommonName unexpected wire type. expect LengthDelimited but got %s", field.Tag.Type())
 			}
 			p.CommonName = unsafe.String(unsafe.SliceData((*val)), len((*val)))
-		case 16:
+		case 15:
 			val := field.ValueData()
 			if val == nil {
 				return fmt.Errorf("field DpType unexpected wire type. expect LengthDelimited but got %s", field.Tag.Type())
 			}
 			p.DpType = unsafe.String(unsafe.SliceData((*val)), len((*val)))
+		case 16:
+			val := field.ValueData()
+			if val == nil {
+				return fmt.Errorf("field Workload unexpected wire type. expect LengthDelimited but got %s", field.Tag.Type())
+			}
+			p.Workload = new(WorkloadStat)
+			if err := p.Workload.Decode((*val)); err != nil {
+				return err
+			}
 		default:
 			// skip unknown
 		}
@@ -6578,22 +6578,13 @@ func (p *Stats) Decode(data []byte) error {
 		case 10:
 			val := field.ValueData()
 			if val == nil {
-				return fmt.Errorf("field Workload unexpected wire type. expect LengthDelimited but got %s", field.Tag.Type())
-			}
-			p.Workload = new(WorkloadStat)
-			if err := p.Workload.Decode((*val)); err != nil {
-				return err
-			}
-		case 11:
-			val := field.ValueData()
-			if val == nil {
 				return fmt.Errorf("field CdnAppSpec unexpected wire type. expect LengthDelimited but got %s", field.Tag.Type())
 			}
 			p.CdnAppSpec = new(CdnAppSpecStat)
 			if err := p.CdnAppSpec.Decode((*val)); err != nil {
 				return err
 			}
-		case 12:
+		case 11:
 			val := field.ValueData()
 			if val == nil {
 				return fmt.Errorf("field HostPhysical unexpected wire type. expect LengthDelimited but got %s", field.Tag.Type())
@@ -6602,7 +6593,7 @@ func (p *Stats) Decode(data []byte) error {
 			if err := p.HostPhysical.Decode((*val)); err != nil {
 				return err
 			}
-		case 13:
+		case 12:
 			val := field.ValueData()
 			if val == nil {
 				return fmt.Errorf("field PopcacheSpec unexpected wire type. expect LengthDelimited but got %s", field.Tag.Type())
@@ -6611,7 +6602,7 @@ func (p *Stats) Decode(data []byte) error {
 			if err := p.PopcacheSpec.Decode((*val)); err != nil {
 				return err
 			}
-		case 14:
+		case 13:
 			val := field.ValueData()
 			if val == nil {
 				return fmt.Errorf("field DnsSpec unexpected wire type. expect LengthDelimited but got %s", field.Tag.Type())
@@ -6620,18 +6611,27 @@ func (p *Stats) Decode(data []byte) error {
 			if err := p.DnsSpec.Decode((*val)); err != nil {
 				return err
 			}
-		case 15:
+		case 14:
 			val := field.ValueData()
 			if val == nil {
 				return fmt.Errorf("field CommonName unexpected wire type. expect LengthDelimited but got %s", field.Tag.Type())
 			}
 			p.CommonName = unsafe.String(unsafe.SliceData((*val)), len((*val)))
-		case 16:
+		case 15:
 			val := field.ValueData()
 			if val == nil {
 				return fmt.Errorf("field DpType unexpected wire type. expect LengthDelimited but got %s", field.Tag.Type())
 			}
 			p.DpType = unsafe.String(unsafe.SliceData((*val)), len((*val)))
+		case 16:
+			val := field.ValueData()
+			if val == nil {
+				return fmt.Errorf("field Workload unexpected wire type. expect LengthDelimited but got %s", field.Tag.Type())
+			}
+			p.Workload = new(WorkloadStat)
+			if err := p.Workload.Decode((*val)); err != nil {
+				return err
+			}
 		default:
 			// skip unknown
 		}
@@ -6796,23 +6796,6 @@ func (p *Stats) Encode(w io.Writer) error {
 		}
 	}
 	field.Tag.SetNumber(10)
-	if p.Workload != nil {
-		field.Tag.SetType(wire.WireType_LengthDelimited)
-		{
-			mBuf := make([]byte, 0)
-			if appendTmp, err := p.Workload.Append(mBuf); err != nil {
-				return err
-			} else {
-				mBuf = appendTmp
-			}
-			field.SetLength(wire.Varint{Value: uint64(len(mBuf))})
-			field.SetValueData(mBuf)
-		}
-		if err := field.Write(w); err != nil {
-			return err
-		}
-	}
-	field.Tag.SetNumber(11)
 	if p.CdnAppSpec != nil {
 		field.Tag.SetType(wire.WireType_LengthDelimited)
 		{
@@ -6829,7 +6812,7 @@ func (p *Stats) Encode(w io.Writer) error {
 			return err
 		}
 	}
-	field.Tag.SetNumber(12)
+	field.Tag.SetNumber(11)
 	if p.HostPhysical != nil {
 		field.Tag.SetType(wire.WireType_LengthDelimited)
 		{
@@ -6846,7 +6829,7 @@ func (p *Stats) Encode(w io.Writer) error {
 			return err
 		}
 	}
-	field.Tag.SetNumber(13)
+	field.Tag.SetNumber(12)
 	if p.PopcacheSpec != nil {
 		field.Tag.SetType(wire.WireType_LengthDelimited)
 		{
@@ -6863,7 +6846,7 @@ func (p *Stats) Encode(w io.Writer) error {
 			return err
 		}
 	}
-	field.Tag.SetNumber(14)
+	field.Tag.SetNumber(13)
 	if p.DnsSpec != nil {
 		field.Tag.SetType(wire.WireType_LengthDelimited)
 		{
@@ -6880,7 +6863,7 @@ func (p *Stats) Encode(w io.Writer) error {
 			return err
 		}
 	}
-	field.Tag.SetNumber(15)
+	field.Tag.SetNumber(14)
 	if len(p.CommonName) > 0 {
 		field.Tag.SetType(wire.WireType_LengthDelimited)
 		field.SetLength(wire.Varint{Value: uint64(len(p.CommonName))})
@@ -6889,11 +6872,28 @@ func (p *Stats) Encode(w io.Writer) error {
 			return err
 		}
 	}
-	field.Tag.SetNumber(16)
+	field.Tag.SetNumber(15)
 	if len(p.DpType) > 0 {
 		field.Tag.SetType(wire.WireType_LengthDelimited)
 		field.SetLength(wire.Varint{Value: uint64(len(p.DpType))})
 		field.SetValueData([]byte(p.DpType))
+		if err := field.Write(w); err != nil {
+			return err
+		}
+	}
+	field.Tag.SetNumber(16)
+	if p.Workload != nil {
+		field.Tag.SetType(wire.WireType_LengthDelimited)
+		{
+			mBuf := make([]byte, 0)
+			if appendTmp, err := p.Workload.Append(mBuf); err != nil {
+				return err
+			} else {
+				mBuf = appendTmp
+			}
+			field.SetLength(wire.Varint{Value: uint64(len(mBuf))})
+			field.SetValueData(mBuf)
+		}
 		if err := field.Write(w); err != nil {
 			return err
 		}
@@ -7056,23 +7056,6 @@ func (p *Stats) EncodeBuffer(w *bytes.Buffer) error {
 		}
 	}
 	field.Tag.SetNumber(10)
-	if p.Workload != nil {
-		field.Tag.SetType(wire.WireType_LengthDelimited)
-		{
-			mBuf := make([]byte, 0)
-			if appendTmp, err := p.Workload.Append(mBuf); err != nil {
-				return err
-			} else {
-				mBuf = appendTmp
-			}
-			field.SetLength(wire.Varint{Value: uint64(len(mBuf))})
-			field.SetValueData(mBuf)
-		}
-		if err := field.WriteBuffer(w); err != nil {
-			return err
-		}
-	}
-	field.Tag.SetNumber(11)
 	if p.CdnAppSpec != nil {
 		field.Tag.SetType(wire.WireType_LengthDelimited)
 		{
@@ -7089,7 +7072,7 @@ func (p *Stats) EncodeBuffer(w *bytes.Buffer) error {
 			return err
 		}
 	}
-	field.Tag.SetNumber(12)
+	field.Tag.SetNumber(11)
 	if p.HostPhysical != nil {
 		field.Tag.SetType(wire.WireType_LengthDelimited)
 		{
@@ -7106,7 +7089,7 @@ func (p *Stats) EncodeBuffer(w *bytes.Buffer) error {
 			return err
 		}
 	}
-	field.Tag.SetNumber(13)
+	field.Tag.SetNumber(12)
 	if p.PopcacheSpec != nil {
 		field.Tag.SetType(wire.WireType_LengthDelimited)
 		{
@@ -7123,7 +7106,7 @@ func (p *Stats) EncodeBuffer(w *bytes.Buffer) error {
 			return err
 		}
 	}
-	field.Tag.SetNumber(14)
+	field.Tag.SetNumber(13)
 	if p.DnsSpec != nil {
 		field.Tag.SetType(wire.WireType_LengthDelimited)
 		{
@@ -7140,7 +7123,7 @@ func (p *Stats) EncodeBuffer(w *bytes.Buffer) error {
 			return err
 		}
 	}
-	field.Tag.SetNumber(15)
+	field.Tag.SetNumber(14)
 	if len(p.CommonName) > 0 {
 		field.Tag.SetType(wire.WireType_LengthDelimited)
 		field.SetLength(wire.Varint{Value: uint64(len(p.CommonName))})
@@ -7149,11 +7132,28 @@ func (p *Stats) EncodeBuffer(w *bytes.Buffer) error {
 			return err
 		}
 	}
-	field.Tag.SetNumber(16)
+	field.Tag.SetNumber(15)
 	if len(p.DpType) > 0 {
 		field.Tag.SetType(wire.WireType_LengthDelimited)
 		field.SetLength(wire.Varint{Value: uint64(len(p.DpType))})
 		field.SetValueData([]byte(p.DpType))
+		if err := field.WriteBuffer(w); err != nil {
+			return err
+		}
+	}
+	field.Tag.SetNumber(16)
+	if p.Workload != nil {
+		field.Tag.SetType(wire.WireType_LengthDelimited)
+		{
+			mBuf := make([]byte, 0)
+			if appendTmp, err := p.Workload.Append(mBuf); err != nil {
+				return err
+			} else {
+				mBuf = appendTmp
+			}
+			field.SetLength(wire.Varint{Value: uint64(len(mBuf))})
+			field.SetValueData(mBuf)
+		}
 		if err := field.WriteBuffer(w); err != nil {
 			return err
 		}
@@ -7334,25 +7334,6 @@ func (p *Stats) Append(w []byte) ([]byte, error) {
 		}
 	}
 	field.Tag.SetNumber(10)
-	if p.Workload != nil {
-		field.Tag.SetType(wire.WireType_LengthDelimited)
-		{
-			mBuf := make([]byte, 0)
-			if appendTmp, err := p.Workload.Append(mBuf); err != nil {
-				return nil, err
-			} else {
-				mBuf = appendTmp
-			}
-			field.SetLength(wire.Varint{Value: uint64(len(mBuf))})
-			field.SetValueData(mBuf)
-		}
-		if appendTmp, err := field.Append(w); err != nil {
-			return nil, err
-		} else {
-			w = appendTmp
-		}
-	}
-	field.Tag.SetNumber(11)
 	if p.CdnAppSpec != nil {
 		field.Tag.SetType(wire.WireType_LengthDelimited)
 		{
@@ -7371,7 +7352,7 @@ func (p *Stats) Append(w []byte) ([]byte, error) {
 			w = appendTmp
 		}
 	}
-	field.Tag.SetNumber(12)
+	field.Tag.SetNumber(11)
 	if p.HostPhysical != nil {
 		field.Tag.SetType(wire.WireType_LengthDelimited)
 		{
@@ -7390,7 +7371,7 @@ func (p *Stats) Append(w []byte) ([]byte, error) {
 			w = appendTmp
 		}
 	}
-	field.Tag.SetNumber(13)
+	field.Tag.SetNumber(12)
 	if p.PopcacheSpec != nil {
 		field.Tag.SetType(wire.WireType_LengthDelimited)
 		{
@@ -7409,7 +7390,7 @@ func (p *Stats) Append(w []byte) ([]byte, error) {
 			w = appendTmp
 		}
 	}
-	field.Tag.SetNumber(14)
+	field.Tag.SetNumber(13)
 	if p.DnsSpec != nil {
 		field.Tag.SetType(wire.WireType_LengthDelimited)
 		{
@@ -7428,7 +7409,7 @@ func (p *Stats) Append(w []byte) ([]byte, error) {
 			w = appendTmp
 		}
 	}
-	field.Tag.SetNumber(15)
+	field.Tag.SetNumber(14)
 	if len(p.CommonName) > 0 {
 		field.Tag.SetType(wire.WireType_LengthDelimited)
 		field.SetLength(wire.Varint{Value: uint64(len(p.CommonName))})
@@ -7439,11 +7420,30 @@ func (p *Stats) Append(w []byte) ([]byte, error) {
 			w = appendTmp
 		}
 	}
-	field.Tag.SetNumber(16)
+	field.Tag.SetNumber(15)
 	if len(p.DpType) > 0 {
 		field.Tag.SetType(wire.WireType_LengthDelimited)
 		field.SetLength(wire.Varint{Value: uint64(len(p.DpType))})
 		field.SetValueData([]byte(p.DpType))
+		if appendTmp, err := field.Append(w); err != nil {
+			return nil, err
+		} else {
+			w = appendTmp
+		}
+	}
+	field.Tag.SetNumber(16)
+	if p.Workload != nil {
+		field.Tag.SetType(wire.WireType_LengthDelimited)
+		{
+			mBuf := make([]byte, 0)
+			if appendTmp, err := p.Workload.Append(mBuf); err != nil {
+				return nil, err
+			} else {
+				mBuf = appendTmp
+			}
+			field.SetLength(wire.Varint{Value: uint64(len(mBuf))})
+			field.SetValueData(mBuf)
+		}
 		if appendTmp, err := field.Append(w); err != nil {
 			return nil, err
 		} else {

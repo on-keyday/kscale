@@ -1,4 +1,5 @@
 {
+    "appended_categories": ["workload"],
     "nested_categories": [
         "interface_spec"
     ],
@@ -281,21 +282,6 @@
             "string_format": "fmt.Sprintf(\"%v\", &$src)"
         },
         {
-            "name": "netdp_stats",
-            "display_name": "Workload Datapath Stats",
-            "type": "[]byte",
-            "hold_type": "netdpmetrics.NetdpMetrics",
-            "category": "workload",
-            "expand_struct": "workload/netdp/netdpmetrics/metrics.json",
-            "to_objproto": "var w [unsafe.Sizeof(netdpmetrics.NetdpMetrics{})]byte; binary.Encode(w[:],binary.LittleEndian, $src); $dst = w[:]",
-            "from_objproto": "r := bytes.NewReader($src); var res netdpmetrics.NetdpMetrics; binary.Read(r,binary.LittleEndian, &res); $dst = res",
-            "sample_value": [
-                "netdpmetrics.NetdpMetrics{}",
-                "netdpmetrics.NetdpMetrics{InSteeredTotal: 3}"
-            ],
-            "string_format": "fmt.Sprintf(\"%v\", &$src)"
-        },
-        {
             "name": "bound_ifaces",
             "display_name": "Bound Interfaces",
             "long_name": "BoundInterfaces",
@@ -415,6 +401,21 @@
             "long_name": "ManagedDNSZones",
             "type": "[]string",
             "category": "dns_spec"
+        },
+        {
+            "name": "netdp_stats",
+            "display_name": "Workload Datapath Stats",
+            "type": "[]byte",
+            "hold_type": "netdpmetrics.NetdpMetrics",
+            "category": "workload",
+            "expand_struct": "workload/netdp/netdpmetrics/metrics.json",
+            "to_objproto": "var w [unsafe.Sizeof(netdpmetrics.NetdpMetrics{})]byte; binary.Encode(w[:],binary.LittleEndian, $src); $dst = w[:]",
+            "from_objproto": "r := bytes.NewReader($src); var res netdpmetrics.NetdpMetrics; binary.Read(r,binary.LittleEndian, &res); $dst = res",
+            "sample_value": [
+                "netdpmetrics.NetdpMetrics{}",
+                "netdpmetrics.NetdpMetrics{InSteeredTotal: 3}"
+            ],
+            "string_format": "fmt.Sprintf(\"%v\", &$src)"
         }
     ],
     "prometheus": [

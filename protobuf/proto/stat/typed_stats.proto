@@ -113,16 +113,6 @@ message DnsStat {
     uint64 errors_total = 4;
 }
 
-message WorkloadStat {
-    uint64 in_steered_total = 1;
-    uint64 in_not_lb_src_total = 2;
-    uint64 in_no_port_total = 3;
-    uint64 in_err_total = 4;
-    uint64 out_snat_total = 5;
-    uint64 out_err_total = 6;
-    uint64 steered_ports = 7;
-}
-
 message CdnAppSpecStat {
     string common_name = 1;
 }
@@ -142,6 +132,16 @@ message DnsSpecStat {
     repeated string managed_dns_zones = 1;
 }
 
+message WorkloadStat {
+    uint64 in_steered_total = 1;
+    uint64 in_not_lb_src_total = 2;
+    uint64 in_no_port_total = 3;
+    uint64 in_err_total = 4;
+    uint64 out_snat_total = 5;
+    uint64 out_err_total = 6;
+    uint64 steered_ports = 7;
+}
+
 // Stats is the wire envelope for the `stats` admin response.
 // Each sub-message is optional; the broker populates only the
 // categories that apply to the dataplane type being reported.
@@ -155,16 +155,16 @@ message Stats {
     CdnAppRealtimeStat cdn_app_realtime = 7;
     PopcacheStat popcache = 8;
     DnsStat dns = 9;
-    WorkloadStat workload = 10;
-    CdnAppSpecStat cdn_app_spec = 11;
-    HostPhysicalStat host_physical = 12;
-    PopcacheSpecStat popcache_spec = 13;
-    DnsSpecStat dns_spec = 14;
+    CdnAppSpecStat cdn_app_spec = 10;
+    HostPhysicalStat host_physical = 11;
+    PopcacheSpecStat popcache_spec = 12;
+    DnsSpecStat dns_spec = 13;
     // common_name is the reporting node's CA CommonName, self-stamped
     // by the dp, used to attribute each Stats payload to its source node.
     // (This is the node identity, NOT a transport connection id.)
-    string common_name = 15;
+    string common_name = 14;
     // dp_type is the dataplane type ("l4lb" / "popcache" / etc.).
-    string dp_type = 16;
+    string dp_type = 15;
+    WorkloadStat workload = 16;
 }
 

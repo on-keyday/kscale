@@ -549,11 +549,16 @@ def process_proto_schema(statMetrics :dict, categories :dict) -> str:
     result += "// Each sub-message is optional; the broker populates only the\n"
     result += "// categories that apply to the dataplane type being reported.\n"
     result += "message Stats {\n"
+    # Wire field numbers must never move: a node running an older build keeps
+    # sending the old numbers (a renumbered common_name made the CP misread every
+    # not-yet-upgraded node). Categories added after common_name/dp_type existed
+    # are listed in "appended_categories" and numbered after dp_type, in order.
     field_no = 1
     nested = set(statMetrics.get("nested_categories", []))
+    appended = list(statMetrics.get("appended_categories", []))
     for category in categories:
-        if category in nested:
-            continue  # nested-only sub-message; not a top-level envelope category
+        if category in nested or category in appended:
+            continue  # nested-only sub-message, or numbered after dp_type below
         msg_name = toCamelCase(category) + "Stat"
         field_name = category
         result += "    " + msg_name + " " + field_name + " = " + str(field_no) + ";\n"
@@ -564,6 +569,12 @@ def process_proto_schema(statMetrics :dict, categories :dict) -> str:
     result += "    string common_name = " + str(field_no) + ";\n"
     result += "    // dp_type is the dataplane type (\"l4lb\" / \"popcache\" / etc.).\n"
     result += "    string dp_type = " + str(field_no + 1) + ";\n"
+    field_no += 2
+    for category in appended:
+        if category not in categories:
+            raise ValueError("appended_categories: unknown category '" + category + "'")
+        result += "    " + toCamelCase(category) + "Stat " + category + " = " + str(field_no) + ";\n"
+        field_no += 1
     result += "}\n\n"
     return result
 
@@ -882,6 +893,9 @@ def loadAndMergeStatMetrics(statMetricsDir :str) -> dict:
         # own message + struct + ToProto, but kept OUT of the top-level Stats
         # envelope (the broker never reports them as a standalone category).
         "nested_categories": [],
+        # Top-level categories numbered after common_name/dp_type (wire field
+        # numbers are append-only; see process_proto_schema).
+        "appended_categories": [],
     }
     # Sort filenames so the generated output is stable across machines /
     # Python versions (os.listdir order is FS-dependent).
@@ -894,7 +908,7 @@ def loadAndMergeStatMetrics(statMetricsDir :str) -> dict:
                 data = yaml.safe_load(f)
             else:
                 data = json.load(f)
-            for key in ["imports", "metrics", "prometheus", "prometheus_converts", "nested_categories"]:
+            for key in ["imports", "metrics", "prometheus", "prometheus_converts", "nested_categories", "appended_categories"]:
                 if key in data:
                     statMetrics[key].extend(data[key])
     return statMetrics

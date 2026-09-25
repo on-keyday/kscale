@@ -83,8 +83,6 @@ const StatPopcacheStats = "popcache_stats"
 
 const StatDnsStats = "dns_stats"
 
-const StatNetdpStats = "netdp_stats"
-
 const StatBoundInterfaces = "bound_ifaces"
 
 const StatIPs = "ips"
@@ -116,6 +114,8 @@ const StatTemperatureCelsiusHigh = "temperature_celsius_high"
 const StatOriginServerAddress = "origin_server_address"
 
 const StatManagedDNSZones = "managed_dns_zones"
+
+const StatNetdpStats = "netdp_stats"
 
 var StatMetricsL4lb = []string{
 	StatSourceIPPacketCount,
@@ -188,10 +188,6 @@ var StatMetricsDns = []string{
 	StatDnsStats,
 }
 
-var StatMetricsWorkload = []string{
-	StatNetdpStats,
-}
-
 var StatMetricsCdnAppSpec = []string{
 	StatCommonName,
 }
@@ -209,6 +205,10 @@ var StatMetricsPopcacheSpec = []string{
 
 var StatMetricsDnsSpec = []string{
 	StatManagedDNSZones,
+}
+
+var StatMetricsWorkload = []string{
+	StatNetdpStats,
 }
 
 func AppendSourceIPPacketCountString(buf *strings.Builder, indent string, value l4lbdrv.SrcIPCounts) {
@@ -444,13 +444,6 @@ func AppendDnsStatsString(buf *strings.Builder, indent string, value dnsmetrics.
 	buf.WriteString("\n")
 }
 
-func AppendNetdpStatsString(buf *strings.Builder, indent string, value netdpmetrics.NetdpMetrics) {
-	buf.WriteString(indent)
-	buf.WriteString("Workload Datapath Stats: ")
-	buf.WriteString(fmt.Sprintf("%v", &value))
-	buf.WriteString("\n")
-}
-
 func AppendBoundInterfacesString(buf *strings.Builder, indent string, value []string) {
 	buf.WriteString(indent)
 	buf.WriteString("Bound Interfaces: ")
@@ -563,6 +556,13 @@ func AppendManagedDNSZonesString(buf *strings.Builder, indent string, value []st
 	buf.WriteString("\n")
 }
 
+func AppendNetdpStatsString(buf *strings.Builder, indent string, value netdpmetrics.NetdpMetrics) {
+	buf.WriteString(indent)
+	buf.WriteString("Workload Datapath Stats: ")
+	buf.WriteString(fmt.Sprintf("%v", &value))
+	buf.WriteString("\n")
+}
+
 type L4lbStat struct {
 	SourceIPPacketCount                 l4lbdrv.SrcIPCounts                `json:"src_ips"`
 	PacketSizeDistribution              l4lbdrv.PacketSizeDist             `json:"packet_sizes"`
@@ -634,10 +634,6 @@ type DnsStat struct {
 	DnsStats dnsmetrics.DNSMetrics `json:"dns_stats"`
 }
 
-type WorkloadStat struct {
-	NetdpStats netdpmetrics.NetdpMetrics `json:"netdp_stats"`
-}
-
 type CdnAppSpecStat struct {
 	CommonName string `json:"common_name"`
 }
@@ -655,6 +651,10 @@ type PopcacheSpecStat struct {
 
 type DnsSpecStat struct {
 	ManagedDNSZones []string `json:"managed_dns_zones"`
+}
+
+type WorkloadStat struct {
+	NetdpStats netdpmetrics.NetdpMetrics `json:"netdp_stats"`
 }
 
 func (s *L4lbStat) Equal(other *L4lbStat) bool {
@@ -956,20 +956,6 @@ func (s *DnsStat) AppendString(buf *strings.Builder, indent string) {
 	AppendDnsStatsString(buf, indent, s.DnsStats)
 }
 
-func (s *WorkloadStat) Equal(other *WorkloadStat) bool {
-	if other == nil {
-		return false
-	}
-	if s.NetdpStats != other.NetdpStats {
-		return false
-	}
-	return true
-}
-
-func (s *WorkloadStat) AppendString(buf *strings.Builder, indent string) {
-	AppendNetdpStatsString(buf, indent, s.NetdpStats)
-}
-
 func (s *CdnAppSpecStat) Equal(other *CdnAppSpecStat) bool {
 	if other == nil {
 		return false
@@ -1036,4 +1022,18 @@ func (s *DnsSpecStat) Equal(other *DnsSpecStat) bool {
 
 func (s *DnsSpecStat) AppendString(buf *strings.Builder, indent string) {
 	AppendManagedDNSZonesString(buf, indent, s.ManagedDNSZones)
+}
+
+func (s *WorkloadStat) Equal(other *WorkloadStat) bool {
+	if other == nil {
+		return false
+	}
+	if s.NetdpStats != other.NetdpStats {
+		return false
+	}
+	return true
+}
+
+func (s *WorkloadStat) AppendString(buf *strings.Builder, indent string) {
+	AppendNetdpStatsString(buf, indent, s.NetdpStats)
 }
