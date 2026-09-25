@@ -96,7 +96,7 @@ services:
     privileged: true
     network_mode: "service:popcache"
     command: ["--addr", "10.5.0.2:9443", "--data", "/data", "--node", "node1",
-              "--converge-interval", "5s"]
+              "--converge-interval", "5s", "--netdp-obj", "/objs/netdp.o"]
     volumes: ["shared:/data", "wlroot:/var/lib/containerd"]
     depends_on: [popcache]
     profiles: ["workload-cri"]

@@ -21,7 +21,10 @@ version = 3
 disabled_plugins = ["io.containerd.nri.v1.nri"]
 [grpc]
   address = "/run/containerd/containerd.sock"
-# Host network only (NamespaceMode NODE): no CNI config needed.
+# Pod-network sandboxes are wired by the kscale CNI plugin (see below).
+[plugins.'io.containerd.cri.v1.runtime'.cni]
+  conf_dir = "/etc/cni/net.d"
+  bin_dir = "/opt/cni/bin"
 [plugins.'io.containerd.cri.v1.runtime'.containerd]
   default_runtime_name = "runc"
   [plugins.'io.containerd.cri.v1.runtime'.containerd.runtimes.runc]
@@ -30,6 +33,19 @@ disabled_plugins = ["io.containerd.nri.v1.nri"]
       # No systemd in this container: plain cgroupfs.
       SystemdCgroup = false
 EOF
+
+# kscale CNI plugin + its network config (root-owned, as on a real node).
+mkdir -p /etc/cni/net.d /opt/cni/bin
+install -m 0755 /usr/local/bin/kscale-cni /opt/cni/bin/kscale-cni
+# containerd also runs a "loopback" network per sandbox; kscale-cni serves it too.
+ln -sf kscale-cni /opt/cni/bin/loopback
+cat > /etc/cni/net.d/10-kscale.conflist <<'CONF'
+{
+  "cniVersion": "1.0.0",
+  "name": "kscale",
+  "plugins": [{"type": "kscale-cni", "subnet": "10.200.0.0/24"}]
+}
+CONF
 
 containerd --config /etc/containerd/config.toml > /var/log/containerd.log 2>&1 &
 i=0

@@ -10,5 +10,7 @@ ARG RUNC_VERSION=1.3.0
 ADD https://github.com/containerd/containerd/releases/download/v${CONTAINERD_VERSION}/containerd-static-${CONTAINERD_VERSION}-linux-amd64.tar.gz /tmp/containerd.tgz
 ADD https://github.com/opencontainers/runc/releases/download/v${RUNC_VERSION}/runc.amd64 /usr/local/bin/runc
 RUN tar -xzf /tmp/containerd.tgz -C /usr/local && rm /tmp/containerd.tgz && chmod 0755 /usr/local/bin/runc
+# bpftool: read the workload datapath's counters in phase 6.
+RUN apk add --no-cache bpftool
 COPY workload-entrypoint.sh /usr/local/bin/workload-entrypoint.sh
 ENTRYPOINT ["/bin/sh", "/usr/local/bin/workload-entrypoint.sh"]

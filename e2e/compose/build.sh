@@ -7,8 +7,9 @@ cd "$(dirname "$0")/../.."
 out=e2e/compose/stage
 rm -rf "$out"
 mkdir -p "$out/bin" "$out/objs"
-for b in controlplane cli dpagent popcacheagent metricsgw katui workloadagent; do
+for b in controlplane cli dpagent popcacheagent metricsgw katui workloadagent kscale-cni; do
 	CGO_ENABLED=0 go build -o "$out/bin/$b" "./cmd/$b"
 done
-cp l4lb/c/lb.o l4lb/c/init_crypto.o l4lb/c/dummy.o "$out/objs/"
+make -s -C workload/netdp/c
+cp l4lb/c/lb.o l4lb/c/init_crypto.o l4lb/c/dummy.o workload/netdp/c/netdp.o "$out/objs/"
 echo "staged: $(ls "$out/bin") + objs"
