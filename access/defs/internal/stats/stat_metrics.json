@@ -10,6 +10,7 @@
         "github.com/on-keyday/kscale/l4lb/l4lbdrv",
         "github.com/on-keyday/kscale/popcache/popmetrics",
         "github.com/on-keyday/kscale/dns/dnsmetrics",
+        "github.com/on-keyday/kscale/workload/netdp/netdpmetrics",
         "encoding/binary",
         "bytes"
     ],
@@ -276,6 +277,21 @@
             "sample_value": [
                 "dnsmetrics.DNSMetrics{}",
                 "dnsmetrics.DNSMetrics{DnsPort: 5353}"
+            ],
+            "string_format": "fmt.Sprintf(\"%v\", &$src)"
+        },
+        {
+            "name": "netdp_stats",
+            "display_name": "Workload Datapath Stats",
+            "type": "[]byte",
+            "hold_type": "netdpmetrics.NetdpMetrics",
+            "category": "workload",
+            "expand_struct": "workload/netdp/netdpmetrics/metrics.json",
+            "to_objproto": "var w [unsafe.Sizeof(netdpmetrics.NetdpMetrics{})]byte; binary.Encode(w[:],binary.LittleEndian, $src); $dst = w[:]",
+            "from_objproto": "r := bytes.NewReader($src); var res netdpmetrics.NetdpMetrics; binary.Read(r,binary.LittleEndian, &res); $dst = res",
+            "sample_value": [
+                "netdpmetrics.NetdpMetrics{}",
+                "netdpmetrics.NetdpMetrics{InSteeredTotal: 3}"
             ],
             "string_format": "fmt.Sprintf(\"%v\", &$src)"
         },
@@ -559,6 +575,16 @@
             "long_name": "DnsEnabled",
             "value_type": "info",
             "source_metric": "dns_stats",
+            "hold_type": "bool",
+            "to_prometheus": "/*set by user*/",
+            "labels": [{"name": "instance"}]
+        },
+        {
+            "metric_name": "ksdk_workload_netdp_enabled",
+            "help": "Indicates if the workload pod-network eBPF datapath is loaded",
+            "long_name": "WorkloadNetdpEnabled",
+            "value_type": "info",
+            "source_metric": "netdp_stats",
             "hold_type": "bool",
             "to_prometheus": "/*set by user*/",
             "labels": [{"name": "instance"}]

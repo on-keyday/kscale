@@ -1,0 +1,40 @@
+{
+    "metrics": [
+        {
+            "name": "in_steered_total",
+            "type": "uint64",
+            "help": "IPIP packets from an l4lb front to a VIP port owned by a pod, decapped and redirected into the pod."
+        },
+        {
+            "name": "in_not_lb_src_total",
+            "type": "uint64",
+            "help": "IPIP packets whose outer source is not a known l4lb front (left to the kernel)."
+        },
+        {
+            "name": "in_no_port_total",
+            "type": "uint64",
+            "help": "IPIP packets from an l4lb front to a VIP port no pod owns (left to the kernel)."
+        },
+        {
+            "name": "in_err_total",
+            "type": "uint64",
+            "help": "Inbound packets dropped because a rewrite helper failed."
+        },
+        {
+            "name": "out_snat_total",
+            "type": "uint64",
+            "help": "Pod replies SNATed back to the VIP and sent out of the bound interface."
+        },
+        {
+            "name": "out_err_total",
+            "type": "uint64",
+            "help": "Pod replies dropped because a rewrite helper failed."
+        },
+        {
+            "name": "steered_ports",
+            "type": "uint64",
+            "kind": "gauge",
+            "help": "VIP ports currently steered into pods."
+        }
+    ]
+}

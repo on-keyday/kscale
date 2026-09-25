@@ -1,0 +1,116 @@
+{
+    "prometheus": [
+        {
+            "metric_name": "ksdk_workload_netdp_in_steered_total",
+            "help": "IPIP packets from an l4lb front to a VIP port owned by a pod, decapped and redirected into the pod.",
+            "long_name": "WorkloadNetdpInSteeredTotal",
+            "value_type": "counter",
+            "hold_type": "uint64",
+            "source_metric": "netdp_stats",
+            "optional": true,
+            "optional_condtition": "$self.WorkloadNetdpEnabled",
+            "to_prometheus": "$dst = uint64($src.InSteeredTotal)",
+            "labels": [
+                {
+                    "name": "instance"
+                }
+            ]
+        },
+        {
+            "metric_name": "ksdk_workload_netdp_in_not_lb_src_total",
+            "help": "IPIP packets whose outer source is not a known l4lb front (left to the kernel).",
+            "long_name": "WorkloadNetdpInNotLbSrcTotal",
+            "value_type": "counter",
+            "hold_type": "uint64",
+            "source_metric": "netdp_stats",
+            "optional": true,
+            "optional_condtition": "$self.WorkloadNetdpEnabled",
+            "to_prometheus": "$dst = uint64($src.InNotLbSrcTotal)",
+            "labels": [
+                {
+                    "name": "instance"
+                }
+            ]
+        },
+        {
+            "metric_name": "ksdk_workload_netdp_in_no_port_total",
+            "help": "IPIP packets from an l4lb front to a VIP port no pod owns (left to the kernel).",
+            "long_name": "WorkloadNetdpInNoPortTotal",
+            "value_type": "counter",
+            "hold_type": "uint64",
+            "source_metric": "netdp_stats",
+            "optional": true,
+            "optional_condtition": "$self.WorkloadNetdpEnabled",
+            "to_prometheus": "$dst = uint64($src.InNoPortTotal)",
+            "labels": [
+                {
+                    "name": "instance"
+                }
+            ]
+        },
+        {
+            "metric_name": "ksdk_workload_netdp_in_err_total",
+            "help": "Inbound packets dropped because a rewrite helper failed.",
+            "long_name": "WorkloadNetdpInErrTotal",
+            "value_type": "counter",
+            "hold_type": "uint64",
+            "source_metric": "netdp_stats",
+            "optional": true,
+            "optional_condtition": "$self.WorkloadNetdpEnabled",
+            "to_prometheus": "$dst = uint64($src.InErrTotal)",
+            "labels": [
+                {
+                    "name": "instance"
+                }
+            ]
+        },
+        {
+            "metric_name": "ksdk_workload_netdp_out_snat_total",
+            "help": "Pod replies SNATed back to the VIP and sent out of the bound interface.",
+            "long_name": "WorkloadNetdpOutSnatTotal",
+            "value_type": "counter",
+            "hold_type": "uint64",
+            "source_metric": "netdp_stats",
+            "optional": true,
+            "optional_condtition": "$self.WorkloadNetdpEnabled",
+            "to_prometheus": "$dst = uint64($src.OutSnatTotal)",
+            "labels": [
+                {
+                    "name": "instance"
+                }
+            ]
+        },
+        {
+            "metric_name": "ksdk_workload_netdp_out_err_total",
+            "help": "Pod replies dropped because a rewrite helper failed.",
+            "long_name": "WorkloadNetdpOutErrTotal",
+            "value_type": "counter",
+            "hold_type": "uint64",
+            "source_metric": "netdp_stats",
+            "optional": true,
+            "optional_condtition": "$self.WorkloadNetdpEnabled",
+            "to_prometheus": "$dst = uint64($src.OutErrTotal)",
+            "labels": [
+                {
+                    "name": "instance"
+                }
+            ]
+        },
+        {
+            "metric_name": "ksdk_workload_netdp_steered_ports",
+            "help": "VIP ports currently steered into pods.",
+            "long_name": "WorkloadNetdpSteeredPorts",
+            "value_type": "gauge",
+            "hold_type": "uint64",
+            "source_metric": "netdp_stats",
+            "optional": true,
+            "optional_condtition": "$self.WorkloadNetdpEnabled",
+            "to_prometheus": "$dst = uint64($src.SteeredPorts)",
+            "labels": [
+                {
+                    "name": "instance"
+                }
+            ]
+        }
+    ]
+}

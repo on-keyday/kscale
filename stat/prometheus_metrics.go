@@ -93,6 +93,14 @@ type PromMetrics struct {
 	CommonName                              string
 	RTT                                     float64
 	AppStatus                               float64
+	WorkloadNetdpEnabled                    bool
+	WorkloadNetdpInSteeredTotal             uint64
+	WorkloadNetdpInNotLbSrcTotal            uint64
+	WorkloadNetdpInNoPortTotal              uint64
+	WorkloadNetdpInErrTotal                 uint64
+	WorkloadNetdpOutSnatTotal               uint64
+	WorkloadNetdpOutErrTotal                uint64
+	WorkloadNetdpSteeredPorts               uint64
 	TemperatureCelsius                      []float64
 	TemperatureSensorKeys                   []string
 	RxBytes                                 []uint64
@@ -211,6 +219,17 @@ func (s *PromMetrics) UpdateConnectionStat(stat *ConnectionStat) {
 
 func (s *PromMetrics) UpdateCdnAppRealtimeStat(stat *CdnAppRealtimeStat) {
 	s.AppStatus = float64(stat.AppStatus)
+}
+
+func (s *PromMetrics) UpdateWorkloadStat(stat *WorkloadStat) {
+	/*set by user*/
+	s.WorkloadNetdpInSteeredTotal = uint64(stat.NetdpStats.InSteeredTotal)
+	s.WorkloadNetdpInNotLbSrcTotal = uint64(stat.NetdpStats.InNotLbSrcTotal)
+	s.WorkloadNetdpInNoPortTotal = uint64(stat.NetdpStats.InNoPortTotal)
+	s.WorkloadNetdpInErrTotal = uint64(stat.NetdpStats.InErrTotal)
+	s.WorkloadNetdpOutSnatTotal = uint64(stat.NetdpStats.OutSnatTotal)
+	s.WorkloadNetdpOutErrTotal = uint64(stat.NetdpStats.OutErrTotal)
+	s.WorkloadNetdpSteeredPorts = uint64(stat.NetdpStats.SteeredPorts)
 }
 
 func (s *PromMetrics) UpdateHostPhysicalStat(stat *HostPhysicalStat) {
@@ -529,6 +548,27 @@ func (s *PromMetrics) Collect(ch chan<- prometheus.Metric) {
 	ch <- prometheus.MustNewConstMetric(prometheus.NewDesc("ksdk_disk_total_bytes", "Total disk size in bytes", []string{"instance"}, nil), prometheus.GaugeValue, float64(s.DiskTotal), s.CommonName)
 	ch <- prometheus.MustNewConstMetric(prometheus.NewDesc("ksdk_rtt_to_control_plane_microseconds", "Round-trip time to control plane in microseconds", []string{"instance"}, nil), prometheus.GaugeValue, s.RTT, s.CommonName)
 	ch <- prometheus.MustNewConstMetric(prometheus.NewDesc("ksdk_app_status", "Application status", []string{"instance"}, nil), prometheus.GaugeValue, s.AppStatus, s.CommonName)
+	if s.WorkloadNetdpEnabled {
+		ch <- prometheus.MustNewConstMetric(prometheus.NewDesc("ksdk_workload_netdp_in_steered_total", "IPIP packets from an l4lb front to a VIP port owned by a pod, decapped and redirected into the pod.", []string{"instance"}, nil), prometheus.CounterValue, float64(s.WorkloadNetdpInSteeredTotal), s.CommonName)
+	}
+	if s.WorkloadNetdpEnabled {
+		ch <- prometheus.MustNewConstMetric(prometheus.NewDesc("ksdk_workload_netdp_in_not_lb_src_total", "IPIP packets whose outer source is not a known l4lb front (left to the kernel).", []string{"instance"}, nil), prometheus.CounterValue, float64(s.WorkloadNetdpInNotLbSrcTotal), s.CommonName)
+	}
+	if s.WorkloadNetdpEnabled {
+		ch <- prometheus.MustNewConstMetric(prometheus.NewDesc("ksdk_workload_netdp_in_no_port_total", "IPIP packets from an l4lb front to a VIP port no pod owns (left to the kernel).", []string{"instance"}, nil), prometheus.CounterValue, float64(s.WorkloadNetdpInNoPortTotal), s.CommonName)
+	}
+	if s.WorkloadNetdpEnabled {
+		ch <- prometheus.MustNewConstMetric(prometheus.NewDesc("ksdk_workload_netdp_in_err_total", "Inbound packets dropped because a rewrite helper failed.", []string{"instance"}, nil), prometheus.CounterValue, float64(s.WorkloadNetdpInErrTotal), s.CommonName)
+	}
+	if s.WorkloadNetdpEnabled {
+		ch <- prometheus.MustNewConstMetric(prometheus.NewDesc("ksdk_workload_netdp_out_snat_total", "Pod replies SNATed back to the VIP and sent out of the bound interface.", []string{"instance"}, nil), prometheus.CounterValue, float64(s.WorkloadNetdpOutSnatTotal), s.CommonName)
+	}
+	if s.WorkloadNetdpEnabled {
+		ch <- prometheus.MustNewConstMetric(prometheus.NewDesc("ksdk_workload_netdp_out_err_total", "Pod replies dropped because a rewrite helper failed.", []string{"instance"}, nil), prometheus.CounterValue, float64(s.WorkloadNetdpOutErrTotal), s.CommonName)
+	}
+	if s.WorkloadNetdpEnabled {
+		ch <- prometheus.MustNewConstMetric(prometheus.NewDesc("ksdk_workload_netdp_steered_ports", "VIP ports currently steered into pods.", []string{"instance"}, nil), prometheus.GaugeValue, float64(s.WorkloadNetdpSteeredPorts), s.CommonName)
+	}
 	for i, v := range s.TemperatureCelsius {
 		ch <- prometheus.MustNewConstMetric(prometheus.NewDesc("ksdk_tempature_celsius", "Temperature in Celsius", []string{"instance", "sensor_key"}, nil), prometheus.GaugeValue, v, s.CommonName, func() string {
 			if s.TemperatureSensorKeys != nil && i < len(s.TemperatureSensorKeys) {

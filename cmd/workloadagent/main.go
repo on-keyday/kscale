@@ -94,7 +94,7 @@ func main() {
 
 	lc := stat.NewAppLifecycle()
 	lc.SetRunning() // operational from boot — the converge loop runs immediately (no start gate)
-	hooks := &workloadHooks{logger: logger, promMetrics: &stat.PromMetrics{}, lc: lc, dp: dp}
+	hooks := &workloadHooks{logger: logger, promMetrics: &stat.PromMetrics{WorkloadNetdpEnabled: dp != nil}, lc: lc, dp: dp}
 	if err := dataplane.Run(ctx, dataplane.Config{
 		Addr:    *addr,
 		DataDir: *dataDir,
@@ -249,5 +249,24 @@ func (h *workloadHooks) UpdateRemote(remotes []stat.DestEntry) error {
 	}
 	return h.dp.SetLBSources(srcs)
 }
-func (h *workloadHooks) Stats() []*pbstat.Stats         { return []*pbstat.Stats{h.lc.Stat()} }
 func (h *workloadHooks) PromMetrics() *stat.PromMetrics { return h.promMetrics }
+
+// Stats reports the app lifecycle plus, when the datapath is loaded, its counters,
+// folding them into the prometheus surface. Deliberately NOT delta-reported: the
+// substrate calls Stats from two goroutines (the 2s host-metrics ticker and the
+// StreamStats loop), so a "last reported" snapshot would let one caller swallow a
+// change the other never sends — and would race. Seven counters per call is cheap.
+func (h *workloadHooks) Stats() []*pbstat.Stats {
+	entries := []*pbstat.Stats{h.lc.Stat()}
+	if h.dp == nil {
+		return entries
+	}
+	m, err := h.dp.Metrics()
+	if err != nil {
+		h.logger.Warn("netdp: metrics", "error", err)
+		return entries
+	}
+	ws := stat.WorkloadStat{NetdpStats: m}
+	h.promMetrics.UpdateWorkloadStat(&ws)
+	return append(entries, &pbstat.Stats{Workload: ws.ToProto()})
+}

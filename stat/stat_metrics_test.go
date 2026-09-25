@@ -15,6 +15,7 @@ import (
 	"github.com/on-keyday/kscale/dns/dnsmetrics"
 	"github.com/on-keyday/kscale/l4lb/l4lbdrv"
 	"github.com/on-keyday/kscale/popcache/popmetrics"
+	"github.com/on-keyday/kscale/workload/netdp/netdpmetrics"
 	"github.com/on-keyday/objtrsf/objproto"
 )
 
@@ -229,6 +230,19 @@ func TestDnsStatProtoRoundTrip(t *testing.T) {
 		t.Fatalf("ToProto returned nil")
 	}
 	s2 := &DnsStat{}
+	s2.FromProto(p)
+	if !s.Equal(s2) {
+		t.Errorf("FromProto did not round-trip")
+	}
+}
+func TestWorkloadStatProtoRoundTrip(t *testing.T) {
+	s := &WorkloadStat{}
+	s.NetdpStats = netdpmetrics.NetdpMetrics{}
+	p := s.ToProto()
+	if p == nil {
+		t.Fatalf("ToProto returned nil")
+	}
+	s2 := &WorkloadStat{}
 	s2.FromProto(p)
 	if !s.Equal(s2) {
 		t.Errorf("FromProto did not round-trip")
@@ -582,6 +596,17 @@ func TestDnsStatAppendString(t *testing.T) {
 	output := buf.String()
 	if !strings.Contains(output, "DNS Stats: ") {
 		t.Errorf("AppendString output missing metric DNS Stats")
+	}
+	fmt.Printf("AppendString output:\n%s", output)
+}
+func TestWorkloadStatAppendString(t *testing.T) {
+	s := &WorkloadStat{}
+	s.NetdpStats = netdpmetrics.NetdpMetrics{}
+	var buf strings.Builder
+	s.AppendString(&buf, "")
+	output := buf.String()
+	if !strings.Contains(output, "Workload Datapath Stats: ") {
+		t.Errorf("AppendString output missing metric Workload Datapath Stats")
 	}
 	fmt.Printf("AppendString output:\n%s", output)
 }

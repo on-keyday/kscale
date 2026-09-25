@@ -352,6 +352,31 @@ func (s *DnsStat) FromProto(in *pbstat.DnsStat) {
 	s.DnsStats.ErrorsTotal = in.ErrorsTotal
 }
 
+func (s *WorkloadStat) ToProto() *pbstat.WorkloadStat {
+	out := &pbstat.WorkloadStat{}
+	out.InSteeredTotal = s.NetdpStats.InSteeredTotal
+	out.InNotLbSrcTotal = s.NetdpStats.InNotLbSrcTotal
+	out.InNoPortTotal = s.NetdpStats.InNoPortTotal
+	out.InErrTotal = s.NetdpStats.InErrTotal
+	out.OutSnatTotal = s.NetdpStats.OutSnatTotal
+	out.OutErrTotal = s.NetdpStats.OutErrTotal
+	out.SteeredPorts = s.NetdpStats.SteeredPorts
+	return out
+}
+
+func (s *WorkloadStat) FromProto(in *pbstat.WorkloadStat) {
+	if in == nil {
+		return
+	}
+	s.NetdpStats.InSteeredTotal = in.InSteeredTotal
+	s.NetdpStats.InNotLbSrcTotal = in.InNotLbSrcTotal
+	s.NetdpStats.InNoPortTotal = in.InNoPortTotal
+	s.NetdpStats.InErrTotal = in.InErrTotal
+	s.NetdpStats.OutSnatTotal = in.OutSnatTotal
+	s.NetdpStats.OutErrTotal = in.OutErrTotal
+	s.NetdpStats.SteeredPorts = in.SteeredPorts
+}
+
 func (s *CdnAppSpecStat) ToProto() *pbstat.CdnAppSpecStat {
 	out := &pbstat.CdnAppSpecStat{}
 	out.CommonName = s.CommonName

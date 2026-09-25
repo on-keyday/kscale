@@ -75,6 +75,18 @@ after=$(counter 1)
 echo "in_not_lb_src: $before -> $after"
 spoof_ok=0; [ "$after" -gt "$before" ] && spoof_ok=1
 
+echo "=== prometheus: netdp counters exported by the workload node ==="
+# scrape-metrics returns the exposition text JSON-escaped in "metrics"; pick our series.
+sleep 3 # one host-metrics tick (2s) so the exported values include the requests above
+prom=$(cli --resource stats --op scrape-metrics --common_name $WL |
+	python3 -c "import json,sys; t=sys.stdin.read(); t=t[t.index('{'):]; print(json.loads(t)['metrics'])" |
+	grep -E '^ksdk_workload_netdp_(in_steered_total|in_not_lb_src_total|out_snat_total|steered_ports)')
+echo "$prom"
+prom_ok=0
+echo "$prom" | grep -qE '^ksdk_workload_netdp_in_steered_total\{[^}]*\} [1-9]' &&
+	echo "$prom" | grep -qE '^ksdk_workload_netdp_out_snat_total\{[^}]*\} [1-9]' &&
+	echo "$prom" | grep -qE '^ksdk_workload_netdp_steered_ports\{[^}]*\} 1$' && prom_ok=1
+
 echo "=== netdp unit tests (BPF_PROG_TEST_RUN) inside the privileged node ==="
 unit_ok=0
 if (cd ../.. && CGO_ENABLED=0 go test -c -o e2e/compose/stage/netdp.test ./workload/netdp); then
@@ -87,5 +99,6 @@ echo "=== result ==="
 fail=0
 [ "$ok" -eq 3 ] && echo "PASS: 3/3 VIP:8080 reached the pod-network workload" || { echo "FAIL: $ok/3 VIP:8080"; fail=1; }
 [ "$spoof_ok" -eq 1 ] && echo "PASS: spoofed IPIP left alone" || { echo "FAIL: spoofed IPIP not counted"; fail=1; }
+[ "$prom_ok" -eq 1 ] && echo "PASS: netdp counters on /metrics" || { echo "FAIL: netdp counters not exported"; fail=1; }
 [ "$unit_ok" -eq 1 ] && echo "PASS: netdp unit tests" || { echo "FAIL: netdp unit tests"; fail=1; }
 exit $fail

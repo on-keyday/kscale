@@ -10,6 +10,7 @@ appStatusFile = sys.argv[5]
 genericControlFile = sys.argv[6]
 popMetricsFile = sys.argv[7]
 dnsMetricsFile = sys.argv[8]
+netdpMetricsFile = sys.argv[9]
 
 with open(configsFile, 'r') as f:
     configs = json.load(f)
@@ -35,6 +36,9 @@ with open(popMetricsFile, 'r') as f:
 
 with open(dnsMetricsFile, 'r') as f:
     dnsMetrics = json.load(f)
+
+with open(netdpMetricsFile, 'r') as f:
+    netdpMetrics = json.load(f)
 
 def collect_imports(configs):
     imports = set()
@@ -285,6 +289,16 @@ dpMetrics = [
         "source_metric": "dns_stats",
         "prefix": "Dns",
         "metrics": dnsMetrics
+    },
+    {
+        "output": "workload/netdp/netdpmetrics/netdp_metrics.go",
+        "json_output": "access/defs/internal/stats/workload_metrics.json",
+        "struct_name": "NetdpMetrics",
+        "packege": "netdpmetrics",
+        "metric_base": "workload_netdp",
+        "source_metric": "netdp_stats",
+        "prefix": "WorkloadNetdp",
+        "metrics": netdpMetrics
     }
 ]
 if __name__ == "__main__":

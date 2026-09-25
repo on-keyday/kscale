@@ -54,7 +54,8 @@ $PY script/internal_value.py \
    "$INTERNAL_PATH/app_status.json" \
    "$INTERNAL_PATH/generic_control.json" \
    "popcache/popmetrics/metrics.json" \
-   "dns/dnsmetrics/metrics.json"
+   "dns/dnsmetrics/metrics.json" \
+   "workload/netdp/netdpmetrics/metrics.json"
 
 $PY script/metrics.py \
    "$INTERNAL_PATH/stats"

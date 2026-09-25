@@ -23,6 +23,7 @@ import (
 	"github.com/vishvananda/netlink"
 
 	"github.com/on-keyday/kscale/workload"
+	"github.com/on-keyday/kscale/workload/netdp/netdpmetrics"
 	"github.com/on-keyday/kscale/workload/podnet"
 )
 
@@ -247,6 +248,29 @@ func (d *Datapath) Counters() (map[string]uint64, error) {
 		out[name] = sum
 	}
 	return out, nil
+}
+
+// Metrics snapshots the counters and the steered-port count in the generated
+// stat shape (reported via Stats and exported to prometheus). The counters live
+// in unpinned maps, so they restart from zero with the agent.
+func (d *Datapath) Metrics() (netdpmetrics.NetdpMetrics, error) {
+	c, err := d.Counters()
+	if err != nil {
+		return netdpmetrics.NetdpMetrics{}, err
+	}
+	ports, err := d.Ports()
+	if err != nil {
+		return netdpmetrics.NetdpMetrics{}, err
+	}
+	return netdpmetrics.NetdpMetrics{
+		InSteeredTotal:  c["in_steered"],
+		InNotLbSrcTotal: c["in_not_lb_src"],
+		InNoPortTotal:   c["in_no_port"],
+		InErrTotal:      c["in_err"],
+		OutSnatTotal:    c["out_snat"],
+		OutErrTotal:     c["out_err"],
+		SteeredPorts:    uint64(len(ports)),
+	}, nil
 }
 
 // Ports lists the steered ports (for logs/tests), sorted.

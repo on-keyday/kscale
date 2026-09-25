@@ -15,6 +15,7 @@ import (
 	"github.com/on-keyday/kscale/dns/dnsmetrics"
 	"github.com/on-keyday/kscale/l4lb/l4lbdrv"
 	"github.com/on-keyday/kscale/popcache/popmetrics"
+	"github.com/on-keyday/kscale/workload/netdp/netdpmetrics"
 	"github.com/on-keyday/objtrsf/objproto"
 )
 
@@ -81,6 +82,8 @@ const StatEbpfStats = "ebpf_stats"
 const StatPopcacheStats = "popcache_stats"
 
 const StatDnsStats = "dns_stats"
+
+const StatNetdpStats = "netdp_stats"
 
 const StatBoundInterfaces = "bound_ifaces"
 
@@ -183,6 +186,10 @@ var StatMetricsPopcache = []string{
 
 var StatMetricsDns = []string{
 	StatDnsStats,
+}
+
+var StatMetricsWorkload = []string{
+	StatNetdpStats,
 }
 
 var StatMetricsCdnAppSpec = []string{
@@ -437,6 +444,13 @@ func AppendDnsStatsString(buf *strings.Builder, indent string, value dnsmetrics.
 	buf.WriteString("\n")
 }
 
+func AppendNetdpStatsString(buf *strings.Builder, indent string, value netdpmetrics.NetdpMetrics) {
+	buf.WriteString(indent)
+	buf.WriteString("Workload Datapath Stats: ")
+	buf.WriteString(fmt.Sprintf("%v", &value))
+	buf.WriteString("\n")
+}
+
 func AppendBoundInterfacesString(buf *strings.Builder, indent string, value []string) {
 	buf.WriteString(indent)
 	buf.WriteString("Bound Interfaces: ")
@@ -618,6 +632,10 @@ type PopcacheStat struct {
 
 type DnsStat struct {
 	DnsStats dnsmetrics.DNSMetrics `json:"dns_stats"`
+}
+
+type WorkloadStat struct {
+	NetdpStats netdpmetrics.NetdpMetrics `json:"netdp_stats"`
 }
 
 type CdnAppSpecStat struct {
@@ -936,6 +954,20 @@ func (s *DnsStat) Equal(other *DnsStat) bool {
 
 func (s *DnsStat) AppendString(buf *strings.Builder, indent string) {
 	AppendDnsStatsString(buf, indent, s.DnsStats)
+}
+
+func (s *WorkloadStat) Equal(other *WorkloadStat) bool {
+	if other == nil {
+		return false
+	}
+	if s.NetdpStats != other.NetdpStats {
+		return false
+	}
+	return true
+}
+
+func (s *WorkloadStat) AppendString(buf *strings.Builder, indent string) {
+	AppendNetdpStatsString(buf, indent, s.NetdpStats)
 }
 
 func (s *CdnAppSpecStat) Equal(other *CdnAppSpecStat) bool {
