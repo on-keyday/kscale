@@ -28,7 +28,7 @@ OUT=stage/freshness
 cli() { $DC run --rm -T cli cli --addr 10.5.0.2:9443 --data /data --role admin "$@" 2>&1 | grep -vE "level=INFO|Container kscale"; }
 prom() { # $1 node, $2 metric -> value from the node's /metrics
 	cli --resource stats --op scrape-metrics --common_name "$1" |
-		python3 -c "import json,sys; t=sys.stdin.read(); t=t[t.index('{'):]; print(json.loads(t)['metrics'])" |
+		python3 -c "import json,re,sys; t=sys.stdin.read(); print(json.loads(t[re.search(r'^[{]', t, re.M).start():])['metrics'])" |
 		awk -v m="$2" '$1 ~ "^"m"[{]" {print $2}'
 }
 

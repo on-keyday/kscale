@@ -79,7 +79,7 @@ echo "=== prometheus: netdp counters exported by the workload node ==="
 # scrape-metrics returns the exposition text JSON-escaped in "metrics"; pick our series.
 sleep 3 # one host-metrics tick (2s) so the exported values include the requests above
 prom=$(cli --resource stats --op scrape-metrics --common_name $WL |
-	python3 -c "import json,sys; t=sys.stdin.read(); t=t[t.index('{'):]; print(json.loads(t)['metrics'])" |
+	python3 -c "import json,re,sys; t=sys.stdin.read(); print(json.loads(t[re.search(r'^[{]', t, re.M).start():])['metrics'])" |
 	grep -E '^ksdk_workload_netdp_(in_steered_total|in_not_lb_src_total|out_snat_total|steered_ports)')
 echo "$prom"
 prom_ok=0
