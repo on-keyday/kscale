@@ -11,9 +11,12 @@ import (
 	"github.com/on-keyday/kscale/stat"
 )
 
-// peeringStartupGrace is how long after a peering controller starts (= after a CP
-// start) a push with NO sources is held back. The stat cache starts empty and fills
-// as nodes stream in; a target whose own stats arrive first would otherwise be
+// peeringStartupGrace is how long after a target first appears to a peering
+// controller (after a CP start, or the target's reconnect) a push with NO sources
+// is held back. Counting from the target, not from the CP start, matters: agents
+// can take far longer than the grace to reconnect after a CP restart (~45s in the
+// e2e harness), which a CP-start clock would already have used up. The stat cache
+// starts empty and fills as nodes stream in; a target whose own stats arrive first would otherwise be
 // pushed an empty source set — on a live CP restart the l4lb dest table went
 // self-only (no popcache backends) for ~21s until the popcache stats landed
 // (notes/bugs/bug_2026_09_25_cp_restart_l4lb_self_only_dests.md). After the grace an

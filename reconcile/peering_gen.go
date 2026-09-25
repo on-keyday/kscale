@@ -22,7 +22,8 @@ import (
 func PeeringPopcacheL4Lb(ctx context.Context, cache DestStatSource, broker *dpbroker.Broker, logger *slog.Logger) {
 	var mu sync.Mutex
 	mgrs := map[string]*stat.DestManager{}
-	started := time.Now()
+	// seen: when each target (re)appeared, the start of its startup grace.
+	seen := map[string]time.Time{}
 
 	reconcile := func() {
 		mu.Lock()
@@ -44,10 +45,13 @@ func PeeringPopcacheL4Lb(ctx context.Context, cache DestStatSource, broker *dpbr
 		for _, p := range broker.List("l4lb") {
 			cn := p.CommonName()
 			live[cn] = struct{}{}
-			// Right after the CP starts, the stat cache is empty and fills node by node,
-			// so no sources yet usually means "not reported yet", not "all gone":
+			if _, ok := seen[cn]; !ok {
+				seen[cn] = time.Now()
+			}
+			// Right after a CP start (or this target's reconnect) the stat cache fills node
+			// by node, so no sources yet usually means "not reported yet", not "all gone":
 			// hold off rather than shrink the target to nothing (see peeringStartupGrace).
-			if len(sources) == 0 && time.Since(started) < peeringStartupGrace {
+			if len(sources) == 0 && time.Since(seen[cn]) < peeringStartupGrace {
 				logger.Debug("peering: no sources yet during startup grace; not pushing", "node", cn)
 				continue
 			}
@@ -74,6 +78,7 @@ func PeeringPopcacheL4Lb(ctx context.Context, cache DestStatSource, broker *dpbr
 		for cn := range mgrs {
 			if _, ok := live[cn]; !ok {
 				delete(mgrs, cn)
+				delete(seen, cn)
 			}
 		}
 	}
@@ -82,6 +87,7 @@ func PeeringPopcacheL4Lb(ctx context.Context, cache DestStatSource, broker *dpbr
 		if dpbroker.Matches("l4lb", dpType) {
 			mu.Lock()
 			delete(mgrs, p.CommonName())
+			delete(seen, p.CommonName())
 			mu.Unlock()
 		}
 		reconcile()
@@ -108,7 +114,8 @@ func PeeringPopcacheL4Lb(ctx context.Context, cache DestStatSource, broker *dpbr
 func PeeringL4LbPopcache(ctx context.Context, cache DestStatSource, broker *dpbroker.Broker, logger *slog.Logger) {
 	var mu sync.Mutex
 	mgrs := map[string]*stat.DestManager{}
-	started := time.Now()
+	// seen: when each target (re)appeared, the start of its startup grace.
+	seen := map[string]time.Time{}
 
 	reconcile := func() {
 		mu.Lock()
@@ -130,10 +137,13 @@ func PeeringL4LbPopcache(ctx context.Context, cache DestStatSource, broker *dpbr
 		for _, p := range broker.List("popcache") {
 			cn := p.CommonName()
 			live[cn] = struct{}{}
-			// Right after the CP starts, the stat cache is empty and fills node by node,
-			// so no sources yet usually means "not reported yet", not "all gone":
+			if _, ok := seen[cn]; !ok {
+				seen[cn] = time.Now()
+			}
+			// Right after a CP start (or this target's reconnect) the stat cache fills node
+			// by node, so no sources yet usually means "not reported yet", not "all gone":
 			// hold off rather than shrink the target to nothing (see peeringStartupGrace).
-			if len(sources) == 0 && time.Since(started) < peeringStartupGrace {
+			if len(sources) == 0 && time.Since(seen[cn]) < peeringStartupGrace {
 				logger.Debug("peering: no sources yet during startup grace; not pushing", "node", cn)
 				continue
 			}
@@ -153,6 +163,7 @@ func PeeringL4LbPopcache(ctx context.Context, cache DestStatSource, broker *dpbr
 		for cn := range mgrs {
 			if _, ok := live[cn]; !ok {
 				delete(mgrs, cn)
+				delete(seen, cn)
 			}
 		}
 	}
@@ -161,6 +172,7 @@ func PeeringL4LbPopcache(ctx context.Context, cache DestStatSource, broker *dpbr
 		if dpbroker.Matches("popcache", dpType) {
 			mu.Lock()
 			delete(mgrs, p.CommonName())
+			delete(seen, p.CommonName())
 			mu.Unlock()
 		}
 		reconcile()
@@ -187,7 +199,8 @@ func PeeringL4LbPopcache(ctx context.Context, cache DestStatSource, broker *dpbr
 func PeeringL4LbWorkload(ctx context.Context, cache DestStatSource, broker *dpbroker.Broker, logger *slog.Logger) {
 	var mu sync.Mutex
 	mgrs := map[string]*stat.DestManager{}
-	started := time.Now()
+	// seen: when each target (re)appeared, the start of its startup grace.
+	seen := map[string]time.Time{}
 
 	reconcile := func() {
 		mu.Lock()
@@ -209,10 +222,13 @@ func PeeringL4LbWorkload(ctx context.Context, cache DestStatSource, broker *dpbr
 		for _, p := range broker.List("workload") {
 			cn := p.CommonName()
 			live[cn] = struct{}{}
-			// Right after the CP starts, the stat cache is empty and fills node by node,
-			// so no sources yet usually means "not reported yet", not "all gone":
+			if _, ok := seen[cn]; !ok {
+				seen[cn] = time.Now()
+			}
+			// Right after a CP start (or this target's reconnect) the stat cache fills node
+			// by node, so no sources yet usually means "not reported yet", not "all gone":
 			// hold off rather than shrink the target to nothing (see peeringStartupGrace).
-			if len(sources) == 0 && time.Since(started) < peeringStartupGrace {
+			if len(sources) == 0 && time.Since(seen[cn]) < peeringStartupGrace {
 				logger.Debug("peering: no sources yet during startup grace; not pushing", "node", cn)
 				continue
 			}
@@ -232,6 +248,7 @@ func PeeringL4LbWorkload(ctx context.Context, cache DestStatSource, broker *dpbr
 		for cn := range mgrs {
 			if _, ok := live[cn]; !ok {
 				delete(mgrs, cn)
+				delete(seen, cn)
 			}
 		}
 	}
@@ -240,6 +257,7 @@ func PeeringL4LbWorkload(ctx context.Context, cache DestStatSource, broker *dpbr
 		if dpbroker.Matches("workload", dpType) {
 			mu.Lock()
 			delete(mgrs, p.CommonName())
+			delete(seen, p.CommonName())
 			mu.Unlock()
 		}
 		reconcile()

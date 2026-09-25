@@ -67,7 +67,8 @@ func emitPeering(w *Writer, s *PeeringSpec) {
 	w.Indented(func(w *Writer) {
 		w.Printf("var mu sync.Mutex\n")
 		w.Printf("mgrs := map[string]*stat.DestManager{}\n")
-		w.Printf("started := time.Now()\n\n")
+		w.Printf("// seen: when each target (re)appeared, the start of its startup grace.\n")
+		w.Printf("seen := map[string]time.Time{}\n\n")
 		w.Printf("reconcile := func() {\n")
 		w.Indented(func(w *Writer) {
 			w.Printf("mu.Lock()\n")
@@ -95,10 +96,13 @@ func emitPeering(w *Writer, s *PeeringSpec) {
 			w.Indented(func(w *Writer) {
 				w.Printf("cn := p.CommonName()\n")
 				w.Printf("live[cn] = struct{}{}\n")
-				w.Printf("// Right after the CP starts, the stat cache is empty and fills node by node,\n")
-				w.Printf("// so no sources yet usually means \"not reported yet\", not \"all gone\":\n")
+				w.Printf("if _, ok := seen[cn]; !ok {\n")
+				w.Indented(func(w *Writer) { w.Printf("seen[cn] = time.Now()\n") })
+				w.Printf("}\n")
+				w.Printf("// Right after a CP start (or this target's reconnect) the stat cache fills node\n")
+				w.Printf("// by node, so no sources yet usually means \"not reported yet\", not \"all gone\":\n")
 				w.Printf("// hold off rather than shrink the target to nothing (see peeringStartupGrace).\n")
-				w.Printf("if len(sources) == 0 && time.Since(started) < peeringStartupGrace {\n")
+				w.Printf("if len(sources) == 0 && time.Since(seen[cn]) < peeringStartupGrace {\n")
 				w.Indented(func(w *Writer) {
 					w.Printf("logger.Debug(%q, \"node\", cn)\n", "peering: no sources yet during startup grace; not pushing")
 					w.Printf("continue\n")
@@ -138,7 +142,10 @@ func emitPeering(w *Writer, s *PeeringSpec) {
 			w.Printf("for cn := range mgrs {\n")
 			w.Indented(func(w *Writer) {
 				w.Printf("if _, ok := live[cn]; !ok {\n")
-				w.Indented(func(w *Writer) { w.Printf("delete(mgrs, cn)\n") })
+				w.Indented(func(w *Writer) {
+					w.Printf("delete(mgrs, cn)\n")
+					w.Printf("delete(seen, cn)\n")
+				})
 				w.Printf("}\n")
 			})
 			w.Printf("}\n")
@@ -150,6 +157,7 @@ func emitPeering(w *Writer, s *PeeringSpec) {
 			w.Indented(func(w *Writer) {
 				w.Printf("mu.Lock()\n")
 				w.Printf("delete(mgrs, p.CommonName())\n")
+				w.Printf("delete(seen, p.CommonName())\n")
 				w.Printf("mu.Unlock()\n")
 			})
 			w.Printf("}\n")
