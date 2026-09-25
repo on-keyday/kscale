@@ -92,11 +92,8 @@ type Controller struct {
 	// reconcile loop can reflect it as the Vip resource's status. (l4lbdrv holds a
 	// single VIP; this is the node's view of "what I was asked to serve".)
 	appliedVips map[string]struct{}
-	// promMetrics is the live prometheus surface served at /metrics-over-transport;
-	// lastStat is the previous eBPF snapshot, kept so the StreamStats loop only
-	// re-emits the L4Lb stat entry on change (mirroring ksdk's delta reporting).
+	// promMetrics is the live prometheus surface served at /metrics-over-transport.
 	promMetrics *stat.PromMetrics
-	lastStat    stat.L4lbStat
 	// serverID is this node's CP-assigned ServerID, reported back as LbId so the
 	// peering identity is symmetric with popcache backends.
 	serverID uint32
@@ -178,7 +175,7 @@ func (c *Controller) Stats() []*pbstat.Stats {
 		}
 		entries = append(entries, &pbstat.Stats{CdnAppRealtime: app})
 	}
-	// eBPF counters -> L4Lb stat (delta) + live prometheus update.
+	// eBPF counters -> L4Lb stat + live prometheus update.
 	if l4 := c.sampleL4lbStatLocked(); l4 != nil {
 		entries = append(entries, &pbstat.Stats{L4Lb: l4})
 	}
@@ -187,10 +184,10 @@ func (c *Controller) Stats() []*pbstat.Stats {
 
 // sampleL4lbStatLocked polls the eBPF stat maps (only when the live driver exposes
 // them — i.e. started on an XDP host), updates the prometheus surface, and returns
-// the L4Lb stat proto when the snapshot changed since the last sample (nil on the
-// stub driver, before start, or when unchanged). Mirrors ksdk's
-// l4lbControllerAgent.sendEBPFStats, but pull-driven by the substrate's StreamStats
-// loop rather than a self-running ticker. Caller must hold c.mu.
+// the L4Lb stat proto (nil on the stub driver or before start). Unlike ksdk's
+// l4lbControllerAgent.sendEBPFStats it reports every sample, not only on change:
+// the kscale CP cache replaces a node's whole batch, so an unchanged-and-skipped
+// entry would drop out of the CP (see dns/control Stats). Caller must hold c.mu.
 func (c *Controller) sampleL4lbStatLocked() *pbstat.L4LbStat {
 	src, ok := c.drv.(statSource)
 	if !ok {
@@ -223,11 +220,7 @@ func (c *Controller) sampleL4lbStatLocked() *pbstat.L4LbStat {
 		ISNLeastSignificantByteDistribution: *dist,
 	}
 	c.promMetrics.L4lbEbpfEnabled = true
-	if newStat.Equal(&c.lastStat) {
-		return nil
-	}
 	c.promMetrics.UpdateL4lbStat(&newStat)
-	c.lastStat = newStat
 	return newStat.ToProto()
 }
 

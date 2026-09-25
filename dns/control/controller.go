@@ -31,8 +31,6 @@ type Controller struct {
 	dns         dnsmetrics.DNSMetricsWithLock
 	zones       stat.DnsSpecStat
 	promMetrics *stat.PromMetrics
-	lastStat    stat.DnsStat
-	lastSpec    stat.DnsSpecStat
 	// appliedVips is the VIP set UpdateVip applied, reported at CdnAppRealtime.Vip
 	// so the CP's vip.applied_on shows this node (same as the other dataplanes).
 	mu          sync.Mutex
@@ -96,9 +94,12 @@ func (c *Controller) UpdateRemote(_ []stat.DestEntry) error       { return nil }
 func (c *Controller) SetServerID(_ uint32)                        {}             // ServerID is meaningless for this dp
 
 // Stats returns the per-dp extra Stats entries reported via StreamStats: the DNS
-// request counters (Dns) and the managed-zone spec (DnsSpec), each delta-reported
-// (emitted only when changed) and folded into the live prometheus surface —
-// mirroring ksdk's dnsAgent.sendMetrics, but pull-driven by the substrate.
+// request counters (Dns) and the managed-zone spec (DnsSpec), folded into the live
+// prometheus surface. Both are reported EVERY call, not only on change as ksdk's
+// dnsAgent.sendMetrics did: ksdk's CP merged per category, but the kscale CP cache
+// replaces a node's whole batch, so a skipped entry vanished from the CP (and the
+// substrate calls Stats from two goroutines, which a "last sent" snapshot races).
+// Measured by e2e/compose/measure_stats_freshness.sh.
 func (c *Controller) Stats() []*pbstat.Stats {
 	var counters dnsmetrics.DNSMetrics
 	var zones stat.DnsSpecStat
@@ -108,16 +109,8 @@ func (c *Controller) Stats() []*pbstat.Stats {
 	})
 	ps := stat.DnsStat{DnsStats: counters}
 
-	var entries []*pbstat.Stats
-	if !ps.Equal(&c.lastStat) {
-		c.promMetrics.UpdateDnsStat(&ps)
-		entries = append(entries, &pbstat.Stats{Dns: ps.ToProto()})
-		c.lastStat = ps
-	}
-	if !zones.Equal(&c.lastSpec) {
-		entries = append(entries, &pbstat.Stats{DnsSpec: zones.ToProto()})
-		c.lastSpec = zones
-	}
+	c.promMetrics.UpdateDnsStat(&ps)
+	entries := []*pbstat.Stats{{Dns: ps.ToProto()}, {DnsSpec: zones.ToProto()}}
 	// Report the applied VIP set (vip.applied_on source) every snapshot, like the
 	// other dataplanes — the CP's VipObserver reads the latest batch, so this entry
 	// must not be delta-gated.
