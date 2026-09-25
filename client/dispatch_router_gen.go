@@ -36,6 +36,8 @@ func DispatchResource(ctx context.Context, src *wire.StreamSource, resource, act
 		return DispatchContainer(ctx, pb.NewContainerServiceClient(src), action, args)
 	case "l4lb-object":
 		return DispatchL4LbObject(ctx, pb.NewL4LbObjectServiceClient(src), action, args)
+	case "workload-netdp-object":
+		return DispatchWorkloadNetdpObject(ctx, pb.NewWorkloadNetdpObjectServiceClient(src), action, args)
 	case "bootstrap-token":
 		return DispatchBootstrapToken(ctx, pb.NewBootstrapTokenServiceClient(src), action, args)
 	case "expected-node":

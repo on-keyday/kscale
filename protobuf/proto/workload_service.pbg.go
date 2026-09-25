@@ -1195,9 +1195,124 @@ func (p *WorkloadServiceListContainersResponse) Append(w []byte) ([]byte, error)
 	return w, nil
 }
 
+type WorkloadServiceSetNetdpObjectRequest struct {
+	Object string `json:"object,omitempty"`
+}
+
+func (p *WorkloadServiceSetNetdpObjectRequest) Read(data io.Reader) error {
+	var field wire.Field
+	for {
+		err := field.Read(data)
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			return fmt.Errorf("decode: %w", err)
+		}
+		switch field.Tag.Number() {
+		case 1:
+			val := field.ValueData()
+			if val == nil {
+				return fmt.Errorf("field Object unexpected wire type. expect LengthDelimited but got %s", field.Tag.Type())
+			}
+			p.Object = unsafe.String(unsafe.SliceData((*val)), len((*val)))
+		default:
+			// skip unknown
+		}
+	}
+	return nil
+}
+func (p *WorkloadServiceSetNetdpObjectRequest) ReadBuffer(data *bytes.Reader) error {
+	var field wire.Field
+	for {
+		err := field.ReadBuffer(data)
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			return fmt.Errorf("decode: %w", err)
+		}
+		switch field.Tag.Number() {
+		case 1:
+			val := field.ValueData()
+			if val == nil {
+				return fmt.Errorf("field Object unexpected wire type. expect LengthDelimited but got %s", field.Tag.Type())
+			}
+			p.Object = unsafe.String(unsafe.SliceData((*val)), len((*val)))
+		default:
+			// skip unknown
+		}
+	}
+	return nil
+}
+func (p *WorkloadServiceSetNetdpObjectRequest) Decode(data []byte) error {
+	var field wire.Field
+	for len(data) > 0 {
+		remain, err := field.Decode(data)
+		if err != nil {
+			return fmt.Errorf("decode: %w", err)
+		}
+		switch field.Tag.Number() {
+		case 1:
+			val := field.ValueData()
+			if val == nil {
+				return fmt.Errorf("field Object unexpected wire type. expect LengthDelimited but got %s", field.Tag.Type())
+			}
+			p.Object = unsafe.String(unsafe.SliceData((*val)), len((*val)))
+		default:
+			// skip unknown
+		}
+		data = remain
+	}
+	return nil
+}
+
+func (p *WorkloadServiceSetNetdpObjectRequest) Encode(w io.Writer) error {
+	var field wire.Field
+	field.Tag.SetNumber(1)
+	if len(p.Object) > 0 {
+		field.Tag.SetType(wire.WireType_LengthDelimited)
+		field.SetLength(wire.Varint{Value: uint64(len(p.Object))})
+		field.SetValueData([]byte(p.Object))
+		if err := field.Write(w); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+func (p *WorkloadServiceSetNetdpObjectRequest) EncodeBuffer(w *bytes.Buffer) error {
+	var field wire.Field
+	field.Tag.SetNumber(1)
+	if len(p.Object) > 0 {
+		field.Tag.SetType(wire.WireType_LengthDelimited)
+		field.SetLength(wire.Varint{Value: uint64(len(p.Object))})
+		field.SetValueData([]byte(p.Object))
+		if err := field.WriteBuffer(w); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+func (p *WorkloadServiceSetNetdpObjectRequest) Append(w []byte) ([]byte, error) {
+	var field wire.Field
+	field.Tag.SetNumber(1)
+	if len(p.Object) > 0 {
+		field.Tag.SetType(wire.WireType_LengthDelimited)
+		field.SetLength(wire.Varint{Value: uint64(len(p.Object))})
+		field.SetValueData([]byte(p.Object))
+		if appendTmp, err := field.Append(w); err != nil {
+			return nil, err
+		} else {
+			w = appendTmp
+		}
+	}
+	return w, nil
+}
+
 type WorkloadServiceServer interface {
 	ApplyContainers(context.Context, *WorkloadServiceApplyContainersRequest) (*wkt.Empty, error)
 	ListContainers(context.Context, *wkt.Empty) (*WorkloadServiceListContainersResponse, error)
+	SetNetdpObject(context.Context, *WorkloadServiceSetNetdpObjectRequest) (*wkt.Empty, error)
 }
 
 type UnimplementedWorkloadServiceServer struct {
@@ -1211,9 +1326,14 @@ func (s *UnimplementedWorkloadServiceServer) ListContainers(context.Context, *wk
 	return nil, errors.New("method ksdk.rpc.WorkloadService.ListContainers not implemented")
 }
 
+func (s *UnimplementedWorkloadServiceServer) SetNetdpObject(context.Context, *WorkloadServiceSetNetdpObjectRequest) (*wkt.Empty, error) {
+	return nil, errors.New("method ksdk.rpc.WorkloadService.SetNetdpObject not implemented")
+}
+
 type WorkloadServiceClient interface {
 	ApplyContainers(context.Context, *WorkloadServiceApplyContainersRequest) (*wkt.Empty, error)
 	ListContainers(context.Context, *wkt.Empty) (*WorkloadServiceListContainersResponse, error)
+	SetNetdpObject(context.Context, *WorkloadServiceSetNetdpObjectRequest) (*wkt.Empty, error)
 }
 
 type DefaultWorkloadServiceClient struct {
@@ -1226,6 +1346,10 @@ func (c *DefaultWorkloadServiceClient) ApplyContainers(arg0 context.Context, arg
 
 func (c *DefaultWorkloadServiceClient) ListContainers(arg0 context.Context, arg1 *wkt.Empty) (*WorkloadServiceListContainersResponse, error) {
 	return wire.NewCall[wkt.Empty, WorkloadServiceListContainersResponse](arg0, "ksdk.rpc.WorkloadService", "ListContainers", c.stream, arg1)
+}
+
+func (c *DefaultWorkloadServiceClient) SetNetdpObject(arg0 context.Context, arg1 *WorkloadServiceSetNetdpObjectRequest) (*wkt.Empty, error) {
+	return wire.NewCall[WorkloadServiceSetNetdpObjectRequest, wkt.Empty](arg0, "ksdk.rpc.WorkloadService", "SetNetdpObject", c.stream, arg1)
 }
 
 func NewWorkloadServiceClient(stream *wire.StreamSource) WorkloadServiceClient {
@@ -1252,6 +1376,18 @@ func RegisterWorkloadServiceServer(reg rpc.Registry, impl WorkloadServiceServer)
 				return nil, err
 			}
 			resp, err := impl.ListContainers(ctx, req)
+			if err != nil {
+				return nil, err
+			}
+			return resp.Append(nil)
+		})
+	reg.RegisterMethod("ksdk.rpc.WorkloadService", "SetNetdpObject",
+		func(ctx context.Context, body []byte) ([]byte, error) {
+			req := &WorkloadServiceSetNetdpObjectRequest{}
+			if err := req.Decode(body); err != nil {
+				return nil, err
+			}
+			resp, err := impl.SetNetdpObject(ctx, req)
 			if err != nil {
 				return nil, err
 			}

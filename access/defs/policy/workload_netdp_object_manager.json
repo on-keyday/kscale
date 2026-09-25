@@ -1,0 +1,27 @@
+{
+    "name": "WorkloadNetdpObjectManager",
+    "policy": "Allow",
+    "description": "Declare which eBPF datapath object a workload node loads. Admin only.",
+    "resource": "workload_netdp_object",
+    "action": [
+        "apply",
+        "list",
+        "get",
+        "delete"
+    ],
+    "or": [
+        {
+            "name": "CanManageWorkloadNetdpObjects",
+            "and": [
+                {
+                    "name": "UserAuthorityIsManager",
+                    "condition": "$user.authority.full_name suffix $env.authority.admin.ca.manager."
+                },
+                {
+                    "name": "UserHasAdminRole",
+                    "condition": "$user.roles list_contains `admin`"
+                }
+            ]
+        }
+    ]
+}

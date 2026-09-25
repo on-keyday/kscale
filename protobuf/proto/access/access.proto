@@ -496,6 +496,22 @@ message ResourceWasmModuleActionGetArgsDTO {
 message ResourceWasmModuleActionListArgsDTO {
 }
 
+message ResourceWorkloadNetdpObjectActionApplyArgsDTO {
+    string node = 1;
+    string object = 2;
+}
+
+message ResourceWorkloadNetdpObjectActionDeleteArgsDTO {
+    string node = 1;
+}
+
+message ResourceWorkloadNetdpObjectActionGetArgsDTO {
+    string node = 1;
+}
+
+message ResourceWorkloadNetdpObjectActionListArgsDTO {
+}
+
 // --- response DTOs ---
 
 message ResourceAcmeActionDeleteAccountResponseDTO {
@@ -985,5 +1001,23 @@ message ResourceWasmModuleActionGetResponseDTO {
 
 message ResourceWasmModuleActionListResponseDTO {
     repeated ResourceWasmModuleActionGetResponseDTO items = 1;
+}
+
+message ResourceWorkloadNetdpObjectActionApplyResponseDTO {
+    string node = 1;
+    string object = 2;
+}
+
+message ResourceWorkloadNetdpObjectActionDeleteResponseDTO {
+    string node = 1;
+}
+
+message ResourceWorkloadNetdpObjectActionGetResponseDTO {
+    string node = 1;
+    string object = 2;
+}
+
+message ResourceWorkloadNetdpObjectActionListResponseDTO {
+    repeated ResourceWorkloadNetdpObjectActionGetResponseDTO items = 1;
 }
 

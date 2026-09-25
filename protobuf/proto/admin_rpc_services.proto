@@ -90,6 +90,13 @@ service L4LbObjectService {
     rpc Delete(ksdk.access.ResourceL4LbObjectActionDeleteArgsDTO) returns (ksdk.access.ResourceL4LbObjectActionDeleteResponseDTO);
 }
 
+service WorkloadNetdpObjectService {
+    rpc Apply(ksdk.access.ResourceWorkloadNetdpObjectActionApplyArgsDTO) returns (ksdk.access.ResourceWorkloadNetdpObjectActionApplyResponseDTO);
+    rpc Get(ksdk.access.ResourceWorkloadNetdpObjectActionGetArgsDTO) returns (ksdk.access.ResourceWorkloadNetdpObjectActionGetResponseDTO);
+    rpc List(ksdk.access.ResourceWorkloadNetdpObjectActionListArgsDTO) returns (ksdk.access.ResourceWorkloadNetdpObjectActionListResponseDTO);
+    rpc Delete(ksdk.access.ResourceWorkloadNetdpObjectActionDeleteArgsDTO) returns (ksdk.access.ResourceWorkloadNetdpObjectActionDeleteResponseDTO);
+}
+
 service BootstrapTokenService {
     rpc Issue(ksdk.access.ResourceBootstrapTokenActionIssueArgsDTO) returns (ksdk.access.ResourceBootstrapTokenActionIssueResponseDTO);
     rpc Revoke(ksdk.access.ResourceBootstrapTokenActionRevokeArgsDTO) returns (ksdk.access.ResourceBootstrapTokenActionRevokeResponseDTO);

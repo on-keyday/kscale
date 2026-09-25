@@ -1260,6 +1260,114 @@ func RegisterL4LbObjectServiceServer(reg rpc.Registry, impl L4LbObjectServiceSer
 		})
 }
 
+type WorkloadNetdpObjectServiceServer interface {
+	Apply(context.Context, *access.ResourceWorkloadNetdpObjectActionApplyArgsDTO) (*access.ResourceWorkloadNetdpObjectActionApplyResponseDTO, error)
+	Get(context.Context, *access.ResourceWorkloadNetdpObjectActionGetArgsDTO) (*access.ResourceWorkloadNetdpObjectActionGetResponseDTO, error)
+	List(context.Context, *access.ResourceWorkloadNetdpObjectActionListArgsDTO) (*access.ResourceWorkloadNetdpObjectActionListResponseDTO, error)
+	Delete(context.Context, *access.ResourceWorkloadNetdpObjectActionDeleteArgsDTO) (*access.ResourceWorkloadNetdpObjectActionDeleteResponseDTO, error)
+}
+
+type UnimplementedWorkloadNetdpObjectServiceServer struct {
+}
+
+func (s *UnimplementedWorkloadNetdpObjectServiceServer) Apply(context.Context, *access.ResourceWorkloadNetdpObjectActionApplyArgsDTO) (*access.ResourceWorkloadNetdpObjectActionApplyResponseDTO, error) {
+	return nil, errors.New("method ksdk.rpc.WorkloadNetdpObjectService.Apply not implemented")
+}
+
+func (s *UnimplementedWorkloadNetdpObjectServiceServer) Get(context.Context, *access.ResourceWorkloadNetdpObjectActionGetArgsDTO) (*access.ResourceWorkloadNetdpObjectActionGetResponseDTO, error) {
+	return nil, errors.New("method ksdk.rpc.WorkloadNetdpObjectService.Get not implemented")
+}
+
+func (s *UnimplementedWorkloadNetdpObjectServiceServer) List(context.Context, *access.ResourceWorkloadNetdpObjectActionListArgsDTO) (*access.ResourceWorkloadNetdpObjectActionListResponseDTO, error) {
+	return nil, errors.New("method ksdk.rpc.WorkloadNetdpObjectService.List not implemented")
+}
+
+func (s *UnimplementedWorkloadNetdpObjectServiceServer) Delete(context.Context, *access.ResourceWorkloadNetdpObjectActionDeleteArgsDTO) (*access.ResourceWorkloadNetdpObjectActionDeleteResponseDTO, error) {
+	return nil, errors.New("method ksdk.rpc.WorkloadNetdpObjectService.Delete not implemented")
+}
+
+type WorkloadNetdpObjectServiceClient interface {
+	Apply(context.Context, *access.ResourceWorkloadNetdpObjectActionApplyArgsDTO) (*access.ResourceWorkloadNetdpObjectActionApplyResponseDTO, error)
+	Get(context.Context, *access.ResourceWorkloadNetdpObjectActionGetArgsDTO) (*access.ResourceWorkloadNetdpObjectActionGetResponseDTO, error)
+	List(context.Context, *access.ResourceWorkloadNetdpObjectActionListArgsDTO) (*access.ResourceWorkloadNetdpObjectActionListResponseDTO, error)
+	Delete(context.Context, *access.ResourceWorkloadNetdpObjectActionDeleteArgsDTO) (*access.ResourceWorkloadNetdpObjectActionDeleteResponseDTO, error)
+}
+
+type DefaultWorkloadNetdpObjectServiceClient struct {
+	stream *wire.StreamSource
+}
+
+func (c *DefaultWorkloadNetdpObjectServiceClient) Apply(arg0 context.Context, arg1 *access.ResourceWorkloadNetdpObjectActionApplyArgsDTO) (*access.ResourceWorkloadNetdpObjectActionApplyResponseDTO, error) {
+	return wire.NewCall[access.ResourceWorkloadNetdpObjectActionApplyArgsDTO, access.ResourceWorkloadNetdpObjectActionApplyResponseDTO](arg0, "ksdk.rpc.WorkloadNetdpObjectService", "Apply", c.stream, arg1)
+}
+
+func (c *DefaultWorkloadNetdpObjectServiceClient) Get(arg0 context.Context, arg1 *access.ResourceWorkloadNetdpObjectActionGetArgsDTO) (*access.ResourceWorkloadNetdpObjectActionGetResponseDTO, error) {
+	return wire.NewCall[access.ResourceWorkloadNetdpObjectActionGetArgsDTO, access.ResourceWorkloadNetdpObjectActionGetResponseDTO](arg0, "ksdk.rpc.WorkloadNetdpObjectService", "Get", c.stream, arg1)
+}
+
+func (c *DefaultWorkloadNetdpObjectServiceClient) List(arg0 context.Context, arg1 *access.ResourceWorkloadNetdpObjectActionListArgsDTO) (*access.ResourceWorkloadNetdpObjectActionListResponseDTO, error) {
+	return wire.NewCall[access.ResourceWorkloadNetdpObjectActionListArgsDTO, access.ResourceWorkloadNetdpObjectActionListResponseDTO](arg0, "ksdk.rpc.WorkloadNetdpObjectService", "List", c.stream, arg1)
+}
+
+func (c *DefaultWorkloadNetdpObjectServiceClient) Delete(arg0 context.Context, arg1 *access.ResourceWorkloadNetdpObjectActionDeleteArgsDTO) (*access.ResourceWorkloadNetdpObjectActionDeleteResponseDTO, error) {
+	return wire.NewCall[access.ResourceWorkloadNetdpObjectActionDeleteArgsDTO, access.ResourceWorkloadNetdpObjectActionDeleteResponseDTO](arg0, "ksdk.rpc.WorkloadNetdpObjectService", "Delete", c.stream, arg1)
+}
+
+func NewWorkloadNetdpObjectServiceClient(stream *wire.StreamSource) WorkloadNetdpObjectServiceClient {
+	return &DefaultWorkloadNetdpObjectServiceClient{stream: stream}
+}
+
+func RegisterWorkloadNetdpObjectServiceServer(reg rpc.Registry, impl WorkloadNetdpObjectServiceServer) {
+	reg.RegisterMethod("ksdk.rpc.WorkloadNetdpObjectService", "Apply",
+		func(ctx context.Context, body []byte) ([]byte, error) {
+			req := &access.ResourceWorkloadNetdpObjectActionApplyArgsDTO{}
+			if err := req.Decode(body); err != nil {
+				return nil, err
+			}
+			resp, err := impl.Apply(ctx, req)
+			if err != nil {
+				return nil, err
+			}
+			return resp.Append(nil)
+		})
+	reg.RegisterMethod("ksdk.rpc.WorkloadNetdpObjectService", "Get",
+		func(ctx context.Context, body []byte) ([]byte, error) {
+			req := &access.ResourceWorkloadNetdpObjectActionGetArgsDTO{}
+			if err := req.Decode(body); err != nil {
+				return nil, err
+			}
+			resp, err := impl.Get(ctx, req)
+			if err != nil {
+				return nil, err
+			}
+			return resp.Append(nil)
+		})
+	reg.RegisterMethod("ksdk.rpc.WorkloadNetdpObjectService", "List",
+		func(ctx context.Context, body []byte) ([]byte, error) {
+			req := &access.ResourceWorkloadNetdpObjectActionListArgsDTO{}
+			if err := req.Decode(body); err != nil {
+				return nil, err
+			}
+			resp, err := impl.List(ctx, req)
+			if err != nil {
+				return nil, err
+			}
+			return resp.Append(nil)
+		})
+	reg.RegisterMethod("ksdk.rpc.WorkloadNetdpObjectService", "Delete",
+		func(ctx context.Context, body []byte) ([]byte, error) {
+			req := &access.ResourceWorkloadNetdpObjectActionDeleteArgsDTO{}
+			if err := req.Decode(body); err != nil {
+				return nil, err
+			}
+			resp, err := impl.Delete(ctx, req)
+			if err != nil {
+				return nil, err
+			}
+			return resp.Append(nil)
+		})
+}
+
 type BootstrapTokenServiceServer interface {
 	Issue(context.Context, *access.ResourceBootstrapTokenActionIssueArgsDTO) (*access.ResourceBootstrapTokenActionIssueResponseDTO, error)
 	Revoke(context.Context, *access.ResourceBootstrapTokenActionRevokeArgsDTO) (*access.ResourceBootstrapTokenActionRevokeResponseDTO, error)

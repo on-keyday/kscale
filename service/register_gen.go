@@ -139,6 +139,17 @@ func RegisterL4LbObject(mgr *rpc.RPCManager, gd GateDeps, inner pb.L4LbObjectSer
 	})
 }
 
+// RegisterWorkloadNetdpObject wraps inner in WorkloadNetdpObjectGated (authz + audit) and registers it.
+func RegisterWorkloadNetdpObject(mgr *rpc.RPCManager, gd GateDeps, inner pb.WorkloadNetdpObjectServiceServer) {
+	pb.RegisterWorkloadNetdpObjectServiceServer(mgr, &WorkloadNetdpObjectGated{
+		Inner:      inner,
+		Controller: gd.Controller,
+		Resource:   gd.Resources[predefined.ResourceWorkloadNetdpObject],
+		Root:       gd.Root,
+		Audit:      gd.Audit,
+	})
+}
+
 // RegisterBootstrapToken wraps inner in BootstrapTokenGated (authz + audit) and registers it.
 func RegisterBootstrapToken(mgr *rpc.RPCManager, gd GateDeps, inner pb.BootstrapTokenServiceServer) {
 	pb.RegisterBootstrapTokenServiceServer(mgr, &BootstrapTokenGated{

@@ -15101,6 +15101,459 @@ func (p *ResourceWasmModuleActionListArgsDTO) Append(w []byte) ([]byte, error) {
 	return w, nil
 }
 
+type ResourceWorkloadNetdpObjectActionApplyArgsDTO struct {
+	Node   string `json:"node,omitempty"`
+	Object string `json:"object,omitempty"`
+}
+
+func (p *ResourceWorkloadNetdpObjectActionApplyArgsDTO) Read(data io.Reader) error {
+	var field wire.Field
+	for {
+		err := field.Read(data)
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			return fmt.Errorf("decode: %w", err)
+		}
+		switch field.Tag.Number() {
+		case 1:
+			val := field.ValueData()
+			if val == nil {
+				return fmt.Errorf("field Node unexpected wire type. expect LengthDelimited but got %s", field.Tag.Type())
+			}
+			p.Node = unsafe.String(unsafe.SliceData((*val)), len((*val)))
+		case 2:
+			val := field.ValueData()
+			if val == nil {
+				return fmt.Errorf("field Object unexpected wire type. expect LengthDelimited but got %s", field.Tag.Type())
+			}
+			p.Object = unsafe.String(unsafe.SliceData((*val)), len((*val)))
+		default:
+			// skip unknown
+		}
+	}
+	return nil
+}
+func (p *ResourceWorkloadNetdpObjectActionApplyArgsDTO) ReadBuffer(data *bytes.Reader) error {
+	var field wire.Field
+	for {
+		err := field.ReadBuffer(data)
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			return fmt.Errorf("decode: %w", err)
+		}
+		switch field.Tag.Number() {
+		case 1:
+			val := field.ValueData()
+			if val == nil {
+				return fmt.Errorf("field Node unexpected wire type. expect LengthDelimited but got %s", field.Tag.Type())
+			}
+			p.Node = unsafe.String(unsafe.SliceData((*val)), len((*val)))
+		case 2:
+			val := field.ValueData()
+			if val == nil {
+				return fmt.Errorf("field Object unexpected wire type. expect LengthDelimited but got %s", field.Tag.Type())
+			}
+			p.Object = unsafe.String(unsafe.SliceData((*val)), len((*val)))
+		default:
+			// skip unknown
+		}
+	}
+	return nil
+}
+func (p *ResourceWorkloadNetdpObjectActionApplyArgsDTO) Decode(data []byte) error {
+	var field wire.Field
+	for len(data) > 0 {
+		remain, err := field.Decode(data)
+		if err != nil {
+			return fmt.Errorf("decode: %w", err)
+		}
+		switch field.Tag.Number() {
+		case 1:
+			val := field.ValueData()
+			if val == nil {
+				return fmt.Errorf("field Node unexpected wire type. expect LengthDelimited but got %s", field.Tag.Type())
+			}
+			p.Node = unsafe.String(unsafe.SliceData((*val)), len((*val)))
+		case 2:
+			val := field.ValueData()
+			if val == nil {
+				return fmt.Errorf("field Object unexpected wire type. expect LengthDelimited but got %s", field.Tag.Type())
+			}
+			p.Object = unsafe.String(unsafe.SliceData((*val)), len((*val)))
+		default:
+			// skip unknown
+		}
+		data = remain
+	}
+	return nil
+}
+
+func (p *ResourceWorkloadNetdpObjectActionApplyArgsDTO) Encode(w io.Writer) error {
+	var field wire.Field
+	field.Tag.SetNumber(1)
+	if len(p.Node) > 0 {
+		field.Tag.SetType(wire.WireType_LengthDelimited)
+		field.SetLength(wire.Varint{Value: uint64(len(p.Node))})
+		field.SetValueData([]byte(p.Node))
+		if err := field.Write(w); err != nil {
+			return err
+		}
+	}
+	field.Tag.SetNumber(2)
+	if len(p.Object) > 0 {
+		field.Tag.SetType(wire.WireType_LengthDelimited)
+		field.SetLength(wire.Varint{Value: uint64(len(p.Object))})
+		field.SetValueData([]byte(p.Object))
+		if err := field.Write(w); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+func (p *ResourceWorkloadNetdpObjectActionApplyArgsDTO) EncodeBuffer(w *bytes.Buffer) error {
+	var field wire.Field
+	field.Tag.SetNumber(1)
+	if len(p.Node) > 0 {
+		field.Tag.SetType(wire.WireType_LengthDelimited)
+		field.SetLength(wire.Varint{Value: uint64(len(p.Node))})
+		field.SetValueData([]byte(p.Node))
+		if err := field.WriteBuffer(w); err != nil {
+			return err
+		}
+	}
+	field.Tag.SetNumber(2)
+	if len(p.Object) > 0 {
+		field.Tag.SetType(wire.WireType_LengthDelimited)
+		field.SetLength(wire.Varint{Value: uint64(len(p.Object))})
+		field.SetValueData([]byte(p.Object))
+		if err := field.WriteBuffer(w); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+func (p *ResourceWorkloadNetdpObjectActionApplyArgsDTO) Append(w []byte) ([]byte, error) {
+	var field wire.Field
+	field.Tag.SetNumber(1)
+	if len(p.Node) > 0 {
+		field.Tag.SetType(wire.WireType_LengthDelimited)
+		field.SetLength(wire.Varint{Value: uint64(len(p.Node))})
+		field.SetValueData([]byte(p.Node))
+		if appendTmp, err := field.Append(w); err != nil {
+			return nil, err
+		} else {
+			w = appendTmp
+		}
+	}
+	field.Tag.SetNumber(2)
+	if len(p.Object) > 0 {
+		field.Tag.SetType(wire.WireType_LengthDelimited)
+		field.SetLength(wire.Varint{Value: uint64(len(p.Object))})
+		field.SetValueData([]byte(p.Object))
+		if appendTmp, err := field.Append(w); err != nil {
+			return nil, err
+		} else {
+			w = appendTmp
+		}
+	}
+	return w, nil
+}
+
+type ResourceWorkloadNetdpObjectActionDeleteArgsDTO struct {
+	Node string `json:"node,omitempty"`
+}
+
+func (p *ResourceWorkloadNetdpObjectActionDeleteArgsDTO) Read(data io.Reader) error {
+	var field wire.Field
+	for {
+		err := field.Read(data)
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			return fmt.Errorf("decode: %w", err)
+		}
+		switch field.Tag.Number() {
+		case 1:
+			val := field.ValueData()
+			if val == nil {
+				return fmt.Errorf("field Node unexpected wire type. expect LengthDelimited but got %s", field.Tag.Type())
+			}
+			p.Node = unsafe.String(unsafe.SliceData((*val)), len((*val)))
+		default:
+			// skip unknown
+		}
+	}
+	return nil
+}
+func (p *ResourceWorkloadNetdpObjectActionDeleteArgsDTO) ReadBuffer(data *bytes.Reader) error {
+	var field wire.Field
+	for {
+		err := field.ReadBuffer(data)
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			return fmt.Errorf("decode: %w", err)
+		}
+		switch field.Tag.Number() {
+		case 1:
+			val := field.ValueData()
+			if val == nil {
+				return fmt.Errorf("field Node unexpected wire type. expect LengthDelimited but got %s", field.Tag.Type())
+			}
+			p.Node = unsafe.String(unsafe.SliceData((*val)), len((*val)))
+		default:
+			// skip unknown
+		}
+	}
+	return nil
+}
+func (p *ResourceWorkloadNetdpObjectActionDeleteArgsDTO) Decode(data []byte) error {
+	var field wire.Field
+	for len(data) > 0 {
+		remain, err := field.Decode(data)
+		if err != nil {
+			return fmt.Errorf("decode: %w", err)
+		}
+		switch field.Tag.Number() {
+		case 1:
+			val := field.ValueData()
+			if val == nil {
+				return fmt.Errorf("field Node unexpected wire type. expect LengthDelimited but got %s", field.Tag.Type())
+			}
+			p.Node = unsafe.String(unsafe.SliceData((*val)), len((*val)))
+		default:
+			// skip unknown
+		}
+		data = remain
+	}
+	return nil
+}
+
+func (p *ResourceWorkloadNetdpObjectActionDeleteArgsDTO) Encode(w io.Writer) error {
+	var field wire.Field
+	field.Tag.SetNumber(1)
+	if len(p.Node) > 0 {
+		field.Tag.SetType(wire.WireType_LengthDelimited)
+		field.SetLength(wire.Varint{Value: uint64(len(p.Node))})
+		field.SetValueData([]byte(p.Node))
+		if err := field.Write(w); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+func (p *ResourceWorkloadNetdpObjectActionDeleteArgsDTO) EncodeBuffer(w *bytes.Buffer) error {
+	var field wire.Field
+	field.Tag.SetNumber(1)
+	if len(p.Node) > 0 {
+		field.Tag.SetType(wire.WireType_LengthDelimited)
+		field.SetLength(wire.Varint{Value: uint64(len(p.Node))})
+		field.SetValueData([]byte(p.Node))
+		if err := field.WriteBuffer(w); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+func (p *ResourceWorkloadNetdpObjectActionDeleteArgsDTO) Append(w []byte) ([]byte, error) {
+	var field wire.Field
+	field.Tag.SetNumber(1)
+	if len(p.Node) > 0 {
+		field.Tag.SetType(wire.WireType_LengthDelimited)
+		field.SetLength(wire.Varint{Value: uint64(len(p.Node))})
+		field.SetValueData([]byte(p.Node))
+		if appendTmp, err := field.Append(w); err != nil {
+			return nil, err
+		} else {
+			w = appendTmp
+		}
+	}
+	return w, nil
+}
+
+type ResourceWorkloadNetdpObjectActionGetArgsDTO struct {
+	Node string `json:"node,omitempty"`
+}
+
+func (p *ResourceWorkloadNetdpObjectActionGetArgsDTO) Read(data io.Reader) error {
+	var field wire.Field
+	for {
+		err := field.Read(data)
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			return fmt.Errorf("decode: %w", err)
+		}
+		switch field.Tag.Number() {
+		case 1:
+			val := field.ValueData()
+			if val == nil {
+				return fmt.Errorf("field Node unexpected wire type. expect LengthDelimited but got %s", field.Tag.Type())
+			}
+			p.Node = unsafe.String(unsafe.SliceData((*val)), len((*val)))
+		default:
+			// skip unknown
+		}
+	}
+	return nil
+}
+func (p *ResourceWorkloadNetdpObjectActionGetArgsDTO) ReadBuffer(data *bytes.Reader) error {
+	var field wire.Field
+	for {
+		err := field.ReadBuffer(data)
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			return fmt.Errorf("decode: %w", err)
+		}
+		switch field.Tag.Number() {
+		case 1:
+			val := field.ValueData()
+			if val == nil {
+				return fmt.Errorf("field Node unexpected wire type. expect LengthDelimited but got %s", field.Tag.Type())
+			}
+			p.Node = unsafe.String(unsafe.SliceData((*val)), len((*val)))
+		default:
+			// skip unknown
+		}
+	}
+	return nil
+}
+func (p *ResourceWorkloadNetdpObjectActionGetArgsDTO) Decode(data []byte) error {
+	var field wire.Field
+	for len(data) > 0 {
+		remain, err := field.Decode(data)
+		if err != nil {
+			return fmt.Errorf("decode: %w", err)
+		}
+		switch field.Tag.Number() {
+		case 1:
+			val := field.ValueData()
+			if val == nil {
+				return fmt.Errorf("field Node unexpected wire type. expect LengthDelimited but got %s", field.Tag.Type())
+			}
+			p.Node = unsafe.String(unsafe.SliceData((*val)), len((*val)))
+		default:
+			// skip unknown
+		}
+		data = remain
+	}
+	return nil
+}
+
+func (p *ResourceWorkloadNetdpObjectActionGetArgsDTO) Encode(w io.Writer) error {
+	var field wire.Field
+	field.Tag.SetNumber(1)
+	if len(p.Node) > 0 {
+		field.Tag.SetType(wire.WireType_LengthDelimited)
+		field.SetLength(wire.Varint{Value: uint64(len(p.Node))})
+		field.SetValueData([]byte(p.Node))
+		if err := field.Write(w); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+func (p *ResourceWorkloadNetdpObjectActionGetArgsDTO) EncodeBuffer(w *bytes.Buffer) error {
+	var field wire.Field
+	field.Tag.SetNumber(1)
+	if len(p.Node) > 0 {
+		field.Tag.SetType(wire.WireType_LengthDelimited)
+		field.SetLength(wire.Varint{Value: uint64(len(p.Node))})
+		field.SetValueData([]byte(p.Node))
+		if err := field.WriteBuffer(w); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+func (p *ResourceWorkloadNetdpObjectActionGetArgsDTO) Append(w []byte) ([]byte, error) {
+	var field wire.Field
+	field.Tag.SetNumber(1)
+	if len(p.Node) > 0 {
+		field.Tag.SetType(wire.WireType_LengthDelimited)
+		field.SetLength(wire.Varint{Value: uint64(len(p.Node))})
+		field.SetValueData([]byte(p.Node))
+		if appendTmp, err := field.Append(w); err != nil {
+			return nil, err
+		} else {
+			w = appendTmp
+		}
+	}
+	return w, nil
+}
+
+type ResourceWorkloadNetdpObjectActionListArgsDTO struct {
+}
+
+func (p *ResourceWorkloadNetdpObjectActionListArgsDTO) Read(data io.Reader) error {
+	var field wire.Field
+	for {
+		err := field.Read(data)
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			return fmt.Errorf("decode: %w", err)
+		}
+		switch field.Tag.Number() {
+		default:
+			// skip unknown
+		}
+	}
+	return nil
+}
+func (p *ResourceWorkloadNetdpObjectActionListArgsDTO) ReadBuffer(data *bytes.Reader) error {
+	var field wire.Field
+	for {
+		err := field.ReadBuffer(data)
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			return fmt.Errorf("decode: %w", err)
+		}
+		switch field.Tag.Number() {
+		default:
+			// skip unknown
+		}
+	}
+	return nil
+}
+func (p *ResourceWorkloadNetdpObjectActionListArgsDTO) Decode(data []byte) error {
+	var field wire.Field
+	for len(data) > 0 {
+		remain, err := field.Decode(data)
+		if err != nil {
+			return fmt.Errorf("decode: %w", err)
+		}
+		switch field.Tag.Number() {
+		default:
+			// skip unknown
+		}
+		data = remain
+	}
+	return nil
+}
+
+func (p *ResourceWorkloadNetdpObjectActionListArgsDTO) Encode(w io.Writer) error {
+	return nil
+}
+func (p *ResourceWorkloadNetdpObjectActionListArgsDTO) EncodeBuffer(w *bytes.Buffer) error {
+	return nil
+}
+func (p *ResourceWorkloadNetdpObjectActionListArgsDTO) Append(w []byte) ([]byte, error) {
+	return w, nil
+}
+
 type ResourceAcmeActionDeleteAccountResponseDTO struct {
 	Status string `json:"status,omitempty"`
 }
@@ -32805,6 +33258,603 @@ func (p *ResourceWasmModuleActionListResponseDTO) EncodeBuffer(w *bytes.Buffer) 
 	return nil
 }
 func (p *ResourceWasmModuleActionListResponseDTO) Append(w []byte) ([]byte, error) {
+	var field wire.Field
+	field.Tag.SetNumber(1)
+	for _, v := range p.Items {
+		field.Tag.SetType(wire.WireType_LengthDelimited)
+		{
+			mBuf := make([]byte, 0)
+			if appendTmp, err := v.Append(mBuf); err != nil {
+				return nil, err
+			} else {
+				mBuf = appendTmp
+			}
+			field.SetLength(wire.Varint{Value: uint64(len(mBuf))})
+			field.SetValueData(mBuf)
+		}
+		if appendTmp, err := field.Append(w); err != nil {
+			return nil, err
+		} else {
+			w = appendTmp
+		}
+	}
+	return w, nil
+}
+
+type ResourceWorkloadNetdpObjectActionApplyResponseDTO struct {
+	Node   string `json:"node,omitempty"`
+	Object string `json:"object,omitempty"`
+}
+
+func (p *ResourceWorkloadNetdpObjectActionApplyResponseDTO) Read(data io.Reader) error {
+	var field wire.Field
+	for {
+		err := field.Read(data)
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			return fmt.Errorf("decode: %w", err)
+		}
+		switch field.Tag.Number() {
+		case 1:
+			val := field.ValueData()
+			if val == nil {
+				return fmt.Errorf("field Node unexpected wire type. expect LengthDelimited but got %s", field.Tag.Type())
+			}
+			p.Node = unsafe.String(unsafe.SliceData((*val)), len((*val)))
+		case 2:
+			val := field.ValueData()
+			if val == nil {
+				return fmt.Errorf("field Object unexpected wire type. expect LengthDelimited but got %s", field.Tag.Type())
+			}
+			p.Object = unsafe.String(unsafe.SliceData((*val)), len((*val)))
+		default:
+			// skip unknown
+		}
+	}
+	return nil
+}
+func (p *ResourceWorkloadNetdpObjectActionApplyResponseDTO) ReadBuffer(data *bytes.Reader) error {
+	var field wire.Field
+	for {
+		err := field.ReadBuffer(data)
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			return fmt.Errorf("decode: %w", err)
+		}
+		switch field.Tag.Number() {
+		case 1:
+			val := field.ValueData()
+			if val == nil {
+				return fmt.Errorf("field Node unexpected wire type. expect LengthDelimited but got %s", field.Tag.Type())
+			}
+			p.Node = unsafe.String(unsafe.SliceData((*val)), len((*val)))
+		case 2:
+			val := field.ValueData()
+			if val == nil {
+				return fmt.Errorf("field Object unexpected wire type. expect LengthDelimited but got %s", field.Tag.Type())
+			}
+			p.Object = unsafe.String(unsafe.SliceData((*val)), len((*val)))
+		default:
+			// skip unknown
+		}
+	}
+	return nil
+}
+func (p *ResourceWorkloadNetdpObjectActionApplyResponseDTO) Decode(data []byte) error {
+	var field wire.Field
+	for len(data) > 0 {
+		remain, err := field.Decode(data)
+		if err != nil {
+			return fmt.Errorf("decode: %w", err)
+		}
+		switch field.Tag.Number() {
+		case 1:
+			val := field.ValueData()
+			if val == nil {
+				return fmt.Errorf("field Node unexpected wire type. expect LengthDelimited but got %s", field.Tag.Type())
+			}
+			p.Node = unsafe.String(unsafe.SliceData((*val)), len((*val)))
+		case 2:
+			val := field.ValueData()
+			if val == nil {
+				return fmt.Errorf("field Object unexpected wire type. expect LengthDelimited but got %s", field.Tag.Type())
+			}
+			p.Object = unsafe.String(unsafe.SliceData((*val)), len((*val)))
+		default:
+			// skip unknown
+		}
+		data = remain
+	}
+	return nil
+}
+
+func (p *ResourceWorkloadNetdpObjectActionApplyResponseDTO) Encode(w io.Writer) error {
+	var field wire.Field
+	field.Tag.SetNumber(1)
+	if len(p.Node) > 0 {
+		field.Tag.SetType(wire.WireType_LengthDelimited)
+		field.SetLength(wire.Varint{Value: uint64(len(p.Node))})
+		field.SetValueData([]byte(p.Node))
+		if err := field.Write(w); err != nil {
+			return err
+		}
+	}
+	field.Tag.SetNumber(2)
+	if len(p.Object) > 0 {
+		field.Tag.SetType(wire.WireType_LengthDelimited)
+		field.SetLength(wire.Varint{Value: uint64(len(p.Object))})
+		field.SetValueData([]byte(p.Object))
+		if err := field.Write(w); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+func (p *ResourceWorkloadNetdpObjectActionApplyResponseDTO) EncodeBuffer(w *bytes.Buffer) error {
+	var field wire.Field
+	field.Tag.SetNumber(1)
+	if len(p.Node) > 0 {
+		field.Tag.SetType(wire.WireType_LengthDelimited)
+		field.SetLength(wire.Varint{Value: uint64(len(p.Node))})
+		field.SetValueData([]byte(p.Node))
+		if err := field.WriteBuffer(w); err != nil {
+			return err
+		}
+	}
+	field.Tag.SetNumber(2)
+	if len(p.Object) > 0 {
+		field.Tag.SetType(wire.WireType_LengthDelimited)
+		field.SetLength(wire.Varint{Value: uint64(len(p.Object))})
+		field.SetValueData([]byte(p.Object))
+		if err := field.WriteBuffer(w); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+func (p *ResourceWorkloadNetdpObjectActionApplyResponseDTO) Append(w []byte) ([]byte, error) {
+	var field wire.Field
+	field.Tag.SetNumber(1)
+	if len(p.Node) > 0 {
+		field.Tag.SetType(wire.WireType_LengthDelimited)
+		field.SetLength(wire.Varint{Value: uint64(len(p.Node))})
+		field.SetValueData([]byte(p.Node))
+		if appendTmp, err := field.Append(w); err != nil {
+			return nil, err
+		} else {
+			w = appendTmp
+		}
+	}
+	field.Tag.SetNumber(2)
+	if len(p.Object) > 0 {
+		field.Tag.SetType(wire.WireType_LengthDelimited)
+		field.SetLength(wire.Varint{Value: uint64(len(p.Object))})
+		field.SetValueData([]byte(p.Object))
+		if appendTmp, err := field.Append(w); err != nil {
+			return nil, err
+		} else {
+			w = appendTmp
+		}
+	}
+	return w, nil
+}
+
+type ResourceWorkloadNetdpObjectActionDeleteResponseDTO struct {
+	Node string `json:"node,omitempty"`
+}
+
+func (p *ResourceWorkloadNetdpObjectActionDeleteResponseDTO) Read(data io.Reader) error {
+	var field wire.Field
+	for {
+		err := field.Read(data)
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			return fmt.Errorf("decode: %w", err)
+		}
+		switch field.Tag.Number() {
+		case 1:
+			val := field.ValueData()
+			if val == nil {
+				return fmt.Errorf("field Node unexpected wire type. expect LengthDelimited but got %s", field.Tag.Type())
+			}
+			p.Node = unsafe.String(unsafe.SliceData((*val)), len((*val)))
+		default:
+			// skip unknown
+		}
+	}
+	return nil
+}
+func (p *ResourceWorkloadNetdpObjectActionDeleteResponseDTO) ReadBuffer(data *bytes.Reader) error {
+	var field wire.Field
+	for {
+		err := field.ReadBuffer(data)
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			return fmt.Errorf("decode: %w", err)
+		}
+		switch field.Tag.Number() {
+		case 1:
+			val := field.ValueData()
+			if val == nil {
+				return fmt.Errorf("field Node unexpected wire type. expect LengthDelimited but got %s", field.Tag.Type())
+			}
+			p.Node = unsafe.String(unsafe.SliceData((*val)), len((*val)))
+		default:
+			// skip unknown
+		}
+	}
+	return nil
+}
+func (p *ResourceWorkloadNetdpObjectActionDeleteResponseDTO) Decode(data []byte) error {
+	var field wire.Field
+	for len(data) > 0 {
+		remain, err := field.Decode(data)
+		if err != nil {
+			return fmt.Errorf("decode: %w", err)
+		}
+		switch field.Tag.Number() {
+		case 1:
+			val := field.ValueData()
+			if val == nil {
+				return fmt.Errorf("field Node unexpected wire type. expect LengthDelimited but got %s", field.Tag.Type())
+			}
+			p.Node = unsafe.String(unsafe.SliceData((*val)), len((*val)))
+		default:
+			// skip unknown
+		}
+		data = remain
+	}
+	return nil
+}
+
+func (p *ResourceWorkloadNetdpObjectActionDeleteResponseDTO) Encode(w io.Writer) error {
+	var field wire.Field
+	field.Tag.SetNumber(1)
+	if len(p.Node) > 0 {
+		field.Tag.SetType(wire.WireType_LengthDelimited)
+		field.SetLength(wire.Varint{Value: uint64(len(p.Node))})
+		field.SetValueData([]byte(p.Node))
+		if err := field.Write(w); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+func (p *ResourceWorkloadNetdpObjectActionDeleteResponseDTO) EncodeBuffer(w *bytes.Buffer) error {
+	var field wire.Field
+	field.Tag.SetNumber(1)
+	if len(p.Node) > 0 {
+		field.Tag.SetType(wire.WireType_LengthDelimited)
+		field.SetLength(wire.Varint{Value: uint64(len(p.Node))})
+		field.SetValueData([]byte(p.Node))
+		if err := field.WriteBuffer(w); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+func (p *ResourceWorkloadNetdpObjectActionDeleteResponseDTO) Append(w []byte) ([]byte, error) {
+	var field wire.Field
+	field.Tag.SetNumber(1)
+	if len(p.Node) > 0 {
+		field.Tag.SetType(wire.WireType_LengthDelimited)
+		field.SetLength(wire.Varint{Value: uint64(len(p.Node))})
+		field.SetValueData([]byte(p.Node))
+		if appendTmp, err := field.Append(w); err != nil {
+			return nil, err
+		} else {
+			w = appendTmp
+		}
+	}
+	return w, nil
+}
+
+type ResourceWorkloadNetdpObjectActionGetResponseDTO struct {
+	Node   string `json:"node,omitempty"`
+	Object string `json:"object,omitempty"`
+}
+
+func (p *ResourceWorkloadNetdpObjectActionGetResponseDTO) Read(data io.Reader) error {
+	var field wire.Field
+	for {
+		err := field.Read(data)
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			return fmt.Errorf("decode: %w", err)
+		}
+		switch field.Tag.Number() {
+		case 1:
+			val := field.ValueData()
+			if val == nil {
+				return fmt.Errorf("field Node unexpected wire type. expect LengthDelimited but got %s", field.Tag.Type())
+			}
+			p.Node = unsafe.String(unsafe.SliceData((*val)), len((*val)))
+		case 2:
+			val := field.ValueData()
+			if val == nil {
+				return fmt.Errorf("field Object unexpected wire type. expect LengthDelimited but got %s", field.Tag.Type())
+			}
+			p.Object = unsafe.String(unsafe.SliceData((*val)), len((*val)))
+		default:
+			// skip unknown
+		}
+	}
+	return nil
+}
+func (p *ResourceWorkloadNetdpObjectActionGetResponseDTO) ReadBuffer(data *bytes.Reader) error {
+	var field wire.Field
+	for {
+		err := field.ReadBuffer(data)
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			return fmt.Errorf("decode: %w", err)
+		}
+		switch field.Tag.Number() {
+		case 1:
+			val := field.ValueData()
+			if val == nil {
+				return fmt.Errorf("field Node unexpected wire type. expect LengthDelimited but got %s", field.Tag.Type())
+			}
+			p.Node = unsafe.String(unsafe.SliceData((*val)), len((*val)))
+		case 2:
+			val := field.ValueData()
+			if val == nil {
+				return fmt.Errorf("field Object unexpected wire type. expect LengthDelimited but got %s", field.Tag.Type())
+			}
+			p.Object = unsafe.String(unsafe.SliceData((*val)), len((*val)))
+		default:
+			// skip unknown
+		}
+	}
+	return nil
+}
+func (p *ResourceWorkloadNetdpObjectActionGetResponseDTO) Decode(data []byte) error {
+	var field wire.Field
+	for len(data) > 0 {
+		remain, err := field.Decode(data)
+		if err != nil {
+			return fmt.Errorf("decode: %w", err)
+		}
+		switch field.Tag.Number() {
+		case 1:
+			val := field.ValueData()
+			if val == nil {
+				return fmt.Errorf("field Node unexpected wire type. expect LengthDelimited but got %s", field.Tag.Type())
+			}
+			p.Node = unsafe.String(unsafe.SliceData((*val)), len((*val)))
+		case 2:
+			val := field.ValueData()
+			if val == nil {
+				return fmt.Errorf("field Object unexpected wire type. expect LengthDelimited but got %s", field.Tag.Type())
+			}
+			p.Object = unsafe.String(unsafe.SliceData((*val)), len((*val)))
+		default:
+			// skip unknown
+		}
+		data = remain
+	}
+	return nil
+}
+
+func (p *ResourceWorkloadNetdpObjectActionGetResponseDTO) Encode(w io.Writer) error {
+	var field wire.Field
+	field.Tag.SetNumber(1)
+	if len(p.Node) > 0 {
+		field.Tag.SetType(wire.WireType_LengthDelimited)
+		field.SetLength(wire.Varint{Value: uint64(len(p.Node))})
+		field.SetValueData([]byte(p.Node))
+		if err := field.Write(w); err != nil {
+			return err
+		}
+	}
+	field.Tag.SetNumber(2)
+	if len(p.Object) > 0 {
+		field.Tag.SetType(wire.WireType_LengthDelimited)
+		field.SetLength(wire.Varint{Value: uint64(len(p.Object))})
+		field.SetValueData([]byte(p.Object))
+		if err := field.Write(w); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+func (p *ResourceWorkloadNetdpObjectActionGetResponseDTO) EncodeBuffer(w *bytes.Buffer) error {
+	var field wire.Field
+	field.Tag.SetNumber(1)
+	if len(p.Node) > 0 {
+		field.Tag.SetType(wire.WireType_LengthDelimited)
+		field.SetLength(wire.Varint{Value: uint64(len(p.Node))})
+		field.SetValueData([]byte(p.Node))
+		if err := field.WriteBuffer(w); err != nil {
+			return err
+		}
+	}
+	field.Tag.SetNumber(2)
+	if len(p.Object) > 0 {
+		field.Tag.SetType(wire.WireType_LengthDelimited)
+		field.SetLength(wire.Varint{Value: uint64(len(p.Object))})
+		field.SetValueData([]byte(p.Object))
+		if err := field.WriteBuffer(w); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+func (p *ResourceWorkloadNetdpObjectActionGetResponseDTO) Append(w []byte) ([]byte, error) {
+	var field wire.Field
+	field.Tag.SetNumber(1)
+	if len(p.Node) > 0 {
+		field.Tag.SetType(wire.WireType_LengthDelimited)
+		field.SetLength(wire.Varint{Value: uint64(len(p.Node))})
+		field.SetValueData([]byte(p.Node))
+		if appendTmp, err := field.Append(w); err != nil {
+			return nil, err
+		} else {
+			w = appendTmp
+		}
+	}
+	field.Tag.SetNumber(2)
+	if len(p.Object) > 0 {
+		field.Tag.SetType(wire.WireType_LengthDelimited)
+		field.SetLength(wire.Varint{Value: uint64(len(p.Object))})
+		field.SetValueData([]byte(p.Object))
+		if appendTmp, err := field.Append(w); err != nil {
+			return nil, err
+		} else {
+			w = appendTmp
+		}
+	}
+	return w, nil
+}
+
+type ResourceWorkloadNetdpObjectActionListResponseDTO struct {
+	Items []*ResourceWorkloadNetdpObjectActionGetResponseDTO `json:"items,omitempty"`
+}
+
+func (p *ResourceWorkloadNetdpObjectActionListResponseDTO) Read(data io.Reader) error {
+	var field wire.Field
+	for {
+		err := field.Read(data)
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			return fmt.Errorf("decode: %w", err)
+		}
+		switch field.Tag.Number() {
+		case 1:
+			val := field.ValueData()
+			if val == nil {
+				return fmt.Errorf("field Items unexpected wire type. expect LengthDelimited but got %s", field.Tag.Type())
+			}
+			{
+				var tmp *ResourceWorkloadNetdpObjectActionGetResponseDTO
+				tmp = new(ResourceWorkloadNetdpObjectActionGetResponseDTO)
+				if err := tmp.Decode((*val)); err != nil {
+					return err
+				}
+				p.Items = append(p.Items, tmp)
+			}
+		default:
+			// skip unknown
+		}
+	}
+	return nil
+}
+func (p *ResourceWorkloadNetdpObjectActionListResponseDTO) ReadBuffer(data *bytes.Reader) error {
+	var field wire.Field
+	for {
+		err := field.ReadBuffer(data)
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			return fmt.Errorf("decode: %w", err)
+		}
+		switch field.Tag.Number() {
+		case 1:
+			val := field.ValueData()
+			if val == nil {
+				return fmt.Errorf("field Items unexpected wire type. expect LengthDelimited but got %s", field.Tag.Type())
+			}
+			{
+				var tmp *ResourceWorkloadNetdpObjectActionGetResponseDTO
+				tmp = new(ResourceWorkloadNetdpObjectActionGetResponseDTO)
+				if err := tmp.Decode((*val)); err != nil {
+					return err
+				}
+				p.Items = append(p.Items, tmp)
+			}
+		default:
+			// skip unknown
+		}
+	}
+	return nil
+}
+func (p *ResourceWorkloadNetdpObjectActionListResponseDTO) Decode(data []byte) error {
+	var field wire.Field
+	for len(data) > 0 {
+		remain, err := field.Decode(data)
+		if err != nil {
+			return fmt.Errorf("decode: %w", err)
+		}
+		switch field.Tag.Number() {
+		case 1:
+			val := field.ValueData()
+			if val == nil {
+				return fmt.Errorf("field Items unexpected wire type. expect LengthDelimited but got %s", field.Tag.Type())
+			}
+			{
+				var tmp *ResourceWorkloadNetdpObjectActionGetResponseDTO
+				tmp = new(ResourceWorkloadNetdpObjectActionGetResponseDTO)
+				if err := tmp.Decode((*val)); err != nil {
+					return err
+				}
+				p.Items = append(p.Items, tmp)
+			}
+		default:
+			// skip unknown
+		}
+		data = remain
+	}
+	return nil
+}
+
+func (p *ResourceWorkloadNetdpObjectActionListResponseDTO) Encode(w io.Writer) error {
+	var field wire.Field
+	field.Tag.SetNumber(1)
+	for _, v := range p.Items {
+		field.Tag.SetType(wire.WireType_LengthDelimited)
+		{
+			mBuf := make([]byte, 0)
+			if appendTmp, err := v.Append(mBuf); err != nil {
+				return err
+			} else {
+				mBuf = appendTmp
+			}
+			field.SetLength(wire.Varint{Value: uint64(len(mBuf))})
+			field.SetValueData(mBuf)
+		}
+		if err := field.Write(w); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+func (p *ResourceWorkloadNetdpObjectActionListResponseDTO) EncodeBuffer(w *bytes.Buffer) error {
+	var field wire.Field
+	field.Tag.SetNumber(1)
+	for _, v := range p.Items {
+		field.Tag.SetType(wire.WireType_LengthDelimited)
+		{
+			mBuf := make([]byte, 0)
+			if appendTmp, err := v.Append(mBuf); err != nil {
+				return err
+			} else {
+				mBuf = appendTmp
+			}
+			field.SetLength(wire.Varint{Value: uint64(len(mBuf))})
+			field.SetValueData(mBuf)
+		}
+		if err := field.WriteBuffer(w); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+func (p *ResourceWorkloadNetdpObjectActionListResponseDTO) Append(w []byte) ([]byte, error) {
 	var field wire.Field
 	field.Tag.SetNumber(1)
 	for _, v := range p.Items {

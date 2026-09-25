@@ -70,6 +70,23 @@ type Hooks interface {
 	PromMetrics() *stat.PromMetrics                  // for /metrics-over-transport (nil -> no /metrics)
 }
 
+// ResolveFileDir is the node-local file store Run serves the file plane from:
+// cfg.FileDir, or <DataDir>/dp_files when unset. Agents that resolve names sent
+// by the control plane (node_file save_as) use it to find the same directory.
+func ResolveFileDir(cfg Config) string {
+	if cfg.FileDir != "" {
+		return cfg.FileDir
+	}
+	return filepath.Join(cfg.DataDir, "dp_files")
+}
+
+// FileReceiver is an optional Hooks capability: OnFileReceived is called after a
+// SendFile (node_file / dp-file send) has written name into the file store, so a
+// dp can act on a file that arrives after it was told to use it.
+type FileReceiver interface {
+	OnFileReceived(name string)
+}
+
 // Config parameterizes Run. Addr is the control-plane UDP address; DataDir holds
 // the bootstrap token + saved cert; Node/App/Domain form the node's CommonName;
 // FileDir is the node-local file store for the file plane; Hooks supplies the
@@ -114,10 +131,7 @@ func Run(ctx context.Context, cfg Config, logger *slog.Logger) error {
 	// the control plane seeds + the per-app bootstrap token.
 	cn := cfg.Node + "." + cfg.App + ".dp.system." + cfg.Domain
 
-	fileDir := cfg.FileDir
-	if fileDir == "" {
-		fileDir = filepath.Join(cfg.DataDir, "dp_files")
-	}
+	fileDir := ResolveFileDir(cfg)
 	if err := os.MkdirAll(fileDir, 0o755); err != nil {
 		return fmt.Errorf("dataplane: file dir: %w", err)
 	}
@@ -680,6 +694,9 @@ func (s *dpService) SendFile(ctx context.Context, req *pb.DataplaneServiceSendFi
 		return nil, err
 	}
 	s.logger.Info("dataplane: SendFile received", "name", name, "bytes", len(req.Content))
+	if r, ok := s.hooks.(FileReceiver); ok {
+		r.OnFileReceived(name)
+	}
 	return &wkt.Empty{}, nil
 }
 

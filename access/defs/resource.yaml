@@ -690,6 +690,38 @@ resources:
                 type: string
               - name: pin_dir
                 type: string
+    # workload_netdp_object: which eBPF object a workload node's pod-network datapath
+    # loads (by file name in the node's file store, put there via node_file) — the
+    # workload counterpart of l4lb_object, so the datapath can be replaced from the
+    # control plane without a redeploy. Generated per-node reconcile pushes it via
+    # WorkloadService.SetNetdpObject; the agent loads it at once if the file is
+    # there, otherwise when node_file delivers it, and hot-swaps the programs on
+    # later changes (maps are refilled from the agent's state; counters restart).
+    # Only the non-root agent's eBPF object is replaceable this way: the root-run
+    # CNI plugin is deployed by Ansible and never through the file store.
+    - name: workload_netdp_object
+      description: Which eBPF datapath object a workload node loads (per-node; reconciled via WorkloadService.SetNetdpObject)
+      command_name: workload-netdp-object
+      kind: resource
+      rpc_service: true
+      schema:
+          key: node
+          declarative: true
+          generated_store: true
+          verbs: [apply, get, list, delete]
+          reconcile:
+              dp_type: workload
+              per_node: true
+              node_field: node
+              service: WorkloadService
+              method: SetNetdpObject
+              request_fields:
+                  - {from: object, to: object}
+          fields:
+              - name: node
+                type: string
+              - name: object
+                type: string
     # bootstrap_token: carved from the ca_management facade. An operation-only
     # resource (no schema/CRUD): issue mints a token (returns the secret) and
     # revoke presents a token to revoke it — the CA has no token list/get, so this

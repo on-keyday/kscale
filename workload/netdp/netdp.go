@@ -1,11 +1,16 @@
 // Package netdp is the workload node's eBPF datapath (the userspace half of
-// workload/netdp/c/netdp.c): it loads the object, attaches the ingress program
-// to the bound NIC and the egress program to each pod's host-side veth (tcx),
-// and keeps the maps in step with what the agent learns — the VIP (UpdateVip),
-// the l4lb fronts allowed to send IPIP (UpdateRemote), and the pod endpoints and
-// their ports (the workload engine). It runs in workloadagent, non-root, with
-// CAP_BPF + CAP_NET_ADMIN; it never enters a pod netns (the CNI plugin wired
-// that), so it needs no CAP_SYS_ADMIN.
+// workload/netdp/c/netdp.c): it attaches the ingress program to the bound NIC and
+// the egress program to each pod's host-side veth (tcx), and keeps the maps in
+// step with what the agent learns — the VIP (UpdateVip), the l4lb fronts allowed
+// to send IPIP (UpdateRemote), and the pod endpoints and their ports (the
+// workload engine). It runs in workloadagent, non-root, with CAP_BPF +
+// CAP_NET_ADMIN; it never enters a pod netns (the CNI plugin wired that), so it
+// needs no CAP_SYS_ADMIN.
+//
+// The Datapath keeps that desired state itself, independent of any loaded
+// object, so the object can arrive late and be replaced at runtime
+// (workload_netdp_object): LoadObject builds the new collection, refills its maps
+// from the state, then swaps the programs under the existing tcx links.
 // See notes/ai/2026_09_25_workload_pod_netns_ebpf_design.md.
 package netdp
 
@@ -62,29 +67,144 @@ var counterNames = []string{"in_steered", "in_not_lb_src", "in_no_port", "in_err
 type Datapath struct {
 	logger *slog.Logger
 
-	mu        sync.Mutex
+	mu sync.Mutex
+
+	// Desired state, kept whether or not an object is loaded.
+	cfg    config
+	nic    string
+	lbSrcs map[[4]byte]bool
+	in     map[portKey]podDest
+	out    map[outKey]bool
+	veths  map[string]int // host veth name -> ifindex
+
+	// Loaded object (nil until LoadObject) and its attachments.
 	coll      *ebpf.Collection
-	cfg       config
-	nic       string
+	object    string
 	nicLink   link.Link
 	vethLinks map[string]link.Link // host veth name -> egress tcx link
 }
 
-// Load loads the datapath object at objPath. Nothing is attached until
-// BindInterface / SetEndpoints.
-func Load(objPath string, logger *slog.Logger) (*Datapath, error) {
+// New returns a Datapath with no object loaded: it records state until
+// LoadObject.
+func New(logger *slog.Logger) *Datapath {
 	if logger == nil {
 		logger = slog.New(slog.DiscardHandler)
 	}
+	return &Datapath{
+		logger:    logger,
+		lbSrcs:    map[[4]byte]bool{},
+		in:        map[portKey]podDest{},
+		out:       map[outKey]bool{},
+		veths:     map[string]int{},
+		vethLinks: map[string]link.Link{},
+	}
+}
+
+// Load is New + LoadObject.
+func Load(objPath string, logger *slog.Logger) (*Datapath, error) {
+	d := New(logger)
+	if err := d.LoadObject(objPath); err != nil {
+		return nil, err
+	}
+	return d, nil
+}
+
+// Loaded reports whether an object is loaded, and its path.
+func (d *Datapath) Loaded() (bool, string) {
+	d.mu.Lock()
+	defer d.mu.Unlock()
+	return d.coll != nil, d.object
+}
+
+// LoadObject loads the object at objPath and makes it the live datapath: its maps
+// are filled from the current state, then its programs replace the running ones
+// under the existing tcx links (or get attached, on the first load). On any
+// failure the running datapath is left as it was.
+func (d *Datapath) LoadObject(objPath string) error {
+	d.mu.Lock()
+	defer d.mu.Unlock()
 	spec, err := ebpf.LoadCollectionSpec(objPath)
 	if err != nil {
-		return nil, fmt.Errorf("netdp: load %s: %w", objPath, err)
+		return fmt.Errorf("netdp: load %s: %w", objPath, err)
 	}
 	coll, err := ebpf.NewCollection(spec)
 	if err != nil {
-		return nil, fmt.Errorf("netdp: create collection: %w", err)
+		return fmt.Errorf("netdp: create collection from %s: %w", objPath, err)
 	}
-	return &Datapath{logger: logger, coll: coll, vethLinks: map[string]link.Link{}}, nil
+	for _, p := range []string{"netdp_ingress", "netdp_egress"} {
+		if coll.Programs[p] == nil {
+			coll.Close()
+			return fmt.Errorf("netdp: %s has no program %s", objPath, p)
+		}
+	}
+	if err := d.fillMaps(coll); err != nil {
+		coll.Close()
+		return fmt.Errorf("netdp: fill maps of %s: %w", objPath, err)
+	}
+
+	old := d.coll
+	if err := d.swapPrograms(old, coll); err != nil {
+		coll.Close()
+		return err
+	}
+	d.coll, d.object = coll, objPath
+	if old != nil {
+		old.Close()
+	}
+	// First load with an interface already bound: attach now.
+	if d.nicLink == nil && d.nic != "" {
+		if err := d.attachNICLocked(); err != nil {
+			return err
+		}
+	}
+	if err := d.attachVethsLocked(); err != nil {
+		return err
+	}
+	d.logger.Info("netdp: object loaded", "object", objPath, "replaced", old != nil)
+	return nil
+}
+
+// swapPrograms points every existing link at next's programs. If one update
+// fails, the ones already moved go back to prev's programs.
+func (d *Datapath) swapPrograms(prev, next *ebpf.Collection) error {
+	type moved struct {
+		l    link.Link
+		prog string
+	}
+	var done []moved
+	update := func(l link.Link, prog string) error {
+		if err := l.Update(next.Programs[prog]); err != nil {
+			return err
+		}
+		done = append(done, moved{l, prog})
+		return nil
+	}
+	fail := func(what string, err error) error {
+		for _, m := range done {
+			_ = m.l.Update(prev.Programs[m.prog])
+		}
+		return fmt.Errorf("netdp: swap %s: %w", what, err)
+	}
+	if d.nicLink != nil {
+		if err := update(d.nicLink, "netdp_ingress"); err != nil {
+			return fail("ingress on "+d.nic, err)
+		}
+	}
+	for name, l := range d.vethLinks {
+		if err := update(l, "netdp_egress"); err != nil {
+			return fail("egress on "+name, err)
+		}
+	}
+	return nil
+}
+
+func (d *Datapath) fillMaps(coll *ebpf.Collection) error {
+	return errors.Join(
+		coll.Maps["netdp_config"].Put(uint32(0), d.cfg),
+		syncSet(coll.Maps["netdp_lb_srcs"], d.lbSrcs, uint8(1)),
+		syncSet(coll.Maps["netdp_ports_out"], d.out, uint8(1)),
+		syncMap(coll.Maps["netdp_ports_in"], d.in),
+	)
 }
 
 func (d *Datapath) Close() error {
@@ -97,41 +217,59 @@ func (d *Datapath) Close() error {
 	for _, l := range d.vethLinks {
 		errs = append(errs, l.Close())
 	}
-	d.coll.Close()
+	if d.coll != nil {
+		d.coll.Close()
+	}
 	return errors.Join(errs...)
 }
 
 func (d *Datapath) writeConfig() error {
+	if d.coll == nil {
+		return nil
+	}
 	return d.coll.Maps["netdp_config"].Put(uint32(0), d.cfg)
 }
 
-// BindInterface attaches the ingress program to the NIC l4lb's IPIP arrives on
-// (and replies leave by). Rebinding to another NIC moves it.
+// BindInterface sets the NIC l4lb's IPIP arrives on (and replies leave by) and,
+// once an object is loaded, attaches the ingress program there. Rebinding to
+// another NIC moves it.
 func (d *Datapath) BindInterface(name string) error {
 	d.mu.Lock()
 	defer d.mu.Unlock()
-	if name == d.nic && d.nicLink != nil {
+	if name == d.nic && (d.nicLink != nil || d.coll == nil) {
 		return nil
 	}
 	l, err := netlink.LinkByName(name)
 	if err != nil {
 		return fmt.Errorf("netdp: interface %q: %w", name, err)
 	}
+	d.nic = name
+	d.cfg.NICIfindex = uint32(l.Attrs().Index)
+	if d.coll == nil {
+		return nil
+	}
+	if d.nicLink != nil {
+		_ = d.nicLink.Close()
+		d.nicLink = nil
+	}
+	if err := d.attachNICLocked(); err != nil {
+		return err
+	}
+	return d.writeConfig()
+}
+
+func (d *Datapath) attachNICLocked() error {
 	tl, err := link.AttachTCX(link.TCXOptions{
-		Interface: l.Attrs().Index,
+		Interface: int(d.cfg.NICIfindex),
 		Program:   d.coll.Programs["netdp_ingress"],
 		Attach:    ebpf.AttachTCXIngress,
 	})
 	if err != nil {
-		return fmt.Errorf("netdp: attach ingress on %s: %w", name, err)
+		return fmt.Errorf("netdp: attach ingress on %s: %w", d.nic, err)
 	}
-	if d.nicLink != nil {
-		_ = d.nicLink.Close()
-	}
-	d.nic, d.nicLink = name, tl
-	d.cfg.NICIfindex = uint32(l.Attrs().Index)
-	d.logger.Info("netdp: ingress attached", "interface", name, "ifindex", l.Attrs().Index)
-	return d.writeConfig()
+	d.nicLink = tl
+	d.logger.Info("netdp: ingress attached", "interface", d.nic, "ifindex", d.cfg.NICIfindex)
+	return nil
 }
 
 // SetVIP sets the address the datapath steers (and SNATs replies to).
@@ -156,8 +294,11 @@ func (d *Datapath) SetLBSources(srcs []netip.Addr) error {
 			want[a.As4()] = true
 		}
 	}
-	m := d.coll.Maps["netdp_lb_srcs"]
-	return syncSet(m, want, uint8(1))
+	d.lbSrcs = want
+	if d.coll == nil {
+		return nil
+	}
+	return syncSet(d.coll.Maps["netdp_lb_srcs"], d.lbSrcs, uint8(1))
 }
 
 // SetEndpoints makes the port maps and egress attachments match eps. A port
@@ -199,9 +340,28 @@ func (d *Datapath) SetEndpoints(eps []workload.Endpoint) error {
 			out[outKey{PodIP: ep.PodIP.As4(), Proto: ipprotoTCP, Port: be16(p.Port)}] = true
 		}
 	}
+	d.in, d.out, d.veths = in, out, veths
+	if d.coll == nil {
+		return errors.Join(errs...)
+	}
 
 	// Egress attachments first, so a pod never receives traffic it can't answer.
-	for name, idx := range veths {
+	if err := d.attachVethsLocked(); err != nil {
+		errs = append(errs, err)
+	}
+	if err := syncSet(d.coll.Maps["netdp_ports_out"], d.out, uint8(1)); err != nil {
+		errs = append(errs, err)
+	}
+	if err := syncMap(d.coll.Maps["netdp_ports_in"], d.in); err != nil {
+		errs = append(errs, err)
+	}
+	return errors.Join(errs...)
+}
+
+// attachVethsLocked makes the egress attachments match d.veths.
+func (d *Datapath) attachVethsLocked() error {
+	var errs []error
+	for name, idx := range d.veths {
 		if _, ok := d.vethLinks[name]; ok {
 			continue
 		}
@@ -216,14 +376,8 @@ func (d *Datapath) SetEndpoints(eps []workload.Endpoint) error {
 		}
 		d.vethLinks[name] = tl
 	}
-	if err := syncSet(d.coll.Maps["netdp_ports_out"], out, uint8(1)); err != nil {
-		errs = append(errs, err)
-	}
-	if err := syncMap(d.coll.Maps["netdp_ports_in"], in); err != nil {
-		errs = append(errs, err)
-	}
 	for name, l := range d.vethLinks {
-		if _, ok := veths[name]; !ok {
+		if _, ok := d.veths[name]; !ok {
 			_ = l.Close() // the veth is usually gone already (CNI DEL)
 			delete(d.vethLinks, name)
 		}
@@ -231,28 +385,31 @@ func (d *Datapath) SetEndpoints(eps []workload.Endpoint) error {
 	return errors.Join(errs...)
 }
 
-// Counters sums the per-CPU counters.
+// Counters sums the per-CPU counters (all zero with no object loaded).
 func (d *Datapath) Counters() (map[string]uint64, error) {
 	d.mu.Lock()
 	defer d.mu.Unlock()
 	out := map[string]uint64{}
 	for i, name := range counterNames {
+		out[name] = 0
+		if d.coll == nil {
+			continue
+		}
 		var per []uint64
 		if err := d.coll.Maps["netdp_counters"].Lookup(uint32(i), &per); err != nil {
 			return nil, err
 		}
-		var sum uint64
 		for _, v := range per {
-			sum += v
+			out[name] += v
 		}
-		out[name] = sum
 	}
 	return out, nil
 }
 
 // Metrics snapshots the counters and the steered-port count in the generated
 // stat shape (reported via Stats and exported to prometheus). The counters live
-// in unpinned maps, so they restart from zero with the agent.
+// in the loaded object's maps, so they restart from zero with the agent and on
+// every object swap.
 func (d *Datapath) Metrics() (netdpmetrics.NetdpMetrics, error) {
 	c, err := d.Counters()
 	if err != nil {
@@ -273,19 +430,17 @@ func (d *Datapath) Metrics() (netdpmetrics.NetdpMetrics, error) {
 	}, nil
 }
 
-// Ports lists the steered ports (for logs/tests), sorted.
+// Ports lists the steered ports (for logs/tests), sorted. It reports the desired
+// state, so it is meaningful before an object is loaded too.
 func (d *Datapath) Ports() ([]string, error) {
 	d.mu.Lock()
 	defer d.mu.Unlock()
-	var out []string
-	var k portKey
-	var v podDest
-	it := d.coll.Maps["netdp_ports_in"].Iterate()
-	for it.Next(&k, &v) {
+	out := make([]string, 0, len(d.in))
+	for k, v := range d.in {
 		out = append(out, fmt.Sprintf("tcp:%d->%v", uint16(k.Port[0])<<8|uint16(k.Port[1]), net.IP(v.PodIP[:])))
 	}
 	sort.Strings(out)
-	return out, it.Err()
+	return out, nil
 }
 
 func be16(v uint16) [2]byte { return [2]byte{byte(v >> 8), byte(v)} }

@@ -97,6 +97,12 @@ func Resources() []access.ResourceTemplate {
 			ResourceL4LbObjectActionList,
 			ResourceL4LbObjectActionDelete,
 		}),
+		access.NewResourceTemplate("workload_netdp_object", nil, []access.Attribute{}, []access.Action{
+			ResourceWorkloadNetdpObjectActionApply,
+			ResourceWorkloadNetdpObjectActionGet,
+			ResourceWorkloadNetdpObjectActionList,
+			ResourceWorkloadNetdpObjectActionDelete,
+		}),
 		access.NewResourceTemplate("bootstrap_token", nil, []access.Attribute{}, []access.Action{
 			ResourceBootstrapTokenActionIssue,
 			ResourceBootstrapTokenActionRevoke,
@@ -473,6 +479,22 @@ var ResourceL4LbObjectActionList = access.NewAction("list", []string{})
 var ResourceL4LbObjectActionDelete = access.NewAction("delete", []string{"node"})
 
 const ResourceL4LbObjectActionDeleteArgNode = "node"
+
+const ResourceWorkloadNetdpObject = "workload_netdp_object"
+
+var ResourceWorkloadNetdpObjectActionApply = access.NewAction("apply", []string{"node", "object"})
+
+const ResourceWorkloadNetdpObjectActionApplyArgNode = "node"
+const ResourceWorkloadNetdpObjectActionApplyArgObject = "object"
+
+var ResourceWorkloadNetdpObjectActionGet = access.NewAction("get", []string{"node"})
+
+const ResourceWorkloadNetdpObjectActionGetArgNode = "node"
+
+var ResourceWorkloadNetdpObjectActionList = access.NewAction("list", []string{})
+var ResourceWorkloadNetdpObjectActionDelete = access.NewAction("delete", []string{"node"})
+
+const ResourceWorkloadNetdpObjectActionDeleteArgNode = "node"
 
 const ResourceBootstrapToken = "bootstrap_token"
 
@@ -1486,6 +1508,22 @@ var PolicyWasmMonitor = policy.NewAndPolicy("WasmMonitor",
 	),
 )
 
+var PolicyWorkloadNetdpObjectManager = policy.NewAndPolicy("WorkloadNetdpObjectManager",
+	policy.MustParsePolicy("ResourceIsWorkloadNetdpObject", "$resource.name == `workload_netdp_object`"),
+	policy.NewOrPolicy("WorkloadNetdpObjectManagerActions",
+		policy.MustParsePolicy("ActionIsApply", "$action.name == `apply`"),
+		policy.MustParsePolicy("ActionIsList", "$action.name == `list`"),
+		policy.MustParsePolicy("ActionIsGet", "$action.name == `get`"),
+		policy.MustParsePolicy("ActionIsDelete", "$action.name == `delete`"),
+	),
+	policy.NewOrPolicy("WorkloadNetdpObjectManager",
+		policy.NewAndPolicy("CanManageWorkloadNetdpObjects",
+			policy.MustParsePolicy("UserAuthorityIsManager", "$user.authority.full_name suffix $env.authority.admin.ca.manager."),
+			policy.MustParsePolicy("UserHasAdminRole", "$user.roles list_contains `admin`"),
+		),
+	),
+)
+
 func AllowPolicies() []access.Policy {
 	return []access.Policy{
 		PolicyAcmeManager,
@@ -1537,6 +1575,7 @@ func AllowPolicies() []access.Policy {
 		PolicyVipMonitor,
 		PolicyWasmManager,
 		PolicyWasmMonitor,
+		PolicyWorkloadNetdpObjectManager,
 	}
 }
 
@@ -2227,6 +2266,32 @@ var PolicyMap = map[string]map[string]*access.PolicyList{
 			Deny: []access.Policy{},
 			Allow: []access.Policy{
 				PolicyWasmMonitor,
+			},
+		},
+	},
+	"workload_netdp_object": map[string]*access.PolicyList{
+		"apply": &access.PolicyList{
+			Deny: []access.Policy{},
+			Allow: []access.Policy{
+				PolicyWorkloadNetdpObjectManager,
+			},
+		},
+		"list": &access.PolicyList{
+			Deny: []access.Policy{},
+			Allow: []access.Policy{
+				PolicyWorkloadNetdpObjectManager,
+			},
+		},
+		"get": &access.PolicyList{
+			Deny: []access.Policy{},
+			Allow: []access.Policy{
+				PolicyWorkloadNetdpObjectManager,
+			},
+		},
+		"delete": &access.PolicyList{
+			Deny: []access.Policy{},
+			Allow: []access.Policy{
+				PolicyWorkloadNetdpObjectManager,
 			},
 		},
 	},

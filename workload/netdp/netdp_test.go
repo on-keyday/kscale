@@ -39,30 +39,23 @@ func loadForTest(t *testing.T) *Datapath {
 	if _, err := os.Stat(objPath); err != nil {
 		t.Skipf("%s not built (make -C workload/netdp/c)", objPath)
 	}
-	d, err := Load(objPath, nil)
-	if err != nil {
+	// State first (as the agent may learn it before any object arrives), then load:
+	// LoadObject must fill the maps from it.
+	d := New(nil)
+	d.cfg = config{VIP: vip.As4(), NICIfindex: 42}
+	d.lbSrcs = map[[4]byte]bool{lbIP.As4(): true}
+	dest := podDest{Ifindex: 7, PodIP: podIP.As4()}
+	copy(dest.PodMAC[:], podMAC)
+	copy(dest.HostMAC[:], hostMAC)
+	d.in = map[portKey]podDest{{Proto: ipprotoTCP, Port: be16(8080)}: dest}
+	d.out = map[outKey]bool{{PodIP: podIP.As4(), Proto: ipprotoTCP, Port: be16(8080)}: true}
+	if err := d.LoadObject(objPath); err != nil {
 		if errors.Is(err, os.ErrPermission) {
 			t.Skipf("needs CAP_BPF: %v", err)
 		}
 		t.Fatal(err)
 	}
 	t.Cleanup(func() { d.Close() })
-	d.cfg = config{VIP: vip.As4(), NICIfindex: 42}
-	if err := d.writeConfig(); err != nil {
-		t.Fatal(err)
-	}
-	if err := d.SetLBSources([]netip.Addr{lbIP}); err != nil {
-		t.Fatal(err)
-	}
-	dest := podDest{Ifindex: 7, PodIP: podIP.As4()}
-	copy(dest.PodMAC[:], podMAC)
-	copy(dest.HostMAC[:], hostMAC)
-	if err := d.coll.Maps["netdp_ports_in"].Put(portKey{Proto: ipprotoTCP, Port: be16(8080)}, dest); err != nil {
-		t.Fatal(err)
-	}
-	if err := d.coll.Maps["netdp_ports_out"].Put(outKey{PodIP: podIP.As4(), Proto: ipprotoTCP, Port: be16(8080)}, uint8(1)); err != nil {
-		t.Fatal(err)
-	}
 	return d
 }
 
@@ -242,5 +235,51 @@ func TestEgressPassesOtherSourcePorts(t *testing.T) {
 	in := append(eth(hostMAC, podMAC), append(ipHeader(podIP, clientIP, 6, len(seg)), seg...)...)
 	if ret, _ := run(t, d.coll.Programs["netdp_egress"], in); ret != tcActOK {
 		t.Fatalf("verdict %d, want TC_ACT_OK (egress outside the declared ports is not ours)", ret)
+	}
+}
+
+func TestReloadRefillsMapsAndResetsCounters(t *testing.T) {
+	d := loadForTest(t)
+	if ret, _ := run(t, d.coll.Programs["netdp_ingress"], ipipFrame(lbIP, 8080)); ret != tcActRedirect {
+		t.Fatalf("before reload: verdict %d", ret)
+	}
+	first := d.coll
+	if err := d.LoadObject(objPath); err != nil {
+		t.Fatal(err)
+	}
+	if d.coll == first {
+		t.Fatal("LoadObject did not replace the collection")
+	}
+	if ok, obj := d.Loaded(); !ok || obj != objPath {
+		t.Fatalf("Loaded() = %v, %q", ok, obj)
+	}
+	// The new object's maps came from the kept state: steering still works.
+	ret, out := run(t, d.coll.Programs["netdp_ingress"], ipipFrame(lbIP, 8080))
+	if ret != tcActRedirect {
+		t.Fatalf("after reload: verdict %d, want TC_ACT_REDIRECT", ret)
+	}
+	verifyIPv4AndTCP(t, out[:len(ipipFrame(lbIP, 8080))-20], clientIP, podIP)
+	if n := counter(t, d, "in_steered"); n != 1 {
+		t.Errorf("in_steered after reload = %d, want 1 (counters restart with the object)", n)
+	}
+}
+
+func TestStateBeforeLoadIsKept(t *testing.T) {
+	d := New(nil)
+	if err := d.SetVIP(vip); err != nil {
+		t.Fatal(err)
+	}
+	if err := d.SetLBSources([]netip.Addr{lbIP}); err != nil {
+		t.Fatal(err)
+	}
+	if ok, _ := d.Loaded(); ok {
+		t.Fatal("nothing loaded yet")
+	}
+	c, err := d.Counters()
+	if err != nil || c["in_steered"] != 0 {
+		t.Fatalf("counters without an object = %v, %v", c, err)
+	}
+	if d.cfg.VIP != vip.As4() || !d.lbSrcs[lbIP.As4()] {
+		t.Fatal("state set before load was not recorded")
 	}
 }

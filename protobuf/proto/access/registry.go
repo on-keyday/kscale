@@ -212,6 +212,14 @@ var dtoFactories = map[string]func() DTO{
 	"ResourceWasmModuleActionGetResponseDTO":                 func() DTO { return &ResourceWasmModuleActionGetResponseDTO{} },
 	"ResourceWasmModuleActionListArgsDTO":                    func() DTO { return &ResourceWasmModuleActionListArgsDTO{} },
 	"ResourceWasmModuleActionListResponseDTO":                func() DTO { return &ResourceWasmModuleActionListResponseDTO{} },
+	"ResourceWorkloadNetdpObjectActionApplyArgsDTO":          func() DTO { return &ResourceWorkloadNetdpObjectActionApplyArgsDTO{} },
+	"ResourceWorkloadNetdpObjectActionApplyResponseDTO":      func() DTO { return &ResourceWorkloadNetdpObjectActionApplyResponseDTO{} },
+	"ResourceWorkloadNetdpObjectActionDeleteArgsDTO":         func() DTO { return &ResourceWorkloadNetdpObjectActionDeleteArgsDTO{} },
+	"ResourceWorkloadNetdpObjectActionDeleteResponseDTO":     func() DTO { return &ResourceWorkloadNetdpObjectActionDeleteResponseDTO{} },
+	"ResourceWorkloadNetdpObjectActionGetArgsDTO":            func() DTO { return &ResourceWorkloadNetdpObjectActionGetArgsDTO{} },
+	"ResourceWorkloadNetdpObjectActionGetResponseDTO":        func() DTO { return &ResourceWorkloadNetdpObjectActionGetResponseDTO{} },
+	"ResourceWorkloadNetdpObjectActionListArgsDTO":           func() DTO { return &ResourceWorkloadNetdpObjectActionListArgsDTO{} },
+	"ResourceWorkloadNetdpObjectActionListResponseDTO":       func() DTO { return &ResourceWorkloadNetdpObjectActionListResponseDTO{} },
 }
 
 // NewDTOByName returns an empty pointer to the named DTO type, ready

@@ -1,7 +1,7 @@
 #!/bin/sh
 # Phase 6: VIP -> a CRI workload in its OWN netns (network "pod"). The kscale CNI
 # plugin wires the pod (veth + 10.200.0.0/24 IP + gateway neighbor); the workload
-# eBPF datapath (workloadagent --netdp-obj) decaps l4lb's IPIP on eth0 for the
+# eBPF datapath (workloadagent; object delivered from the CP) decaps l4lb's IPIP on eth0 for the
 # declared port, DNATs VIP -> pod IP and redirects into the pod; the pod's reply
 # is SNATed back to the VIP on its host veth and leaves eth0 directly (DSR).
 #
@@ -9,7 +9,11 @@
 #   - VIP:8080 reaches the pod 3/3, and :8080 is NOT listening in the node netns
 #     (it really is a separate netns);
 #   - VIP:8081 (no pod owns it) still takes popcache's kernel path -> refused;
-#   - IPIP from a non-l4lb source is not decapped (datapath counter in_not_lb_src).
+#   - IPIP from a non-l4lb source is not decapped (datapath counter in_not_lb_src);
+#   - the datapath object comes from the CP (cplane-file -> node-file ->
+#     workload-netdp-object, selected BEFORE the file lands, so the agent must
+#     load it on arrival), and replacing it with another object keeps VIP:8080
+#     serving (programs swapped under the live tcx links, maps refilled).
 # Also runs the netdp BPF_PROG_TEST_RUN unit tests inside the privileged node.
 # SYSTEM docker only; needs registry access (busybox, pause).
 set -e
@@ -22,13 +26,29 @@ WL=node1.workload.dp.system.kscale.local
 cli() { $DC run --rm cli cli --addr 10.5.0.2:9443 --data /data --role admin "$@" 2>&1 | grep -vE "level=INFO|Container kscale"; }
 must() { out=$(cli "$@"); echo "$out" | grep -q '^ALLOWED' || { echo "setup op failed: $*" >&2; echo "$out" >&2; exit 1; }; }
 ex() { $DC exec -T "$1" sh -c "$2"; }
+waitlog() { # $1 regex in the workload node's log, $2 what (for the error)
+	i=0
+	until $DC logs workloadnode 2>&1 | grep -qE "$1"; do
+		i=$((i+1)); [ $i -gt 40 ] && { echo "timed out waiting for $2" >&2; $DC logs --tail 40 workloadnode >&2; exit 1; }
+		sleep 3
+	done
+}
+curl3() { # -> number of 3 VIP:8080 tries that returned workload-ok
+	n=0
+	for i in 1 2 3; do
+		body=$(ex client "curl -s -m 3 http://$VIP:8080/" || true)
+		echo "  try $i: ${body:-<no response>}" >&2
+		[ "$body" = "workload-ok" ] && n=$((n+1))
+	done
+	echo $n
+}
 counter() { # sum a netdp counter across CPUs (index per the C enum)
 	ex workloadnode "bpftool -j map dump name netdp_counters" |
 		python3 -c "import json,sys; d=json.load(sys.stdin); print(sum(v['value'] for e in d if e['formatted']['key']==$1 for v in e['formatted']['values']))"
 }
 
 sh ./phase3_dummy.sh
-echo "=== start workload node (containerd + kscale-cni + workloadagent --netdp-obj) ==="
+echo "=== start workload node (containerd + kscale-cni + workloadagent) ==="
 $DC --profile workload-cri up --build -d workloadnode
 i=0
 until cli --resource node --op list | grep -q "\"$WL\""; do
@@ -36,8 +56,17 @@ until cli --resource node --op list | grep -q "\"$WL\""; do
 	sleep 3
 done
 echo "workload node joined: $WL"
-# The datapath attaches its ingress program to the bound interface.
+# The datapath attaches its ingress program to the bound interface (recorded now,
+# attached once the object loads).
 must --resource interface --op apply --node $WL --interface eth0
+
+echo "=== datapath object from the CP: select first, deliver second ==="
+must --resource cplane-file --op upload --file-name netdp.o --content /objs/netdp.o
+must --resource workload-netdp-object --op apply --node $WL --object netdp.o
+waitlog 'netdp: object selected; waiting for the file.*netdp.o' "the agent to stage the selection"
+must --resource node-file --op apply --name netdp-wl --node $WL --cplane-file netdp.o --save-as netdp.o
+waitlog 'netdp: object loaded.*netdp.o.*replaced=false' "the object to load on arrival"
+echo "ok: loaded on arrival"
 
 echo "=== container apply: busybox httpd :8080, network pod ==="
 must --resource container --op apply --name web --node workload/node1 \
@@ -61,6 +90,14 @@ for i in 1 2 3; do
 	echo "try $i: ${body:-<no response>}"
 	[ "$body" = "workload-ok" ] && ok=$((ok+1))
 done
+
+echo "=== replace the datapath object (netdp-v2.o) while serving ==="
+must --resource cplane-file --op upload --file-name netdp-v2.o --content /objs/netdp.o
+must --resource node-file --op apply --name netdp-wl-v2 --node $WL --cplane-file netdp-v2.o --save-as netdp-v2.o
+must --resource workload-netdp-object --op apply --node $WL --object netdp-v2.o
+waitlog 'netdp: object loaded.*netdp-v2.o.*replaced=true' "the object swap"
+swap_ok=$(curl3)
+echo "after swap: $swap_ok/3"
 
 echo "=== client -> VIP:8081 (no pod owns it; expect refused via popcache's kernel path) ==="
 ex client "curl -s -m 3 -o /dev/null http://$VIP:8081/; echo \"curl exit=\$? (7=refused, 28=timeout)\"" || true
@@ -98,6 +135,7 @@ fi
 echo "=== result ==="
 fail=0
 [ "$ok" -eq 3 ] && echo "PASS: 3/3 VIP:8080 reached the pod-network workload" || { echo "FAIL: $ok/3 VIP:8080"; fail=1; }
+[ "$swap_ok" -eq 3 ] && echo "PASS: 3/3 VIP:8080 after replacing the datapath object" || { echo "FAIL: $swap_ok/3 after object swap"; fail=1; }
 [ "$spoof_ok" -eq 1 ] && echo "PASS: spoofed IPIP left alone" || { echo "FAIL: spoofed IPIP not counted"; fail=1; }
 [ "$prom_ok" -eq 1 ] && echo "PASS: netdp counters on /metrics" || { echo "FAIL: netdp counters not exported"; fail=1; }
 [ "$unit_ok" -eq 1 ] && echo "PASS: netdp unit tests" || { echo "FAIL: netdp unit tests"; fail=1; }

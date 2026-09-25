@@ -47,7 +47,14 @@ message WorkloadServiceListContainersResponse {
     repeated WorkloadServiceContainerStatus containers = 1;
 }
 
+// SetNetdpObject selects the pod-network eBPF object by name in the node's file
+// store (the workload_netdp_object resource).
+message WorkloadServiceSetNetdpObjectRequest {
+    string object = 1;
+}
+
 service WorkloadService {
     rpc ApplyContainers(WorkloadServiceApplyContainersRequest) returns (google.protobuf.Empty);
     rpc ListContainers(google.protobuf.Empty) returns (WorkloadServiceListContainersResponse);
+    rpc SetNetdpObject(WorkloadServiceSetNetdpObjectRequest) returns (google.protobuf.Empty);
 }
