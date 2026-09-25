@@ -63,6 +63,26 @@ services:
         ipv4_address: 10.5.0.4
     depends_on: [cp]
 
+  # Stand-in for a host-network workload container on the popcache node (Phase 4):
+  # shares popcache's netns exactly like a CRI sandbox with NamespaceMode_NODE shares
+  # the node's, so VIP:8080 traffic that l4lb IPIP-forwards (every TCP port) and
+  # popcache decaps onto the VIP-on-lo lands here. A tiny HTTP/1.0 responder on :8080.
+  workload:
+    image: kscale-e2e
+    network_mode: "service:popcache"
+    command:
+      - sh
+      - -c
+      - |
+        cat > /r.sh <<'EOF'
+        #!/bin/sh
+        printf 'HTTP/1.0 200 OK\r\nContent-Type: text/plain\r\n\r\nworkload-ok\n'
+        EOF
+        chmod +x /r.sh
+        exec nc -lk -p 8080 -e /r.sh
+    depends_on: [popcache]
+    profiles: ["workload"]
+
   # One-shot admin client (run with `docker compose run --rm cli ...`).
   cli:
     image: kscale-e2e
