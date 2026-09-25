@@ -5,18 +5,22 @@
 // agent reconciles that set onto the node's container runtime (containerd) over
 // CRI. See notes/ai/2026_07_07_container_workload_cri_design.md.
 //
-// The l4lb-shaped Hooks (VIP / secret / interface / MTU / eBPF) are all no-ops
-// here; the container lifecycle lives entirely in the workload.Engine behind
-// WorkloadService and a periodic converge that honours restart policy and heals
-// crashes without a fresh Apply.
+// The container lifecycle lives in the workload.Engine behind WorkloadService and
+// a periodic converge that honours restart policy and heals crashes without a
+// fresh Apply. With --netdp-obj, the agent also runs the pod-network eBPF
+// datapath (workload/netdp): the VIP / interface / remote (l4lb fronts) hooks
+// feed it, and every converge re-syncs it with the running pod endpoints. The
+// secret / MTU / destination hooks stay no-ops.
 package main
 
 import (
 	"context"
 	"flag"
+	"fmt"
 	"log/slog"
 	"net/netip"
 	"os"
+	"sync"
 	"time"
 
 	"github.com/on-keyday/kscale/cri"
@@ -30,6 +34,7 @@ import (
 	"github.com/on-keyday/kscale/rpc"
 	"github.com/on-keyday/kscale/stat"
 	"github.com/on-keyday/kscale/workload"
+	"github.com/on-keyday/kscale/workload/netdp"
 )
 
 var domain = "kscale.local"
@@ -44,6 +49,7 @@ func main() {
 	convergeEvery := fs.Duration("converge-interval", 30*time.Second, "periodic reconcile interval (restart policy + crash healing)")
 	fileDir := fs.String("file-dir", "", "node-local file store (default <data>/dp_files)")
 	domainFlag := fs.String("ca-domain", domain, "CA domain — must match the control plane's --ca-domain")
+	netdpObj := fs.String("netdp-obj", "", "workload eBPF datapath object (workload/netdp/c/netdp.o); empty = no pod-network ingress. Needs CAP_BPF + CAP_NET_ADMIN")
 	_ = fs.Parse(os.Args[1:])
 	domain = *domainFlag
 
@@ -54,6 +60,19 @@ func main() {
 	// RPC that finds it down errors and the next converge retries.
 	criClient := cri.NewClient(*criSocket, logger)
 	engine := workload.NewEngine(criClient, logger)
+
+	// An explicitly requested datapath that cannot load is fatal: silently running
+	// without it would leave every pod-network port unreachable.
+	var dp *netdp.Datapath
+	if *netdpObj != "" {
+		var err error
+		if dp, err = netdp.Load(*netdpObj, logger); err != nil {
+			logger.Error("workloadagent: netdp", "error", err)
+			os.Exit(1)
+		}
+		defer dp.Close()
+	}
+	epSync := &endpointSync{engine: engine, dp: dp, logger: logger}
 
 	// Periodic converge: honour restart=always + heal crashed sandboxes using the
 	// last-applied desired set, independent of control-plane pushes.
@@ -68,13 +87,14 @@ func main() {
 				if err := engine.Converge(ctx); err != nil {
 					logger.Warn("workload: periodic converge", "error", err)
 				}
+				epSync.run(ctx)
 			}
 		}
 	})
 
 	lc := stat.NewAppLifecycle()
 	lc.SetRunning() // operational from boot — the converge loop runs immediately (no start gate)
-	hooks := &workloadHooks{logger: logger, promMetrics: &stat.PromMetrics{}, lc: lc}
+	hooks := &workloadHooks{logger: logger, promMetrics: &stat.PromMetrics{}, lc: lc, dp: dp}
 	if err := dataplane.Run(ctx, dataplane.Config{
 		Addr:    *addr,
 		DataDir: *dataDir,
@@ -84,7 +104,7 @@ func main() {
 		FileDir: *fileDir,
 		Hooks:   hooks,
 		RegisterExtra: func(mgr *rpc.RPCManager) {
-			pb.RegisterWorkloadServiceServer(mgr, &workloadService{engine: engine, logger: logger})
+			pb.RegisterWorkloadServiceServer(mgr, &workloadService{engine: engine, sync: epSync, logger: logger})
 		},
 	}, logger); err != nil && ctx.Err() == nil {
 		logger.Error("workloadagent exited", "error", err)
@@ -96,7 +116,41 @@ func main() {
 type workloadService struct {
 	pb.UnimplementedWorkloadServiceServer
 	engine *workload.Engine
+	sync   *endpointSync
 	logger *slog.Logger
+}
+
+// endpointSync pushes the engine's running pod endpoints into the datapath. It
+// runs after every Apply and periodic converge, so a pod that just got its IP
+// (or went away) is reflected within one converge interval.
+type endpointSync struct {
+	engine *workload.Engine
+	dp     *netdp.Datapath // nil = datapath disabled
+	logger *slog.Logger
+
+	mu   sync.Mutex // run is called from the converge loop and the RPC handler
+	last string
+}
+
+func (s *endpointSync) run(ctx context.Context) {
+	if s.dp == nil {
+		return
+	}
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	eps, err := s.engine.Endpoints(ctx)
+	if err != nil {
+		s.logger.Warn("netdp: endpoints", "error", err)
+	}
+	if err := s.dp.SetEndpoints(eps); err != nil {
+		s.logger.Warn("netdp: sync", "error", err)
+	}
+	if ports, err := s.dp.Ports(); err == nil {
+		if cur := fmt.Sprint(ports); cur != s.last {
+			s.logger.Info("netdp: steered ports", "ports", ports)
+			s.last = cur
+		}
+	}
 }
 
 func (s *workloadService) ApplyContainers(ctx context.Context, req *pb.WorkloadServiceApplyContainersRequest) (*wkt.Empty, error) {
@@ -110,9 +164,13 @@ func (s *workloadService) ApplyContainers(ctx context.Context, req *pb.WorkloadS
 			Env:     c.Env,
 			Mounts:  c.Mounts,
 			Restart: c.Restart,
+			Network: c.Network,
+			Ports:   c.Ports,
 		})
 	}
-	if err := s.engine.Apply(ctx, specs); err != nil {
+	err := s.engine.Apply(ctx, specs)
+	s.sync.run(ctx) // also after a partial failure: the converged part is live
+	if err != nil {
 		return nil, err
 	}
 	return &wkt.Empty{}, nil
@@ -136,11 +194,12 @@ func (s *workloadService) ListContainers(ctx context.Context, _ *wkt.Empty) (*pb
 	return resp, nil
 }
 
-// workloadHooks satisfies dataplane.Hooks. The workload agent has no l4lb/popcache
-// dataplane, so the traffic-plane methods are no-ops; container lifecycle is
-// entirely in the workload.Engine.
+// workloadHooks satisfies dataplane.Hooks. VIP / interface / remote feed the
+// pod-network datapath when it is enabled (dp != nil) and are no-ops otherwise;
+// the rest are no-ops (no l4lb/popcache dataplane here).
 type workloadHooks struct {
 	logger *slog.Logger
+	dp     *netdp.Datapath
 	// promMetrics is the node's prometheus surface. The workload agent has no
 	// app-specific counters, but a NON-NIL PromMetrics is what makes the substrate
 	// register the /metrics (StreamMagicHTTP) handler; returning nil leaves the CP's
@@ -159,12 +218,36 @@ type workloadHooks struct {
 func (h *workloadHooks) DpType() string                            { return "workload" }
 func (h *workloadHooks) Start(ctx context.Context) error           { h.lc.SetRunning(); return nil }
 func (h *workloadHooks) Stop() error                               { h.lc.SetStopped(); return nil }
-func (h *workloadHooks) UpdateVip(netip.Addr, bool) error          { return nil }
 func (h *workloadHooks) SyncSecret([]byte) error                   { return nil }
-func (h *workloadHooks) BindInterface(string) error                { return nil }
 func (h *workloadHooks) UpdateMtu(uint16) error                    { return nil }
 func (h *workloadHooks) SetServerID(uint32)                        {}
 func (h *workloadHooks) UpdateDestinations([]stat.DestEntry) error { return nil }
-func (h *workloadHooks) UpdateRemote([]stat.DestEntry) error       { return nil }
-func (h *workloadHooks) Stats() []*pbstat.Stats                    { return []*pbstat.Stats{h.lc.Stat()} }
-func (h *workloadHooks) PromMetrics() *stat.PromMetrics            { return h.promMetrics }
+
+func (h *workloadHooks) UpdateVip(vip netip.Addr, _ bool) error {
+	if h.dp == nil || !vip.IsValid() {
+		return nil
+	}
+	return h.dp.SetVIP(vip)
+}
+
+func (h *workloadHooks) BindInterface(iface string) error {
+	if h.dp == nil {
+		return nil
+	}
+	return h.dp.BindInterface(iface)
+}
+
+// UpdateRemote receives the l4lb fronts (peering l4lb -> workload): the only
+// sources whose IPIP the datapath will decap.
+func (h *workloadHooks) UpdateRemote(remotes []stat.DestEntry) error {
+	if h.dp == nil {
+		return nil
+	}
+	srcs := make([]netip.Addr, 0, len(remotes))
+	for _, r := range remotes {
+		srcs = append(srcs, r.IPAddr)
+	}
+	return h.dp.SetLBSources(srcs)
+}
+func (h *workloadHooks) Stats() []*pbstat.Stats         { return []*pbstat.Stats{h.lc.Stat()} }
+func (h *workloadHooks) PromMetrics() *stat.PromMetrics { return h.promMetrics }
