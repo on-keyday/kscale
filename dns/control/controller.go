@@ -16,6 +16,7 @@ import (
 	"sort"
 	"sync"
 
+	"github.com/on-keyday/kscale/consts"
 	"github.com/on-keyday/kscale/dns/dnsmetrics"
 	"github.com/on-keyday/kscale/dns/server"
 	pbstat "github.com/on-keyday/kscale/protobuf/proto/stat"
@@ -55,8 +56,12 @@ func (c *Controller) Server() server.Server { return c.srv }
 func (c *Controller) DpType() string { return "dns" }
 
 // Start brings up the DNS listener (built-in server); Cloudflare's Start reconciles
-// records via the API.
+// records via the API. Idempotent: a Start while running is a no-op (it used to
+// fail "already running" AND flip the lifecycle to Error on a healthy server).
 func (c *Controller) Start(ctx context.Context) error {
+	if c.lc.Status() == consts.AppStatusRunning {
+		return nil
+	}
 	if err := c.srv.Start(ctx); err != nil {
 		c.lc.SetError()
 		return err

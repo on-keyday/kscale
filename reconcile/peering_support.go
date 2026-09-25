@@ -5,9 +5,21 @@
 package reconcile
 
 import (
+	"time"
+
 	pbstat "github.com/on-keyday/kscale/protobuf/proto/stat"
 	"github.com/on-keyday/kscale/stat"
 )
+
+// peeringStartupGrace is how long after a peering controller starts (= after a CP
+// start) a push with NO sources is held back. The stat cache starts empty and fills
+// as nodes stream in; a target whose own stats arrive first would otherwise be
+// pushed an empty source set — on a live CP restart the l4lb dest table went
+// self-only (no popcache backends) for ~21s until the popcache stats landed
+// (notes/bugs/bug_2026_09_25_cp_restart_l4lb_self_only_dests.md). After the grace an
+// empty set is pushed as before (all sources really gone). Partial sets are still
+// pushed during the grace: they shrink the table but keep serving.
+const peeringStartupGrace = 30 * time.Second
 
 // DestStatSource is the per-node stat snapshot the peering reconcile reads
 // (satisfied by service/stats.Cache; an interface to avoid the import).

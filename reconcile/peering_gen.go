@@ -22,6 +22,7 @@ import (
 func PeeringPopcacheL4Lb(ctx context.Context, cache DestStatSource, broker *dpbroker.Broker, logger *slog.Logger) {
 	var mu sync.Mutex
 	mgrs := map[string]*stat.DestManager{}
+	started := time.Now()
 
 	reconcile := func() {
 		mu.Lock()
@@ -43,6 +44,13 @@ func PeeringPopcacheL4Lb(ctx context.Context, cache DestStatSource, broker *dpbr
 		for _, p := range broker.List("l4lb") {
 			cn := p.CommonName()
 			live[cn] = struct{}{}
+			// Right after the CP starts, the stat cache is empty and fills node by node,
+			// so no sources yet usually means "not reported yet", not "all gone":
+			// hold off rather than shrink the target to nothing (see peeringStartupGrace).
+			if len(sources) == 0 && time.Since(started) < peeringStartupGrace {
+				logger.Debug("peering: no sources yet during startup grace; not pushing", "node", cn)
+				continue
+			}
 			dests := sources
 			// dest[0] = this target's own front (the eBPF source-fill slot).
 			self, err := destFromBatch(cache.Get(cn))
@@ -100,6 +108,7 @@ func PeeringPopcacheL4Lb(ctx context.Context, cache DestStatSource, broker *dpbr
 func PeeringL4LbPopcache(ctx context.Context, cache DestStatSource, broker *dpbroker.Broker, logger *slog.Logger) {
 	var mu sync.Mutex
 	mgrs := map[string]*stat.DestManager{}
+	started := time.Now()
 
 	reconcile := func() {
 		mu.Lock()
@@ -121,6 +130,13 @@ func PeeringL4LbPopcache(ctx context.Context, cache DestStatSource, broker *dpbr
 		for _, p := range broker.List("popcache") {
 			cn := p.CommonName()
 			live[cn] = struct{}{}
+			// Right after the CP starts, the stat cache is empty and fills node by node,
+			// so no sources yet usually means "not reported yet", not "all gone":
+			// hold off rather than shrink the target to nothing (see peeringStartupGrace).
+			if len(sources) == 0 && time.Since(started) < peeringStartupGrace {
+				logger.Debug("peering: no sources yet during startup grace; not pushing", "node", cn)
+				continue
+			}
 			dests := sources
 			mgr := mgrs[cn]
 			if mgr == nil {
@@ -171,6 +187,7 @@ func PeeringL4LbPopcache(ctx context.Context, cache DestStatSource, broker *dpbr
 func PeeringL4LbWorkload(ctx context.Context, cache DestStatSource, broker *dpbroker.Broker, logger *slog.Logger) {
 	var mu sync.Mutex
 	mgrs := map[string]*stat.DestManager{}
+	started := time.Now()
 
 	reconcile := func() {
 		mu.Lock()
@@ -192,6 +209,13 @@ func PeeringL4LbWorkload(ctx context.Context, cache DestStatSource, broker *dpbr
 		for _, p := range broker.List("workload") {
 			cn := p.CommonName()
 			live[cn] = struct{}{}
+			// Right after the CP starts, the stat cache is empty and fills node by node,
+			// so no sources yet usually means "not reported yet", not "all gone":
+			// hold off rather than shrink the target to nothing (see peeringStartupGrace).
+			if len(sources) == 0 && time.Since(started) < peeringStartupGrace {
+				logger.Debug("peering: no sources yet during startup grace; not pushing", "node", cn)
+				continue
+			}
 			dests := sources
 			mgr := mgrs[cn]
 			if mgr == nil {

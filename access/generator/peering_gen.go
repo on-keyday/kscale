@@ -66,7 +66,8 @@ func emitPeering(w *Writer, s *PeeringSpec) {
 	w.Printf("func %s(ctx context.Context, cache DestStatSource, broker *dpbroker.Broker, logger *slog.Logger) {\n", fn)
 	w.Indented(func(w *Writer) {
 		w.Printf("var mu sync.Mutex\n")
-		w.Printf("mgrs := map[string]*stat.DestManager{}\n\n")
+		w.Printf("mgrs := map[string]*stat.DestManager{}\n")
+		w.Printf("started := time.Now()\n\n")
 		w.Printf("reconcile := func() {\n")
 		w.Indented(func(w *Writer) {
 			w.Printf("mu.Lock()\n")
@@ -94,6 +95,15 @@ func emitPeering(w *Writer, s *PeeringSpec) {
 			w.Indented(func(w *Writer) {
 				w.Printf("cn := p.CommonName()\n")
 				w.Printf("live[cn] = struct{}{}\n")
+				w.Printf("// Right after the CP starts, the stat cache is empty and fills node by node,\n")
+				w.Printf("// so no sources yet usually means \"not reported yet\", not \"all gone\":\n")
+				w.Printf("// hold off rather than shrink the target to nothing (see peeringStartupGrace).\n")
+				w.Printf("if len(sources) == 0 && time.Since(started) < peeringStartupGrace {\n")
+				w.Indented(func(w *Writer) {
+					w.Printf("logger.Debug(%q, \"node\", cn)\n", "peering: no sources yet during startup grace; not pushing")
+					w.Printf("continue\n")
+				})
+				w.Printf("}\n")
 				w.Printf("dests := sources\n")
 				if s.PrependSelf {
 					w.Printf("// dest[0] = this target's own front (the eBPF source-fill slot).\n")

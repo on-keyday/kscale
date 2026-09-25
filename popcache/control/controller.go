@@ -87,7 +87,16 @@ func (c *Controller) DpType() string { return "popcache" }
 
 // Start satisfies dataplane.Hooks (StartDataplane) — popcache's "dataplane" is
 // the HTTP cache server; bring up its listeners.
+// Start is idempotent: a Start while already running (e.g. the CP's node_run
+// reconcile re-issuing it after a CP restart, before this node's stats reached
+// the fresh CP) is a no-op rather than an "already running" error.
 func (c *Controller) Start(ctx context.Context) error {
+	c.mu.Lock()
+	started := c.started
+	c.mu.Unlock()
+	if started {
+		return nil
+	}
 	if err := c.srv.Start(ctx); err != nil {
 		c.lc.SetError()
 		return err

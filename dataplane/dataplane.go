@@ -218,6 +218,9 @@ func serve(ctx context.Context, p *peer.Peer, cfg Config, cn, fileDir string, lo
 	// fires. The parent ctx still cancels this as a child, so process shutdown is
 	// unaffected. Without this, a silently-dead CP connection wedged serve()
 	// forever (the endpoint GC reaped the connection but never unblocked accept).
+	// runCtx keeps the agent-lifetime ctx for what must outlive this connection:
+	// the dataplane Start (see dpService.StartDataplane).
+	runCtx := ctx
 	ctx = p.Context()
 	mgr := rpc.NewRPCManager()
 	// Assign this node a stable ServerID derived from its CommonName (QUIC-LB
@@ -225,7 +228,7 @@ func serve(ctx context.Context, p *peer.Peer, cfg Config, cn, fileDir string, lo
 	// it from the stable CN here is self-consistent (the node's connid generator and
 	// its reported LbId agree) and needs no extra RPC round-trip.
 	cfg.Hooks.SetServerID(serverIDFromCN(cn))
-	pb.RegisterDataplaneServiceServer(mgr, &dpService{hooks: cfg.Hooks, fileDir: fileDir, cn: cn, peer: p, logger: logger})
+	pb.RegisterDataplaneServiceServer(mgr, &dpService{hooks: cfg.Hooks, fileDir: fileDir, cn: cn, peer: p, runCtx: runCtx, logger: logger})
 	if cfg.RegisterExtra != nil {
 		cfg.RegisterExtra(mgr)
 	}
@@ -496,7 +499,9 @@ type dpService struct {
 	fileDir string
 	cn      string
 	peer    *peer.Peer
-	logger  *slog.Logger
+	// runCtx is the agent-lifetime ctx (Run's), not the connection's.
+	runCtx context.Context
+	logger *slog.Logger
 }
 
 var _ pb.DataplaneServiceServer = (*dpService)(nil)
@@ -715,8 +720,13 @@ func (s *dpService) RemoveDir(ctx context.Context, req *pb.DataplaneServiceRemov
 	return &wkt.Empty{}, nil
 }
 
+// StartDataplane starts the dataplane under the AGENT's lifetime, not this RPC's
+// connection: dps hand the ctx to their servers (popcache / dns listeners), so the
+// connection ctx made a CP restart close every listener while the lifecycle still
+// said Running — nothing ever restarted them. The dataplane now runs until
+// StopDataplane or the agent exits, exactly as with --auto-start.
 func (s *dpService) StartDataplane(ctx context.Context, _ *wkt.Empty) (*wkt.Empty, error) {
-	return &wkt.Empty{}, s.hooks.Start(ctx)
+	return &wkt.Empty{}, s.hooks.Start(s.runCtx)
 }
 
 func (s *dpService) StopDataplane(ctx context.Context, _ *wkt.Empty) (*wkt.Empty, error) {
