@@ -91,6 +91,22 @@ for i in 1 2 3; do
 	[ "$body" = "workload-ok" ] && ok=$((ok+1))
 done
 
+echo "=== interface applied_on is attributed per declaration ==="
+# popcache and the workload node share a netns and the NIC name (eth0); each must
+# show up only under its own interface declaration.
+iface_json=$(cli --resource interface --op list | sed -n '/^{/,$p')
+echo "$iface_json" | python3 -c "
+import json,sys
+items={i['node']: i.get('applied_on') or [] for i in json.load(sys.stdin)['items']}
+for k,v in sorted(items.items()): print('  ', k, '->', v)
+"
+iface_ok=$(echo "$iface_json" | python3 -c "
+import json,sys
+items={i['node']: i.get('applied_on') or [] for i in json.load(sys.stdin)['items']}
+pop='node1.popcache.dp.system.kscale.local'; wl='$WL'
+print(1 if items.get(wl)==[wl] and wl not in items.get(pop,[]) and pop in items.get(pop,[]) else 0)
+")
+
 echo "=== replace the datapath object (netdp-v2.o) while serving ==="
 must --resource cplane-file --op upload --file-name netdp-v2.o --content /objs/netdp.o
 must --resource node-file --op apply --name netdp-wl-v2 --node $WL --cplane-file netdp-v2.o --save-as netdp-v2.o
@@ -136,6 +152,7 @@ echo "=== result ==="
 fail=0
 [ "$ok" -eq 3 ] && echo "PASS: 3/3 VIP:8080 reached the pod-network workload" || { echo "FAIL: $ok/3 VIP:8080"; fail=1; }
 [ "$swap_ok" -eq 3 ] && echo "PASS: 3/3 VIP:8080 after replacing the datapath object" || { echo "FAIL: $swap_ok/3 after object swap"; fail=1; }
+[ "$iface_ok" = "1" ] && echo "PASS: interface applied_on attributed per declaration" || { echo "FAIL: interface applied_on mixes nodes"; fail=1; }
 [ "$spoof_ok" -eq 1 ] && echo "PASS: spoofed IPIP left alone" || { echo "FAIL: spoofed IPIP not counted"; fail=1; }
 [ "$prom_ok" -eq 1 ] && echo "PASS: netdp counters on /metrics" || { echo "FAIL: netdp counters not exported"; fail=1; }
 [ "$unit_ok" -eq 1 ] && echo "PASS: netdp unit tests" || { echo "FAIL: netdp unit tests"; fail=1; }

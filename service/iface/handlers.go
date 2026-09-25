@@ -11,6 +11,7 @@ import (
 	"sort"
 	"sync"
 
+	"github.com/on-keyday/kscale/dpbroker"
 	pb "github.com/on-keyday/kscale/protobuf/proto"
 	pbaccess "github.com/on-keyday/kscale/protobuf/proto/access"
 )
@@ -90,12 +91,22 @@ func (d DriftLister) Desired() []string {
 // status). Generated as reconcile.InterfaceObserver. Mirrors the vip pattern.
 type Observer interface {
 	AppliedNodes(iface string) []string
+	ObservedSets() map[string][]string // node -> bound interfaces it reports
+}
+
+// NodeLister gives each connected node's dp_type (satisfied by *dpbroker.Broker).
+type NodeLister interface {
+	Nodes() []dpbroker.NodeInfo
 }
 
 type Handlers struct {
 	pb.UnimplementedInterfaceServiceServer
 	Store    *Store
 	Observer Observer
+	// Broker, if set, lets List attribute each node's bound interface to the ONE
+	// declaration that targets it (see attributeAppliedOn). Without it applied_on
+	// falls back to "every node binding an interface of this name".
+	Broker NodeLister
 	// ConfirmPush, set by the control plane, returns the resource's current per-node
 	// reconcile push error (nil if all good). Called right after notify() so apply
 	// reports a failed push synchronously instead of a silent OK. Optional.
@@ -122,10 +133,52 @@ func (h *Handlers) Apply(ctx context.Context, req *pbaccess.ResourceInterfaceAct
 
 func (h *Handlers) List(ctx context.Context, _ *pbaccess.ResourceInterfaceActionListArgsDTO) (*pbaccess.ResourceInterfaceActionListResponseDTO, error) {
 	items := h.Store.Desired()
-	for _, it := range items {
-		it.AppliedOn = h.appliedOn(it.Interface)
+	if h.Observer != nil && h.Broker != nil {
+		dpTypes := map[string]string{}
+		for _, n := range h.Broker.Nodes() {
+			dpTypes[n.CommonName] = n.DpType
+		}
+		attributeAppliedOn(items, h.Observer.ObservedSets(), dpTypes)
+	} else {
+		for _, it := range items {
+			it.AppliedOn = h.appliedOn(it.Interface)
+		}
 	}
 	return &pbaccess.ResourceInterfaceActionListResponseDTO{Items: items}, nil
+}
+
+// attributeAppliedOn fills each declaration's AppliedOn with the nodes it is the
+// most specific match for (the same rule the per-node reconcile uses to pick which
+// value to push) AND that report binding its interface. Matching by interface name
+// alone listed a node under every declaration of the same NIC name — the popcache
+// nodes showed up on the workload entries because both bind enp2s0f1.
+func attributeAppliedOn(items []*pbaccess.ResourceInterfaceActionGetResponseDTO, observed map[string][]string, dpTypes map[string]string) {
+	for _, it := range items {
+		it.AppliedOn = nil
+	}
+	nodes := make([]string, 0, len(observed))
+	for cn := range observed {
+		nodes = append(nodes, cn)
+	}
+	sort.Strings(nodes)
+	for _, cn := range nodes {
+		var best *pbaccess.ResourceInterfaceActionGetResponseDTO
+		bestScore := 0
+		for _, it := range items { // sorted by selector: ties go to the first
+			if s := dpbroker.MatchSelector(it.Node, dpTypes[cn], cn); s > bestScore {
+				best, bestScore = it, s
+			}
+		}
+		if best == nil {
+			continue
+		}
+		for _, bound := range observed[cn] {
+			if bound == best.Interface {
+				best.AppliedOn = append(best.AppliedOn, cn)
+				break
+			}
+		}
+	}
 }
 
 func (h *Handlers) Delete(ctx context.Context, req *pbaccess.ResourceInterfaceActionDeleteArgsDTO) (*pbaccess.ResourceInterfaceActionDeleteResponseDTO, error) {

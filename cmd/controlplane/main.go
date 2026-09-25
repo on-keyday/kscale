@@ -61,7 +61,6 @@ import (
 	"github.com/on-keyday/kscale/service/expectednode"
 	"github.com/on-keyday/kscale/service/iface"
 	"github.com/on-keyday/kscale/service/l4lbobject"
-	"github.com/on-keyday/kscale/service/workloadnetdpobject"
 	"github.com/on-keyday/kscale/service/logs"
 	"github.com/on-keyday/kscale/service/monitorchat"
 	"github.com/on-keyday/kscale/service/mtu"
@@ -74,6 +73,7 @@ import (
 	"github.com/on-keyday/kscale/service/userhierarchyauthority"
 	"github.com/on-keyday/kscale/service/vip"
 	"github.com/on-keyday/kscale/service/wasmmodule"
+	"github.com/on-keyday/kscale/service/workloadnetdpobject"
 	"github.com/on-keyday/objtrsf/objproto"
 	"github.com/on-keyday/objtrsf/transport"
 	"github.com/on-keyday/objtrsf/trsf"
@@ -536,7 +536,7 @@ func run(ctx context.Context, logger *slog.Logger, args []string) error {
 	// interface: the XDP interface l4lb nodes attach to, reconciled via BindInterface.
 	ifaceStore := iface.NewStore()
 	ifaceObserver := reconcile.NewInterfaceObserver(statCache, broker)
-	service.RegisterInterface(mgr, gd, &iface.Handlers{Store: ifaceStore, Observer: ifaceObserver, ConfirmPush: func() error { return reconcileStatus.ResourceError("interface") }})
+	service.RegisterInterface(mgr, gd, &iface.Handlers{Store: ifaceStore, Observer: ifaceObserver, Broker: broker, ConfirmPush: func() error { return reconcileStatus.ResourceError("interface") }})
 	// expected_node: the declared node inventory (written by the deploy tooling)
 	// plus each node's desired run-state (written by `node start`/`stop`). Feeds
 	// dataplane_node's NotConnected fold-in below; the run-state is converged by

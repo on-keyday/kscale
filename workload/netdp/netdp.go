@@ -109,6 +109,16 @@ func Load(objPath string, logger *slog.Logger) (*Datapath, error) {
 	return d, nil
 }
 
+// BoundInterface is the NIC the ingress program is attached to ("" if none yet).
+func (d *Datapath) BoundInterface() string {
+	d.mu.Lock()
+	defer d.mu.Unlock()
+	if d.nicLink == nil {
+		return ""
+	}
+	return d.nic
+}
+
 // Loaded reports whether an object is loaded, and its path.
 func (d *Datapath) Loaded() (bool, string) {
 	d.mu.Lock()

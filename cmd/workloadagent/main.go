@@ -323,7 +323,14 @@ func (h *workloadHooks) PromMetrics() *stat.PromMetrics { return h.promMetrics }
 // StreamStats loop), so a "last reported" snapshot would let one caller swallow a
 // change the other never sends — and would race. Seven counters per call is cheap.
 func (h *workloadHooks) Stats() []*pbstat.Stats {
-	entries := []*pbstat.Stats{h.lc.Stat()}
+	// The lifecycle entry also carries the datapath's attached NIC, so the
+	// interface resource's applied_on shows this node (in the SAME entry as the
+	// app status: readers that take the first CdnAppRealtime must still see it).
+	life := h.lc.Stat()
+	if nic := h.dp.BoundInterface(); nic != "" {
+		life.CdnAppRealtime.BoundIfaces = &pbstat.StringList{Items: []string{nic}}
+	}
+	entries := []*pbstat.Stats{life}
 	loaded, _ := h.dp.Loaded()
 	h.promMetrics.WorkloadNetdpEnabled = loaded
 	if !loaded {

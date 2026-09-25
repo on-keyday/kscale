@@ -187,14 +187,20 @@ func nodeLabel(commonName string) string {
 // A per-node reconcile gives each node the value of its MOST specific matching
 // selector, so a per-node override beats a group default beats "*".
 func (b *Broker) MatchSpecificity(selector, dpType string, p *peer.Peer) int {
+	return MatchSelector(selector, dpType, p.CommonName())
+}
+
+// MatchSelector is MatchSpecificity for a node known by its CommonName (no live
+// peer needed) — e.g. to attribute a node's reported state to the declaration
+// that targets it most specifically.
+func MatchSelector(selector, dpType, commonName string) int {
 	switch selector {
 	case "*":
 		return 1
 	case dpType + "/*":
 		return 2
 	}
-	cn := p.CommonName()
-	if selector == cn || selector == dpType+"/"+nodeLabel(cn) || selector == nodeLabel(cn) {
+	if selector == commonName || selector == dpType+"/"+nodeLabel(commonName) || selector == nodeLabel(commonName) {
 		return 3
 	}
 	return 0
