@@ -7,7 +7,7 @@ cd "$(dirname "$0")/../.."
 out=e2e/compose/stage
 rm -rf "$out"
 mkdir -p "$out/bin" "$out/objs"
-for b in controlplane cli dpagent popcacheagent metricsgw katui; do
+for b in controlplane cli dpagent popcacheagent metricsgw katui workloadagent; do
 	CGO_ENABLED=0 go build -o "$out/bin/$b" "./cmd/$b"
 done
 cp l4lb/c/lb.o l4lb/c/init_crypto.o l4lb/c/dummy.o "$out/objs/"
