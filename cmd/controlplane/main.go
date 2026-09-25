@@ -363,12 +363,15 @@ func run(ctx context.Context, logger *slog.Logger, args []string) error {
 	logger.Info("rebuilt authority tree from persisted CA storage", "common_names", len(cns))
 
 	// Bootstrap tokens: admin (policy allows), viewer (policy denies), monitor
-	// (read-only nodewatch agent), and the dataplane agents (l4lb/popcache). The
-	// role/app is carried as the cert app.
+	// (read-only nodewatch agent), and every dataplane kind. The role/app is carried
+	// as the cert app.
 	if *demoSeed {
 		// Demo/dev convenience: seed a short-lived token for every role so a local CP
-		// + agents sharing one --data dir can all enroll without minting.
-		for _, role := range []string{"admin", "viewer", "monitor", "l4lb", "popcache"} {
+		// + agents sharing one --data dir can all enroll without minting. Derived from
+		// the same sources as the authority seeds above (a hand list here had silently
+		// left out workload/dns/router).
+		roles := append(append([]string{}, demo.ManagerRoles...), predefined.DataplaneTypes()...)
+		for _, role := range roles {
 			token, err := caObj.GenerateBootstrapToken(10*time.Minute, role, demo.Domain, time.Hour)
 			if err != nil {
 				return fmt.Errorf("generate %s token: %w", role, err)
@@ -377,7 +380,7 @@ func run(ctx context.Context, logger *slog.Logger, args []string) error {
 				return err
 			}
 		}
-		logger.Info("demo: seeded bootstrap tokens", "roles", "admin,viewer,monitor,l4lb,popcache")
+		logger.Info("demo: seeded bootstrap tokens", "roles", strings.Join(roles, ","))
 	} else {
 		// Production: a root-issuer auto-issues the FIRST admin bootstrap token (only
 		// while no admin exists) to <data>/bootstrap.admin.token, then stops once an
