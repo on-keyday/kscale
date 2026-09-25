@@ -23,6 +23,8 @@ message WorkloadServiceContainerSpec {
     repeated string env = 5;
     repeated string mounts = 6;
     string restart = 7; // "always" | "never"
+    string network = 8; // "" / "host" (node netns) | "pod" (own netns via the kscale CNI)
+    repeated string ports = 9; // "tcp:8080"; only for network "pod"
 }
 
 // ApplyContainers hands the agent the FULL desired set for this node. The agent

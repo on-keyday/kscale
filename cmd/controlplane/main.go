@@ -677,11 +677,10 @@ func run(ctx context.Context, logger *slog.Logger, args []string) error {
 	reconcile.Vip(ctx, vipStore, broker, reconcileStatus, logger)
 	reconcile.Secret(ctx, secretStore, broker, reconcileStatus, logger)
 	reconcile.Interface(ctx, ifaceStore, broker, reconcileStatus, logger)
-	// Membership-driven l4lb<->popcache peering (generated from resource.yaml's
-	// peering: section): forward pushes popcache backends to l4lb's eBPF dest table,
-	// reverse pushes l4lb fronts to popcache for IPIP decap tunnels.
-	reconcile.PeeringPopcacheL4Lb(ctx, statCache, broker, logger)
-	reconcile.PeeringL4LbPopcache(ctx, statCache, broker, logger)
+	// Membership-driven peering, every binding in resource.yaml's peering: section
+	// (popcache backends -> l4lb dest table; l4lb fronts -> popcache decap tunnels and
+	// -> workload decap allowlist). Generated, so a new binding needs no edit here.
+	reconcile.StartPeerings(ctx, statCache, broker, logger)
 
 	// Drift detection: for each resource with an observed status, periodically diff
 	// the nodes' actual reported set against desired and warn + gauge on undesired

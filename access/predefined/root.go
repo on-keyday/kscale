@@ -432,7 +432,7 @@ const ResourceNodeFileActionGetArgName = "name"
 
 const ResourceContainer = "container"
 
-var ResourceContainerActionApply = access.NewAction("apply", []string{"name", "node", "image", "command", "args", "env", "mounts", "restart"})
+var ResourceContainerActionApply = access.NewAction("apply", []string{"name", "node", "image", "command", "args", "env", "mounts", "restart", "network", "ports"})
 
 const ResourceContainerActionApplyArgName = "name"
 const ResourceContainerActionApplyArgNode = "node"
@@ -442,6 +442,8 @@ const ResourceContainerActionApplyArgArgs = "args"
 const ResourceContainerActionApplyArgEnv = "env"
 const ResourceContainerActionApplyArgMounts = "mounts"
 const ResourceContainerActionApplyArgRestart = "restart"
+const ResourceContainerActionApplyArgNetwork = "network"
+const ResourceContainerActionApplyArgPorts = "ports"
 
 var ResourceContainerActionGet = access.NewAction("get", []string{"name"})
 

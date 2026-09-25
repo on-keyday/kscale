@@ -91,6 +91,8 @@ message ResourceContainerActionApplyArgsDTO {
     repeated string env = 6;
     repeated string mounts = 7;
     string restart = 8;
+    string network = 9;
+    repeated string ports = 10;
 }
 
 message ResourceContainerActionDeleteArgsDTO {
@@ -578,6 +580,8 @@ message ResourceContainerActionApplyResponseDTO {
     repeated string env = 6;
     repeated string mounts = 7;
     string restart = 8;
+    string network = 9;
+    repeated string ports = 10;
 }
 
 message ResourceContainerActionDeleteResponseDTO {
@@ -597,6 +601,8 @@ message ResourceContainerActionGetResponseDTO {
     repeated string env = 6;
     repeated string mounts = 7;
     string restart = 8;
+    string network = 9;
+    repeated string ports = 10;
 }
 
 message ResourceContainerActionListResponseDTO {

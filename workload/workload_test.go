@@ -2,6 +2,8 @@ package workload
 
 import (
 	"context"
+	"crypto/sha256"
+	"encoding/hex"
 	"fmt"
 	"testing"
 
@@ -18,11 +20,14 @@ type fakeRuntime struct {
 	pulled   []string
 	creates  int
 	removes  int
-	startErr error // if set, StartContainer fails once
+	startErr error                           // if set, StartContainer fails once
+	modes    map[string]criapi.NamespaceMode // sandbox id -> requested network mode
+	podIPs   map[string]string               // sandbox id -> IP PodSandboxStatus reports
 }
 
 func newFake() *fakeRuntime {
-	return &fakeRuntime{pods: map[string]*criapi.PodSandbox{}, ctrs: map[string]*criapi.Container{}}
+	return &fakeRuntime{pods: map[string]*criapi.PodSandbox{}, ctrs: map[string]*criapi.Container{},
+		modes: map[string]criapi.NamespaceMode{}, podIPs: map[string]string{}}
 }
 
 func (f *fakeRuntime) id(prefix string) string {
@@ -47,7 +52,27 @@ func (f *fakeRuntime) PullImage(_ context.Context, r *criapi.PullImageRequest) (
 func (f *fakeRuntime) RunPodSandbox(_ context.Context, r *criapi.RunPodSandboxRequest) (*criapi.RunPodSandboxResponse, error) {
 	id := f.id("pod")
 	f.pods[id] = &criapi.PodSandbox{Id: id, Metadata: &criapi.PodSandboxMetadata{Name: r.Config.Metadata.Name}, Labels: r.Config.Labels, State: criapi.PodSandboxState_SANDBOX_READY}
+	f.modes[id] = r.Config.Linux.SecurityContext.NamespaceOptions.Network
+	if f.modes[id] == criapi.NamespaceMode_POD {
+		f.podIPs[id] = fmt.Sprintf("10.200.0.%d", f.nextID)
+	}
 	return &criapi.RunPodSandboxResponse{PodSandboxId: id}, nil
+}
+
+func (f *fakeRuntime) PodSandboxStatus(_ context.Context, r *criapi.PodSandboxStatusRequest) (*criapi.PodSandboxStatusResponse, error) {
+	st := &criapi.PodSandboxStatus{Id: r.PodSandboxId}
+	if ip, ok := f.podIPs[r.PodSandboxId]; ok {
+		st.Network = &criapi.PodSandboxNetworkStatus{Ip: ip}
+	}
+	return &criapi.PodSandboxStatusResponse{Status: st}, nil
+}
+
+// podOf returns the sandbox a named container runs in.
+func (f *fakeRuntime) podOf(name string) string {
+	if c := f.byName(name); c != nil {
+		return c.PodSandboxId
+	}
+	return ""
 }
 
 func (f *fakeRuntime) StopPodSandbox(_ context.Context, r *criapi.StopPodSandboxRequest) (*criapi.StopPodSandboxResponse, error) {
@@ -307,5 +332,93 @@ func TestCreateFailureRollsBackSandbox(t *testing.T) {
 	}
 	if len(f.pods) != 1 || len(f.ctrs) != 1 {
 		t.Fatalf("leaked sandbox/container: %d pods %d ctrs", len(f.pods), len(f.ctrs))
+	}
+}
+
+func TestNetworkModeSelectsNamespace(t *testing.T) {
+	f := newFake()
+	e := NewEngine(f, nil)
+	pod := Spec{Name: "pod", Image: "a:1", Network: NetworkPod, Ports: []string{"tcp:8080"}}
+	host := Spec{Name: "host", Image: "a:1"}
+	if err := e.Apply(context.Background(), []Spec{pod, host}); err != nil {
+		t.Fatal(err)
+	}
+	if m := f.modes[f.podOf("pod")]; m != criapi.NamespaceMode_POD {
+		t.Fatalf("network pod -> %v, want POD", m)
+	}
+	if m := f.modes[f.podOf("host")]; m != criapi.NamespaceMode_NODE {
+		t.Fatalf("network \"\" -> %v, want NODE", m)
+	}
+}
+
+func TestInvalidNetworkSpecRejected(t *testing.T) {
+	for _, s := range []Spec{
+		{Name: "a", Image: "a:1", Network: "bridge"},
+		{Name: "b", Image: "a:1", Ports: []string{"tcp:80"}}, // ports without pod network
+		{Name: "c", Image: "a:1", Network: NetworkPod, Ports: []string{"udp:53"}},
+		{Name: "d", Image: "a:1", Network: NetworkPod, Ports: []string{"tcp:0"}},
+		{Name: "e", Image: "a:1", Network: NetworkPod, Ports: []string{"8080"}},
+	} {
+		f := newFake()
+		if err := NewEngine(f, nil).Apply(context.Background(), []Spec{s}); err == nil {
+			t.Errorf("%+v: expected rejection", s)
+		}
+		if len(f.pods) != 0 {
+			t.Errorf("%+v: rejected spec still created a sandbox", s)
+		}
+	}
+}
+
+func TestEndpointsReportPodNetworkOnly(t *testing.T) {
+	f := newFake()
+	e := NewEngine(f, nil)
+	ctx := context.Background()
+	pod := Spec{Name: "web", Image: "a:1", Network: NetworkPod, Ports: []string{"tcp:8080", "tcp:9090"}}
+	if err := e.Apply(ctx, []Spec{pod, {Name: "host", Image: "a:1"}}); err != nil {
+		t.Fatal(err)
+	}
+	eps, err := e.Endpoints(ctx)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(eps) != 1 || eps[0].Name != "web" || eps[0].SandboxID != f.podOf("web") {
+		t.Fatalf("want only web's endpoint, got %+v", eps)
+	}
+	if want := f.podIPs[f.podOf("web")]; eps[0].PodIP.String() != want {
+		t.Fatalf("pod IP %v, want %s", eps[0].PodIP, want)
+	}
+	if len(eps[0].Ports) != 2 || eps[0].Ports[0] != (Port{"tcp", 8080}) || eps[0].Ports[1] != (Port{"tcp", 9090}) {
+		t.Fatalf("ports %+v", eps[0].Ports)
+	}
+}
+
+func TestHashStableWithoutNetworkFields(t *testing.T) {
+	// A spec that never sets Network/Ports must hash as before the fields existed,
+	// or an agent upgrade would recreate every running host-network container.
+	preNetworkHash := func(s Spec) string { // specHash as it was before Network/Ports
+		h := sha256.New()
+		write := func(parts ...string) {
+			for _, p := range parts {
+				h.Write([]byte(p))
+				h.Write([]byte{0})
+			}
+			h.Write([]byte{1})
+		}
+		write(s.Image)
+		write(s.Command...)
+		write(s.Args...)
+		write(s.Env...)
+		write(s.Mounts...)
+		write(s.Restart)
+		return hex.EncodeToString(h.Sum(nil))[:32]
+	}
+	s := nginx()
+	if specHash(s) != preNetworkHash(s) {
+		t.Fatal("a spec without network fields no longer hashes as before")
+	}
+	withPod := s
+	withPod.Network = NetworkPod
+	if specHash(s) == specHash(withPod) {
+		t.Fatal("network change must change the hash")
 	}
 }

@@ -40,6 +40,7 @@ func GeneratePeering(input *Input) []ReconcileFile {
 	for i := range specs {
 		emitPeering(w, &specs[i])
 	}
+	emitStartPeerings(w, specs)
 	// One push helper per distinct (service, method, request_field).
 	seen := map[string]bool{}
 	for i := range specs {
@@ -162,6 +163,20 @@ func emitPeering(w *Writer, s *PeeringSpec) {
 			w.Printf("}\n")
 		})
 		w.Printf("}()\n")
+	})
+	w.Printf("}\n\n")
+}
+
+// emitStartPeerings emits StartPeerings, which starts every declared binding. The
+// control plane calls this one entry point, so a new `peering:` entry in
+// resource.yaml is live without a matching hand edit in cmd/controlplane.
+func emitStartPeerings(w *Writer, specs []PeeringSpec) {
+	w.Printf("// StartPeerings starts every peering controller declared in resource.yaml.\n")
+	w.Printf("func StartPeerings(ctx context.Context, cache DestStatSource, broker *dpbroker.Broker, logger *slog.Logger) {\n")
+	w.Indented(func(w *Writer) {
+		for i := range specs {
+			w.Printf("Peering%s%s(ctx, cache, broker, logger)\n", toCamelCase(specs[i].Source), toCamelCase(specs[i].Target))
+		}
 	})
 	w.Printf("}\n\n")
 }

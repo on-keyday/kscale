@@ -600,9 +600,12 @@ resources:
     # container: a container workload to run on a node, reconciled to the node's
     # container runtime (containerd) over CRI by the workload dp_type agent. Flat
     # model — one entry is one container (the agent wraps it in an implicit pod
-    # sandbox). Stage-1 is host network, so command/args/env/mounts are the only
-    # runtime knobs; ports are moot under host network. Custom reconcile (the
-    # CRI converge lives in reconcile/container.go, not a single RPC method).
+    # sandbox). network picks the sandbox netns: "" / "host" = the node's netns
+    # (NamespaceMode_NODE, no CNI); "pod" = its own netns wired by the kscale CNI
+    # plugin, with VIP:<ports> steered into it by the workload eBPF datapath
+    # (notes/ai/2026_09_25_workload_pod_netns_ebpf_design.md). ports ("tcp:8080")
+    # only take effect for network "pod". Custom reconcile (the CRI converge lives
+    # in reconcile/container.go, not a single RPC method).
     - name: container
       description: A container workload to run on a node (declarative; reconciled to the node's container runtime via CRI)
       command_name: container
@@ -637,6 +640,10 @@ resources:
                 type: "[]string"
               - name: restart
                 type: string
+              - name: network
+                type: string
+              - name: ports
+                type: "[]string"
       # diff: observed-status / drift on demand. For each connected workload node, ask
       # its actual CRI state (WorkloadService.ListContainers) and compare against the
       # desired container set matching that node — returning human-readable lines for
@@ -1267,6 +1274,13 @@ peering:
     # reverse (decap): push the l4lb fronts to each popcache for IPIP decap tunnels.
     - source: l4lb
       target: popcache
+      service: DataplaneService
+      method: UpdateRemote
+      request_field: remotes
+    # workload decap allowlist: push the l4lb fronts to each workload node so its
+    # eBPF ingress only decaps IPIP whose outer source is a real l4lb.
+    - source: l4lb
+      target: workload
       service: DataplaneService
       method: UpdateRemote
       request_field: remotes

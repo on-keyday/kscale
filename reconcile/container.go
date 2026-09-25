@@ -42,6 +42,8 @@ func Container(ctx context.Context, store ContainerDesired, broker *dpbroker.Bro
 					Env:     item.Env,
 					Mounts:  item.Mounts,
 					Restart: item.Restart,
+					Network: item.Network,
+					Ports:   item.Ports,
 				})
 			}
 		}

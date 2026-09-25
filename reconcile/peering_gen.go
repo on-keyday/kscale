@@ -165,6 +165,84 @@ func PeeringL4LbPopcache(ctx context.Context, cache DestStatSource, broker *dpbr
 	}()
 }
 
+// PeeringL4LbWorkload reconciles the "l4lb"->"workload" peering: derive the l4lb nodes that pass the
+// membership gate (running + bound + ServerID) from the stat cache and push
+// them to every workload node via DataplaneService.UpdateRemote on a tick and on node connect.
+func PeeringL4LbWorkload(ctx context.Context, cache DestStatSource, broker *dpbroker.Broker, logger *slog.Logger) {
+	var mu sync.Mutex
+	mgrs := map[string]*stat.DestManager{}
+
+	reconcile := func() {
+		mu.Lock()
+		defer mu.Unlock()
+		var sources []stat.DestEntry
+		for _, p := range broker.List("l4lb") {
+			entry, err := destFromBatch(cache.Get(p.CommonName()))
+			if err != nil {
+				if err != stat.ErrNoBoundInterface {
+					logger.Debug("peering: skip source node", "node", p.CommonName(), "error", err)
+				}
+				continue
+			}
+			sources = append(sources, entry)
+		}
+		sort.Slice(sources, func(i, j int) bool { return sources[i].ServerID < sources[j].ServerID })
+
+		live := map[string]struct{}{}
+		for _, p := range broker.List("workload") {
+			cn := p.CommonName()
+			live[cn] = struct{}{}
+			dests := sources
+			mgr := mgrs[cn]
+			if mgr == nil {
+				mgr = &stat.DestManager{}
+				mgrs[cn] = mgr
+			}
+			p := p
+			if err := mgr.UpdateIfDiffer(dests, func(d []stat.DestEntry) error {
+				return pushUpdateRemote(ctx, p, d, logger)
+			}); err != nil {
+				logger.Error("peering: push failed", "node", cn, "error", err)
+			}
+		}
+		for cn := range mgrs {
+			if _, ok := live[cn]; !ok {
+				delete(mgrs, cn)
+			}
+		}
+	}
+
+	broker.OnConnect(func(dpType string, p *peer.Peer) {
+		if dpbroker.Matches("workload", dpType) {
+			mu.Lock()
+			delete(mgrs, p.CommonName())
+			mu.Unlock()
+		}
+		reconcile()
+	})
+
+	go func() {
+		defer safe.Recover(logger, "peering")
+		t := time.NewTicker(3 * time.Second)
+		defer t.Stop()
+		for {
+			select {
+			case <-ctx.Done():
+				return
+			case <-t.C:
+				reconcile()
+			}
+		}
+	}()
+}
+
+// StartPeerings starts every peering controller declared in resource.yaml.
+func StartPeerings(ctx context.Context, cache DestStatSource, broker *dpbroker.Broker, logger *slog.Logger) {
+	PeeringPopcacheL4Lb(ctx, cache, broker, logger)
+	PeeringL4LbPopcache(ctx, cache, broker, logger)
+	PeeringL4LbWorkload(ctx, cache, broker, logger)
+}
+
 func pushUpdateDestinations(ctx context.Context, p *peer.Peer, dests []stat.DestEntry, logger *slog.Logger) error {
 	c := pb.NewDataplaneServiceClient(rpc.NewTrsfStreamSource(p.Streams(), logger))
 	req := &pb.DataplaneServiceUpdateDestinationsRequest{}

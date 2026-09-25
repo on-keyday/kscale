@@ -51,7 +51,7 @@ func (s *ContainerGated) authorize(ctx context.Context, action string, args []ac
 }
 
 func (s *ContainerGated) Apply(ctx context.Context, req *pbaccess.ResourceContainerActionApplyArgsDTO) (*pbaccess.ResourceContainerActionApplyResponseDTO, error) {
-	if err := s.authorize(ctx, "apply", []access.Attribute{access.NewAttribute("name", req.Name), access.NewAttribute("node", req.Node), access.NewAttribute("image", req.Image), access.NewAttribute("command", req.Command), access.NewAttribute("args", req.Args), access.NewAttribute("env", req.Env), access.NewAttribute("mounts", req.Mounts), access.NewAttribute("restart", req.Restart)}); err != nil {
+	if err := s.authorize(ctx, "apply", []access.Attribute{access.NewAttribute("name", req.Name), access.NewAttribute("node", req.Node), access.NewAttribute("image", req.Image), access.NewAttribute("command", req.Command), access.NewAttribute("args", req.Args), access.NewAttribute("env", req.Env), access.NewAttribute("mounts", req.Mounts), access.NewAttribute("restart", req.Restart), access.NewAttribute("network", req.Network), access.NewAttribute("ports", req.Ports)}); err != nil {
 		return nil, err
 	}
 	return s.Inner.Apply(ctx, req)

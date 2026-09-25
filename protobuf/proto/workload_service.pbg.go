@@ -21,6 +21,8 @@ type WorkloadServiceContainerSpec struct {
 	Env     []string `json:"env,omitempty"`
 	Mounts  []string `json:"mounts,omitempty"`
 	Restart string   `json:"restart,omitempty"`
+	Network string   `json:"network,omitempty"`
+	Ports   []string `json:"ports,omitempty"`
 }
 
 func (p *WorkloadServiceContainerSpec) Read(data io.Reader) error {
@@ -92,6 +94,22 @@ func (p *WorkloadServiceContainerSpec) Read(data io.Reader) error {
 				return fmt.Errorf("field Restart unexpected wire type. expect LengthDelimited but got %s", field.Tag.Type())
 			}
 			p.Restart = unsafe.String(unsafe.SliceData((*val)), len((*val)))
+		case 8:
+			val := field.ValueData()
+			if val == nil {
+				return fmt.Errorf("field Network unexpected wire type. expect LengthDelimited but got %s", field.Tag.Type())
+			}
+			p.Network = unsafe.String(unsafe.SliceData((*val)), len((*val)))
+		case 9:
+			val := field.ValueData()
+			if val == nil {
+				return fmt.Errorf("field Ports unexpected wire type. expect LengthDelimited but got %s", field.Tag.Type())
+			}
+			{
+				var tmp string
+				tmp = unsafe.String(unsafe.SliceData((*val)), len((*val)))
+				p.Ports = append(p.Ports, tmp)
+			}
 		default:
 			// skip unknown
 		}
@@ -167,6 +185,22 @@ func (p *WorkloadServiceContainerSpec) ReadBuffer(data *bytes.Reader) error {
 				return fmt.Errorf("field Restart unexpected wire type. expect LengthDelimited but got %s", field.Tag.Type())
 			}
 			p.Restart = unsafe.String(unsafe.SliceData((*val)), len((*val)))
+		case 8:
+			val := field.ValueData()
+			if val == nil {
+				return fmt.Errorf("field Network unexpected wire type. expect LengthDelimited but got %s", field.Tag.Type())
+			}
+			p.Network = unsafe.String(unsafe.SliceData((*val)), len((*val)))
+		case 9:
+			val := field.ValueData()
+			if val == nil {
+				return fmt.Errorf("field Ports unexpected wire type. expect LengthDelimited but got %s", field.Tag.Type())
+			}
+			{
+				var tmp string
+				tmp = unsafe.String(unsafe.SliceData((*val)), len((*val)))
+				p.Ports = append(p.Ports, tmp)
+			}
 		default:
 			// skip unknown
 		}
@@ -239,6 +273,22 @@ func (p *WorkloadServiceContainerSpec) Decode(data []byte) error {
 				return fmt.Errorf("field Restart unexpected wire type. expect LengthDelimited but got %s", field.Tag.Type())
 			}
 			p.Restart = unsafe.String(unsafe.SliceData((*val)), len((*val)))
+		case 8:
+			val := field.ValueData()
+			if val == nil {
+				return fmt.Errorf("field Network unexpected wire type. expect LengthDelimited but got %s", field.Tag.Type())
+			}
+			p.Network = unsafe.String(unsafe.SliceData((*val)), len((*val)))
+		case 9:
+			val := field.ValueData()
+			if val == nil {
+				return fmt.Errorf("field Ports unexpected wire type. expect LengthDelimited but got %s", field.Tag.Type())
+			}
+			{
+				var tmp string
+				tmp = unsafe.String(unsafe.SliceData((*val)), len((*val)))
+				p.Ports = append(p.Ports, tmp)
+			}
 		default:
 			// skip unknown
 		}
@@ -312,6 +362,24 @@ func (p *WorkloadServiceContainerSpec) Encode(w io.Writer) error {
 			return err
 		}
 	}
+	field.Tag.SetNumber(8)
+	if len(p.Network) > 0 {
+		field.Tag.SetType(wire.WireType_LengthDelimited)
+		field.SetLength(wire.Varint{Value: uint64(len(p.Network))})
+		field.SetValueData([]byte(p.Network))
+		if err := field.Write(w); err != nil {
+			return err
+		}
+	}
+	field.Tag.SetNumber(9)
+	for _, v := range p.Ports {
+		field.Tag.SetType(wire.WireType_LengthDelimited)
+		field.SetLength(wire.Varint{Value: uint64(len(v))})
+		field.SetValueData([]byte(v))
+		if err := field.Write(w); err != nil {
+			return err
+		}
+	}
 	return nil
 }
 func (p *WorkloadServiceContainerSpec) EncodeBuffer(w *bytes.Buffer) error {
@@ -375,6 +443,24 @@ func (p *WorkloadServiceContainerSpec) EncodeBuffer(w *bytes.Buffer) error {
 		field.Tag.SetType(wire.WireType_LengthDelimited)
 		field.SetLength(wire.Varint{Value: uint64(len(p.Restart))})
 		field.SetValueData([]byte(p.Restart))
+		if err := field.WriteBuffer(w); err != nil {
+			return err
+		}
+	}
+	field.Tag.SetNumber(8)
+	if len(p.Network) > 0 {
+		field.Tag.SetType(wire.WireType_LengthDelimited)
+		field.SetLength(wire.Varint{Value: uint64(len(p.Network))})
+		field.SetValueData([]byte(p.Network))
+		if err := field.WriteBuffer(w); err != nil {
+			return err
+		}
+	}
+	field.Tag.SetNumber(9)
+	for _, v := range p.Ports {
+		field.Tag.SetType(wire.WireType_LengthDelimited)
+		field.SetLength(wire.Varint{Value: uint64(len(v))})
+		field.SetValueData([]byte(v))
 		if err := field.WriteBuffer(w); err != nil {
 			return err
 		}
@@ -454,6 +540,28 @@ func (p *WorkloadServiceContainerSpec) Append(w []byte) ([]byte, error) {
 		field.Tag.SetType(wire.WireType_LengthDelimited)
 		field.SetLength(wire.Varint{Value: uint64(len(p.Restart))})
 		field.SetValueData([]byte(p.Restart))
+		if appendTmp, err := field.Append(w); err != nil {
+			return nil, err
+		} else {
+			w = appendTmp
+		}
+	}
+	field.Tag.SetNumber(8)
+	if len(p.Network) > 0 {
+		field.Tag.SetType(wire.WireType_LengthDelimited)
+		field.SetLength(wire.Varint{Value: uint64(len(p.Network))})
+		field.SetValueData([]byte(p.Network))
+		if appendTmp, err := field.Append(w); err != nil {
+			return nil, err
+		} else {
+			w = appendTmp
+		}
+	}
+	field.Tag.SetNumber(9)
+	for _, v := range p.Ports {
+		field.Tag.SetType(wire.WireType_LengthDelimited)
+		field.SetLength(wire.Varint{Value: uint64(len(v))})
+		field.SetValueData([]byte(v))
 		if appendTmp, err := field.Append(w); err != nil {
 			return nil, err
 		} else {

@@ -50,6 +50,14 @@ func DispatchContainer(ctx context.Context, c pb.ContainerServiceClient, action 
 			dto.Mounts = l
 		}
 		dto.Restart = args["restart"]
+		dto.Network = args["network"]
+		if v, ok := args["ports"]; ok {
+			l, err := parseStringList(v)
+			if err != nil {
+				return "", fmt.Errorf("arg ports: %w", err)
+			}
+			dto.Ports = l
+		}
 		resp, err := c.Apply(ctx, dto)
 		if err != nil {
 			return "", err

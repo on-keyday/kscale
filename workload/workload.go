@@ -13,7 +13,9 @@ import (
 	"errors"
 	"fmt"
 	"log/slog"
+	"net/netip"
 	"sort"
+	"strconv"
 	"strings"
 	"sync"
 
@@ -27,7 +29,15 @@ import (
 const (
 	labelManaged  = "kscale-managed"
 	labelSpecHash = "kscale-spec-hash"
+	labelNetwork  = "kscale-network"
 	sandboxNS     = "kscale"
+)
+
+// Network modes (Spec.Network). "" is host, so specs written before the field
+// existed keep their behaviour.
+const (
+	NetworkHost = "host"
+	NetworkPod  = "pod"
 )
 
 // Runtime is the subset of the CRI client the Engine uses. *cri.CRI satisfies it;
@@ -43,6 +53,7 @@ type Runtime interface {
 	StopContainer(context.Context, *criapi.StopContainerRequest) (*criapi.StopContainerResponse, error)
 	RemoveContainer(context.Context, *criapi.RemoveContainerRequest) (*criapi.RemoveContainerResponse, error)
 	ListContainers(context.Context, *criapi.ListContainersRequest) (*criapi.ListContainersResponse, error)
+	PodSandboxStatus(context.Context, *criapi.PodSandboxStatusRequest) (*criapi.PodSandboxStatusResponse, error)
 }
 
 // Spec is one desired container (the WorkloadService wire spec, decoupled from
@@ -55,6 +66,62 @@ type Spec struct {
 	Env     []string // "KEY=VALUE"
 	Mounts  []string // "hostPath:containerPath[:ro]"
 	Restart string   // "always" | "never"
+	Network string   // "" / "host" (node netns) | "pod" (own netns via the kscale CNI)
+	Ports   []string // "tcp:8080"; only for Network "pod"
+}
+
+// Port is one parsed Spec.Ports entry.
+type Port struct {
+	Proto string // "tcp" (the only protocol the datapath steers so far)
+	Port  uint16
+}
+
+// ParsePorts parses "proto:port" entries. Only tcp is accepted: the eBPF
+// datapath does not steer UDP yet, and accepting it would declare a port that
+// silently never receives traffic.
+func ParsePorts(ports []string) ([]Port, error) {
+	out := make([]Port, 0, len(ports))
+	for _, s := range ports {
+		proto, num, ok := strings.Cut(s, ":")
+		if !ok {
+			return nil, fmt.Errorf("port %q: want proto:port", s)
+		}
+		if proto != "tcp" {
+			return nil, fmt.Errorf("port %q: only tcp is supported", s)
+		}
+		n, err := strconv.ParseUint(num, 10, 16)
+		if err != nil || n == 0 {
+			return nil, fmt.Errorf("port %q: bad port number", s)
+		}
+		out = append(out, Port{Proto: proto, Port: uint16(n)})
+	}
+	return out, nil
+}
+
+// validate rejects specs the engine cannot honour, before touching the runtime.
+func (s Spec) validate() error {
+	switch s.Network {
+	case "", NetworkHost:
+		if len(s.Ports) > 0 {
+			return fmt.Errorf("ports need network %q (host network is not steered)", NetworkPod)
+		}
+	case NetworkPod:
+		if _, err := ParsePorts(s.Ports); err != nil {
+			return err
+		}
+	default:
+		return fmt.Errorf("unknown network %q (want host or pod)", s.Network)
+	}
+	return nil
+}
+
+// Endpoint is a running pod-network container as the datapath needs it: where
+// it lives (sandbox ID -> the CNI's veth/MAC naming) and which ports it owns.
+type Endpoint struct {
+	Name      string
+	SandboxID string
+	PodIP     netip.Addr
+	Ports     []Port
 }
 
 // Status is the observed state of one managed container.
@@ -176,6 +243,9 @@ func (e *Engine) convergeLocked(ctx context.Context) error {
 // nil). A container that matches the desired spec hash is left alone when running
 // (or when exited under restart=never); everything else is recreated.
 func (e *Engine) ensure(ctx context.Context, spec Spec, pod *criapi.PodSandbox, ctr *criapi.Container) error {
+	if err := spec.validate(); err != nil {
+		return err
+	}
 	hash := specHash(spec)
 	if ctr != nil && ctr.Labels[labelSpecHash] == hash {
 		switch ctr.State {
@@ -232,13 +302,18 @@ func (e *Engine) ensure(ctx context.Context, spec Spec, pod *criapi.PodSandbox, 
 }
 
 func (e *Engine) sandboxConfig(spec Spec) *criapi.PodSandboxConfig {
+	// Host network: no CNI, the container shares the node netns. Pod network: the
+	// runtime creates a netns and the kscale CNI plugin wires it.
+	mode, network := criapi.NamespaceMode_NODE, NetworkHost
+	if spec.Network == NetworkPod {
+		mode, network = criapi.NamespaceMode_POD, NetworkPod
+	}
 	return &criapi.PodSandboxConfig{
 		Metadata: &criapi.PodSandboxMetadata{Name: spec.Name, Uid: spec.Name, Namespace: sandboxNS},
-		Labels:   map[string]string{labelManaged: "true"},
+		Labels:   map[string]string{labelManaged: "true", labelNetwork: network},
 		Linux: &criapi.LinuxPodSandboxConfig{
 			SecurityContext: &criapi.LinuxSandboxSecurityContext{
-				// Host network (stage 1): no CNI, container shares the node netns.
-				NamespaceOptions: &criapi.NamespaceOption{Network: criapi.NamespaceMode_NODE},
+				NamespaceOptions: &criapi.NamespaceOption{Network: mode},
 			},
 		},
 	}
@@ -302,6 +377,50 @@ func (e *Engine) List(ctx context.Context) ([]Status, error) {
 	return out, nil
 }
 
+// Endpoints reports every ready pod-network sandbox with its IP (from the CNI
+// result, via PodSandboxStatus) and the ports its desired spec declares. A
+// sandbox whose status read fails or that has no IP yet is skipped (the next
+// converge retries); its error is returned alongside the rest.
+func (e *Engine) Endpoints(ctx context.Context) ([]Endpoint, error) {
+	e.mu.Lock()
+	defer e.mu.Unlock()
+	pods, _, err := e.managed(ctx)
+	if err != nil {
+		return nil, err
+	}
+	var out []Endpoint
+	var errs []error
+	for name, p := range pods {
+		if p.Labels[labelNetwork] != NetworkPod || p.State != criapi.PodSandboxState_SANDBOX_READY {
+			continue
+		}
+		spec, ok := e.desired[name]
+		if !ok {
+			continue
+		}
+		ports, err := ParsePorts(spec.Ports)
+		if err != nil {
+			continue // validate() already failed this spec at ensure time
+		}
+		st, err := e.rt.PodSandboxStatus(ctx, &criapi.PodSandboxStatusRequest{PodSandboxId: p.Id})
+		if err != nil {
+			errs = append(errs, fmt.Errorf("sandbox status %q: %w", name, err))
+			continue
+		}
+		var ip netip.Addr
+		if st.Status != nil && st.Status.Network != nil {
+			ip, _ = netip.ParseAddr(st.Status.Network.Ip)
+		}
+		if !ip.Is4() {
+			errs = append(errs, fmt.Errorf("sandbox %q: no IPv4 pod IP yet", name))
+			continue
+		}
+		out = append(out, Endpoint{Name: name, SandboxID: p.Id, PodIP: ip, Ports: ports})
+	}
+	sort.Slice(out, func(i, j int) bool { return out[i].Name < out[j].Name })
+	return out, errors.Join(errs...)
+}
+
 func stateString(s criapi.ContainerState) string {
 	switch s {
 	case criapi.ContainerState_CONTAINER_CREATED:
@@ -333,6 +452,12 @@ func specHash(s Spec) string {
 	write(s.Env...)
 	write(s.Mounts...)
 	write(s.Restart)
+	// Only when set, so specs from before these fields existed keep their hash
+	// (and their running containers) across an agent upgrade.
+	if s.Network != "" || len(s.Ports) > 0 {
+		write(s.Network)
+		write(s.Ports...)
+	}
 	// 32 hex chars (128 bit) — collision-safe and within CRI's 63-char label limit.
 	return hex.EncodeToString(h.Sum(nil))[:32]
 }
