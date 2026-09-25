@@ -15,16 +15,25 @@ VIP=192.0.2.10
 L4LB=node1.l4lb.dp.system.kscale.local
 POP=node1.popcache.dp.system.kscale.local
 cli() { $DC run --rm cli cli --addr 10.5.0.2:9443 --data /data --role admin "$@" 2>&1 | grep -vE "level=INFO|Container kscale"; }
+# must: run a setup op and abort if the CLI did not ALLOW it (a silently rejected op —
+# e.g. a stale flag — otherwise surfaces much later as an opaque "curl timeout").
+must() { out=$(cli "$@"); echo "$out" | grep -q '^ALLOWED' || { echo "setup op failed: $*" >&2; echo "$out" >&2; exit 1; }; }
 ex() { $DC exec -T "$1" sh -c "$2"; }
 
 ./build.sh
+# Fresh CP state each run: desired state persists in the shared volume.
+$DC --profile datapath down -v >/dev/null 2>&1 || true
 $DC --profile datapath up --build -d
 echo "=== wait connect ==="; sleep 12
-cli --resource interface --op apply --interface eth0 >/dev/null
-cli --resource vip --op apply --vip $VIP >/dev/null
-cli --resource secret --op apply --value 0123456789abcdef >/dev/null
-cli --resource node --op start --common_name $POP >/dev/null
-cli --resource node --op start --common_name $L4LB >/dev/null
+# interface is per-node and must be bound BEFORE start (no post-start rebind).
+must --resource interface --op apply --node $L4LB --interface eth0
+must --resource interface --op apply --node $POP --interface eth0
+must --resource vip --op apply --vip $VIP
+# QUIC-LB shared secret: the CP generates the value (default 16 bytes); l4lb start
+# fails without one.
+must --resource secret --op apply --name quiclb
+must --resource node --op start --common_name $POP
+must --resource node --op start --common_name $L4LB
 echo "=== wait peering ==="; sleep 9
 ex popcache "ip addr add $VIP/32 dev lo 2>/dev/null; sysctl -wq net.ipv4.conf.all.rp_filter=0 net.ipv4.conf.lo.rp_filter=0 net.ipv4.conf.eth0.rp_filter=0; true"
 
