@@ -101,6 +101,21 @@ services:
     depends_on: [popcache]
     profiles: ["workload-cri"]
 
+  # Built-in authoritative DNS dataplane (measure_stats_freshness.sh): serves
+  # example.test on :53 so the client can drive its request counters.
+  dns:
+    image: kscale-e2e
+    privileged: true
+    command: ["dnsagent", "--backend", "builtin", "--domain", "example.test",
+              "--dns-port", "53", "--auto-start",
+              "--addr", "10.5.0.2:9443", "--data", "/data", "--node", "node1"]
+    volumes: ["shared:/data"]
+    networks:
+      pop:
+        ipv4_address: 10.5.0.7
+    depends_on: [cp]
+    profiles: ["dns"]
+
   # One-shot admin client (run with `docker compose run --rm cli ...`).
   cli:
     image: kscale-e2e
