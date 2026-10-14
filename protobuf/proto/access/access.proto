@@ -93,6 +93,7 @@ message ResourceContainerActionApplyArgsDTO {
     string restart = 8;
     string network = 9;
     repeated string ports = 10;
+    repeated string volumes = 11;
 }
 
 message ResourceContainerActionDeleteArgsDTO {
@@ -598,6 +599,7 @@ message ResourceContainerActionApplyResponseDTO {
     string restart = 8;
     string network = 9;
     repeated string ports = 10;
+    repeated string volumes = 11;
 }
 
 message ResourceContainerActionDeleteResponseDTO {
@@ -619,6 +621,7 @@ message ResourceContainerActionGetResponseDTO {
     string restart = 8;
     string network = 9;
     repeated string ports = 10;
+    repeated string volumes = 11;
 }
 
 message ResourceContainerActionListResponseDTO {

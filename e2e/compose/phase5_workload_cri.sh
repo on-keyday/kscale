@@ -28,10 +28,18 @@ until cli --resource node --op list | grep -q "\"$WL\""; do
 done
 echo "workload node joined: $WL"
 
-echo "=== container apply: busybox httpd on :8080, host network ==="
+echo "=== container apply with a raw hostPath mount: must be refused ==="
+out=$(cli --resource container --op apply --name evil --node workload/node1 \
+	--image docker.io/library/busybox:1.37 --mounts '["/:/host"]')
+# A handler error prints as "DENIED (...): <err>" (the CLI does not tell it from a policy denial).
+echo "$out" | grep -q 'hostPath mounts are not allowed' \
+	|| { echo "FAIL: hostPath mount was not refused" >&2; echo "$out" >&2; exit 1; }
+echo "refused as expected"
+
+echo "=== container apply: busybox httpd on :8080, host network, docroot on a volume ==="
 must --resource container --op apply --name web --node workload/node1 \
-	--image docker.io/library/busybox:1.37 --restart always \
-	--command '["sh","-c","mkdir -p /www && echo workload-ok > /www/index.html && exec httpd -f -p 8080 -h /www"]'
+	--image docker.io/library/busybox:1.37 --restart always --volumes '["www:/www"]' \
+	--command '["sh","-c","echo workload-ok > /www/index.html && exec httpd -f -p 8080 -h /www"]'
 
 # Wait until the listener is up in the shared netns (pull + sandbox + start).
 i=0

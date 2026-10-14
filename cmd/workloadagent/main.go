@@ -50,6 +50,7 @@ func main() {
 	node := fs.String("node", "node1", "this workload node's name")
 	criSocket := fs.String("cri-socket", "/run/containerd/containerd.sock", "CRI (containerd) unix socket")
 	convergeEvery := fs.Duration("converge-interval", 30*time.Second, "periodic reconcile interval (restart policy + crash healing)")
+	volumeRoot := fs.String("volume-root", "", "directory container volumes are created under (default: volumes/ beside --data). Never mount it into a container")
 	pullTimeout := fs.Duration("pull-timeout", 30*time.Minute, "upper bound on one image pull (pulls run in the background on their own CRI connection; a stalled download is also cut by containerd's own progress timeout)")
 	fileDir := fs.String("file-dir", "", "node-local file store (default <data>/dp_files)")
 	domainFlag := fs.String("ca-domain", domain, "CA domain — must match the control plane's --ca-domain")
@@ -67,7 +68,10 @@ func main() {
 	criClient := cri.NewClient(*criSocket, logger)
 	pullClient := cri.NewClient(*criSocket, logger)
 	pullClient.SetReceiveTimeout(*pullTimeout)
-	engine := workload.NewEngine(criClient, logger, workload.WithPuller(pullClient))
+	if *volumeRoot == "" {
+		*volumeRoot = filepath.Join(filepath.Dir(filepath.Clean(*dataDir)), "volumes")
+	}
+	engine := workload.NewEngine(criClient, logger, workload.WithPuller(pullClient), workload.WithVolumeRoot(*volumeRoot))
 	defer engine.Close()
 
 	// The datapath records state from boot; its object arrives from the CP (or
@@ -244,6 +248,7 @@ func (s *workloadService) ApplyContainers(ctx context.Context, req *pb.WorkloadS
 			Restart: c.Restart,
 			Network: c.Network,
 			Ports:   c.Ports,
+			Volumes: c.Volumes,
 		})
 	}
 	err := s.engine.Apply(ctx, specs)

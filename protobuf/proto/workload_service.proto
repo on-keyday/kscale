@@ -13,18 +13,22 @@ import "google/protobuf/empty.proto";
 
 // ContainerSpec is one desired container. Mirrors the `container` resource's
 // fields (flat model: one spec is one container, wrapped in an implicit pod
-// sandbox by the agent). env entries are "KEY=VALUE"; mount entries are
-// "hostPath:containerPath" with an optional ":ro" suffix.
+// sandbox by the agent). env entries are "KEY=VALUE"; volume entries are
+// "name:/containerPath" with an optional ":ro" suffix, name being an
+// agent-managed directory under the node's volume root. mounts (raw
+// "hostPath:containerPath") is rejected by the agent and kept for wire
+// compatibility only.
 message WorkloadServiceContainerSpec {
     string name = 1;
     string image = 2;
     repeated string command = 3;
     repeated string args = 4;
     repeated string env = 5;
-    repeated string mounts = 6;
+    repeated string mounts = 6; // rejected: use volumes
     string restart = 7; // "always" | "never"
     string network = 8; // "" / "host" (node netns) | "pod" (own netns via the kscale CNI)
     repeated string ports = 9; // "tcp:8080"; only for network "pod"
+    repeated string volumes = 10; // "name:/containerPath[:ro]"
 }
 
 // ApplyContainers hands the agent the FULL desired set for this node. The agent

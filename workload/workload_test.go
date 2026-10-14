@@ -5,6 +5,9 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"fmt"
+	"os"
+	"path/filepath"
+	"strings"
 	"sync"
 	"testing"
 	"time"
@@ -30,12 +33,14 @@ type fakeRuntime struct {
 	removes  int
 	startErr error                           // if set, StartContainer fails once
 	modes    map[string]criapi.NamespaceMode // sandbox id -> requested network mode
+	mounts   map[string][]*criapi.Mount      // container id -> requested mounts
 	podIPs   map[string]string               // sandbox id -> IP PodSandboxStatus reports
 }
 
 func newFake() *fakeRuntime {
 	return &fakeRuntime{pods: map[string]*criapi.PodSandbox{}, ctrs: map[string]*criapi.Container{},
-		images: map[string]bool{}, modes: map[string]criapi.NamespaceMode{}, podIPs: map[string]string{}}
+		images: map[string]bool{}, modes: map[string]criapi.NamespaceMode{}, podIPs: map[string]string{},
+		mounts: map[string][]*criapi.Mount{}}
 }
 
 func (f *fakeRuntime) id(prefix string) string {
@@ -158,6 +163,7 @@ func (f *fakeRuntime) ListPodSandbox(_ context.Context, r *criapi.ListPodSandbox
 func (f *fakeRuntime) CreateContainer(_ context.Context, r *criapi.CreateContainerRequest) (*criapi.CreateContainerResponse, error) {
 	f.creates++
 	id := f.id("ctr")
+	f.mounts[id] = r.Config.Mounts
 	f.ctrs[id] = &criapi.Container{
 		Id:           id,
 		PodSandboxId: r.PodSandboxId,
@@ -635,5 +641,90 @@ func TestCloseCancelsPull(t *testing.T) {
 	case <-done:
 	case <-time.After(5 * time.Second):
 		t.Fatal("Close blocked on an in-flight pull")
+	}
+}
+
+// TestHostMountsRejected: a raw hostPath mount never reaches the runtime.
+func TestHostMountsRejected(t *testing.T) {
+	f := newFake()
+	e := NewEngine(f, nil, WithVolumeRoot(t.TempDir()))
+	defer e.Close()
+	s := nginx()
+	s.Mounts = []string{"/:/host"}
+	if err := applySettled(context.Background(), e, []Spec{s}); err == nil {
+		t.Fatal("hostPath mount accepted")
+	}
+	if len(f.pods) != 0 || len(f.ctrs) != 0 || f.pullCount() != 0 {
+		t.Fatalf("rejected spec touched the runtime: %d pods %d ctrs %d pulls", len(f.pods), len(f.ctrs), f.pullCount())
+	}
+}
+
+// TestVolumesMapToAgentDirs: each volume becomes a directory the engine creates
+// under its root, bind-mounted at the container path (ro honoured).
+func TestVolumesMapToAgentDirs(t *testing.T) {
+	root := t.TempDir()
+	f := newFake()
+	e := NewEngine(f, nil, WithVolumeRoot(root))
+	defer e.Close()
+	s := nginx()
+	s.Volumes = []string{"models:/models", "cfg:/etc/app:ro"}
+	if err := applySettled(context.Background(), e, []Spec{s}); err != nil {
+		t.Fatal(err)
+	}
+	c := f.byName("web")
+	if c == nil {
+		t.Fatal("web not created")
+	}
+	got := f.mounts[c.Id]
+	want := []*criapi.Mount{
+		{HostPath: filepath.Join(root, "models"), ContainerPath: "/models"},
+		{HostPath: filepath.Join(root, "cfg"), ContainerPath: "/etc/app", Readonly: true},
+	}
+	if len(got) != len(want) {
+		t.Fatalf("mounts = %+v", got)
+	}
+	for i := range want {
+		if g := got[i]; g.HostPath != want[i].HostPath || g.ContainerPath != want[i].ContainerPath || g.Readonly != want[i].Readonly {
+			t.Fatalf("mount %d = %+v, want %+v", i, got[i], want[i])
+		}
+		if fi, err := os.Lstat(want[i].HostPath); err != nil || !fi.IsDir() {
+			t.Fatalf("volume dir %s not created: %v", want[i].HostPath, err)
+		}
+	}
+}
+
+// TestVolumeSymlinkRefused: a volume entry that is a symlink (pointing out of the
+// root) is refused, not followed.
+func TestVolumeSymlinkRefused(t *testing.T) {
+	root := t.TempDir()
+	if err := os.Symlink("/", filepath.Join(root, "evil")); err != nil {
+		t.Fatal(err)
+	}
+	f := newFake()
+	e := NewEngine(f, nil, WithVolumeRoot(root))
+	defer e.Close()
+	s := nginx()
+	s.Volumes = []string{"evil:/host"}
+	err := applySettled(context.Background(), e, []Spec{s})
+	if err == nil || !strings.Contains(err.Error(), "not a plain directory") {
+		t.Fatalf("symlinked volume not refused (err=%v)", err)
+	}
+	if len(f.ctrs) != 0 {
+		t.Fatalf("container created on a symlinked volume")
+	}
+}
+
+func TestParseVolumesRejects(t *testing.T) {
+	for _, v := range []string{
+		"x", "../x:/a", "a/b:/c", "A:/c", ".:/a", "..:/a", "a..b:/a",
+		"x:relative", "x:/", "x:/a/../b", "x:/a/", "x:/a:rw", "x:/a:ro:extra", ":/a",
+	} {
+		if _, err := ParseVolumes([]string{v}); err == nil {
+			t.Errorf("%q accepted", v)
+		}
+	}
+	got, err := ParseVolumes([]string{"llm-models:/models", "a.b_c:/x/y:ro"})
+	if err != nil || len(got) != 2 || got[1] != (Volume{Name: "a.b_c", ContainerPath: "/x/y", ReadOnly: true}) {
+		t.Fatalf("valid volumes: %+v, %v", got, err)
 	}
 }

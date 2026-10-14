@@ -66,10 +66,11 @@ type Spec struct {
 	Command []string
 	Args    []string
 	Env     []string // "KEY=VALUE"
-	Mounts  []string // "hostPath:containerPath[:ro]"
+	Mounts  []string // raw "hostPath:containerPath" — always rejected (see volume.go)
 	Restart string   // "always" | "never"
 	Network string   // "" / "host" (node netns) | "pod" (own netns via the kscale CNI)
 	Ports   []string // "tcp:8080"; only for Network "pod"
+	Volumes []string // "name:/containerPath[:ro]" — agent-managed dirs (volume.go)
 }
 
 // Port is one parsed Spec.Ports entry.
@@ -100,8 +101,16 @@ func ParsePorts(ports []string) ([]Port, error) {
 	return out, nil
 }
 
-// validate rejects specs the engine cannot honour, before touching the runtime.
-func (s Spec) validate() error {
+// Validate rejects specs the engine cannot (or must not) honour. The engine runs
+// it before touching the runtime; the control plane runs it at apply time so a
+// bad spec is refused up front instead of failing silently on the node.
+func (s Spec) Validate() error {
+	if len(s.Mounts) > 0 {
+		return errHostMounts
+	}
+	if _, err := ParseVolumes(s.Volumes); err != nil {
+		return err
+	}
 	switch s.Network {
 	case "", NetworkHost:
 		if len(s.Ports) > 0 {
@@ -158,6 +167,7 @@ type Engine struct {
 	pmu        sync.Mutex // guards pulls; never held across a CRI call
 	pulls      map[string]*pullState
 	now        func() time.Time
+	volumeRoot string
 }
 
 // NewEngine builds an Engine over rt. Pulls go through rt unless WithPuller says
@@ -169,7 +179,7 @@ func NewEngine(rt Runtime, logger *slog.Logger, opts ...Option) *Engine {
 	e := &Engine{
 		rt: rt, logger: logger, desired: map[string]Spec{},
 		puller: rt, pullSem: make(chan struct{}, 2), pullDone: make(chan struct{}, 1),
-		pulls: map[string]*pullState{}, now: time.Now,
+		pulls: map[string]*pullState{}, now: time.Now, volumeRoot: DefaultVolumeRoot,
 	}
 	e.pullCtx, e.pullCancel = context.WithCancel(context.Background())
 	for _, o := range opts {
@@ -276,7 +286,7 @@ func (e *Engine) convergeLocked(ctx context.Context) error {
 // and a background pull is requested, so an image change never means downtime
 // for the length of the download.
 func (e *Engine) ensure(ctx context.Context, spec Spec, pod *criapi.PodSandbox, ctr *criapi.Container) error {
-	if err := spec.validate(); err != nil {
+	if err := spec.Validate(); err != nil {
 		return err
 	}
 	hash := specHash(spec)
@@ -294,6 +304,11 @@ func (e *Engine) ensure(ctx context.Context, spec Spec, pod *criapi.PodSandbox, 
 
 	if ok, err := e.imageReady(ctx, spec.Image); err != nil || !ok {
 		return err // !ok: pulling in the background; a later converge recreates
+	}
+	vols, _ := ParseVolumes(spec.Volumes) // validated above
+	mounts, err := e.ensureVolumes(vols)
+	if err != nil {
+		return err
 	}
 
 	// Recreate: tear down the stale container and sandbox for this name.
@@ -316,7 +331,7 @@ func (e *Engine) ensure(ctx context.Context, spec Spec, pod *criapi.PodSandbox, 
 
 	created, err := e.rt.CreateContainer(ctx, &criapi.CreateContainerRequest{
 		PodSandboxId:  run.PodSandboxId,
-		Config:        e.containerConfig(spec, hash),
+		Config:        e.containerConfig(spec, hash, mounts),
 		SandboxConfig: sandboxConfig,
 	})
 	if err != nil {
@@ -350,14 +365,14 @@ func (e *Engine) sandboxConfig(spec Spec) *criapi.PodSandboxConfig {
 	}
 }
 
-func (e *Engine) containerConfig(spec Spec, hash string) *criapi.ContainerConfig {
+func (e *Engine) containerConfig(spec Spec, hash string, mounts []*criapi.Mount) *criapi.ContainerConfig {
 	return &criapi.ContainerConfig{
 		Metadata: &criapi.ContainerMetadata{Name: spec.Name},
 		Image:    &criapi.ImageSpec{Image: spec.Image},
 		Command:  spec.Command,
 		Args:     spec.Args,
 		Envs:     parseEnv(spec.Env),
-		Mounts:   parseMounts(spec.Mounts),
+		Mounts:   mounts,
 		Labels:   map[string]string{labelManaged: "true", labelSpecHash: hash},
 	}
 }
@@ -445,7 +460,7 @@ func (e *Engine) Endpoints(ctx context.Context) ([]Endpoint, error) {
 		}
 		ports, err := ParsePorts(spec.Ports)
 		if err != nil {
-			continue // validate() already failed this spec at ensure time
+			continue // Validate() already failed this spec at ensure time
 		}
 		st, err := e.rt.PodSandboxStatus(ctx, &criapi.PodSandboxStatusRequest{PodSandboxId: p.Id})
 		if err != nil {
@@ -503,6 +518,9 @@ func specHash(s Spec) string {
 		write(s.Network)
 		write(s.Ports...)
 	}
+	if len(s.Volumes) > 0 {
+		write(s.Volumes...)
+	}
 	// 32 hex chars (128 bit) — collision-safe and within CRI's 63-char label limit.
 	return hex.EncodeToString(h.Sum(nil))[:32]
 }
@@ -515,27 +533,6 @@ func parseEnv(env []string) []*criapi.KeyValue {
 	for _, kv := range env {
 		k, v, _ := strings.Cut(kv, "=")
 		out = append(out, &criapi.KeyValue{Key: k, Value: v})
-	}
-	return out
-}
-
-// parseMounts turns "hostPath:containerPath[:ro]" into CRI Mounts. Entries that
-// don't have at least host:container are skipped.
-func parseMounts(mounts []string) []*criapi.Mount {
-	if len(mounts) == 0 {
-		return nil
-	}
-	out := make([]*criapi.Mount, 0, len(mounts))
-	for _, m := range mounts {
-		parts := strings.Split(m, ":")
-		if len(parts) < 2 || parts[0] == "" || parts[1] == "" {
-			continue
-		}
-		mount := &criapi.Mount{HostPath: parts[0], ContainerPath: parts[1]}
-		if len(parts) >= 3 && parts[2] == "ro" {
-			mount.Readonly = true
-		}
-		out = append(out, mount)
 	}
 	return out
 }

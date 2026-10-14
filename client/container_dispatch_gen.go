@@ -58,6 +58,13 @@ func DispatchContainer(ctx context.Context, c pb.ContainerServiceClient, action 
 			}
 			dto.Ports = l
 		}
+		if v, ok := args["volumes"]; ok {
+			l, err := parseStringList(v)
+			if err != nil {
+				return "", fmt.Errorf("arg volumes: %w", err)
+			}
+			dto.Volumes = l
+		}
 		resp, err := c.Apply(ctx, dto)
 		if err != nil {
 			return "", err
