@@ -1,7 +1,7 @@
 // Command nodewatch is a kscale-integrated LLM monitoring agent: it enrolls with the
 // control plane as an ordinary (ABAC-gated) client, exposes kscale's read-only
-// resource ops as tools, and runs a local-LLM (Ollama) native tool-calling loop to
-// observe node state and notify on anomalies.
+// resource ops as tools, and runs a local-LLM tool-calling loop (Ollama or an
+// OpenAI-compatible server) to observe node state and notify on anomalies.
 package main
 
 import (
@@ -40,12 +40,15 @@ func main() {
 
 func run(ctx context.Context, logger *slog.Logger, args []string) error {
 	fs := flag.NewFlagSet("nodewatch", flag.ExitOnError)
-	ollamaHost := fs.String("ollama-host", "http://localhost:11434", "Ollama base URL")
-	model := fs.String("model", "qwen2.5", "Ollama model (tool-calling capable)")
+	llmAPI := fs.String("llm-api", nodewatch.APIOllama, "LLM wire API: ollama (native /api/chat) | openai (/v1/chat/completions: llama-server, vLLM, Ollama /v1)")
+	var llmHost string
+	fs.StringVar(&llmHost, "llm-host", "http://localhost:11434", "LLM server base URL")
+	fs.StringVar(&llmHost, "ollama-host", "http://localhost:11434", "deprecated alias of --llm-host")
+	model := fs.String("model", "qwen2.5", "model name (tool-calling capable)")
 	maxSteps := fs.Int("max-steps", 8, "max tool-calling steps per monitoring pass")
-	think := fs.Bool("think", false, "enable reasoning on thinking-capable models (qwen3, gemma4, …); Ollama rejects it on others")
-	reqTimeout := fs.Duration("request-timeout", 5*time.Minute, "per-/api/chat-call IDLE timeout — max gap with no stream progress, not total duration (a healthy CPU generation streams for minutes; only a real stall trips it)")
-	numCtx := fs.Int("num-ctx", 8192, "Ollama context window (num_ctx); raise on GPU hosts so long histories / big tool results fit")
+	think := fs.Bool("think", false, "enable reasoning on thinking-capable models (qwen3, gemma4, …); Ollama rejects it on others. --llm-api ollama only (openai: a server setting)")
+	reqTimeout := fs.Duration("request-timeout", 5*time.Minute, "per-chat-call IDLE timeout — max gap with no stream progress, not total duration (a healthy CPU generation streams for minutes; only a real stall trips it)")
+	numCtx := fs.Int("num-ctx", 8192, "Ollama context window (num_ctx); raise on GPU hosts so long histories / big tool results fit. --llm-api ollama only (openai: the server's window, e.g. llama-server -c)")
 	maxToolResult := fs.Int("max-tool-result", nodewatch.DefaultMaxToolResult, "max bytes of one tool result fed to the model; raise together with --num-ctx")
 	addr := fs.String("addr", "127.0.0.1:9443", "control plane UDP address")
 	dataDir := fs.String("data", "/tmp/kscale-ca", "dir holding bootstrap tokens / saved certs")
@@ -58,7 +61,7 @@ func run(ctx context.Context, logger *slog.Logger, args []string) error {
 	demo.Domain = *domainFlag
 
 	cfg := nodewatch.Config{
-		OllamaHost: *ollamaHost, Model: *model, MaxSteps: *maxSteps, Think: *think,
+		API: *llmAPI, LLMHost: llmHost, Model: *model, MaxSteps: *maxSteps, Think: *think,
 		RequestTimeout: *reqTimeout, NumCtx: *numCtx, MaxToolResult: *maxToolResult,
 		CPAddr: *addr, DataDir: *dataDir, Role: *role, Interval: *interval,
 	}
@@ -105,7 +108,10 @@ func run(ctx context.Context, logger *slog.Logger, args []string) error {
 	registry := nodewatch.NewRegistry()
 	registry.Add(nodewatch.NotifyTool(logger))
 
-	agent := nodewatch.NewOllamaAgent(cfg, registry, logger)
+	agent, err := nodewatch.NewLLMAgent(cfg, registry, logger)
+	if err != nil {
+		return err
+	}
 
 	// Interactive chat gets its own agent over the same read tools but without the
 	// notify sink — a chat answer goes to the admin on the stream, not the alert path.
@@ -117,7 +123,11 @@ func run(ctx context.Context, logger *slog.Logger, args []string) error {
 	for _, t := range nodewatch.ProbeTools() {
 		chatRegistry.AddClientSide(t)
 	}
-	chatServer := nodewatch.NewChatServer(nodewatch.NewOllamaAgent(cfg, chatRegistry, logger))
+	chatAgent, err := nodewatch.NewLLMAgent(cfg, chatRegistry, logger)
+	if err != nil {
+		return err
+	}
+	chatServer := nodewatch.NewChatServer(chatAgent)
 
 	// Connection session loop (the resilience the dataplane substrate has and this
 	// agent lacked): connect, expose the tools + served RPC surface over the peer,
@@ -139,10 +149,10 @@ func run(ctx context.Context, logger *slog.Logger, args []string) error {
 	}
 
 	if cfg.Interval <= 0 {
-		logger.Info("nodewatch: single monitoring pass", "model", cfg.Model, "ollama", cfg.OllamaHost)
+		logger.Info("nodewatch: single monitoring pass", "model", cfg.Model, "api", cfg.API, "llm", cfg.LLMHost)
 		return agent.Run(ctx)
 	}
-	logger.Info("nodewatch: periodic monitoring", "interval", cfg.Interval, "model", cfg.Model)
+	logger.Info("nodewatch: periodic monitoring", "interval", cfg.Interval, "model", cfg.Model, "api", cfg.API, "llm", cfg.LLMHost)
 	return runPeriodic(ctx, agent, cfg.Interval, logger)
 }
 

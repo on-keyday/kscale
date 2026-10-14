@@ -1,5 +1,5 @@
 // Command nodewatchmock is a standalone evaluation harness for the nodewatch LLM
-// agent: the same Ollama tool-calling loop, chat sessions, and katui chat UX as the
+// agent: the same LLM tool-calling loop, chat sessions, and katui chat UX as the
 // production deployment, but with the kscale control plane replaced by a scenario
 // file (canned tool/probe results). It exists to evaluate bigger models on a rented
 // GPU box — copy the single binary over, point it at the local Ollama, and drive the
@@ -34,12 +34,15 @@ func main() {
 
 func run(ctx context.Context, args []string) error {
 	fs := flag.NewFlagSet("nodewatchmock", flag.ExitOnError)
-	ollamaHost := fs.String("ollama-host", "http://localhost:11434", "Ollama base URL")
-	modelName := fs.String("model", "qwen2.5", "Ollama model (tool-calling capable)")
+	llmAPI := fs.String("llm-api", nodewatch.APIOllama, "LLM wire API: ollama (native /api/chat) | openai (/v1/chat/completions: llama-server, vLLM, Ollama /v1)")
+	var llmHost string
+	fs.StringVar(&llmHost, "llm-host", "http://localhost:11434", "LLM server base URL")
+	fs.StringVar(&llmHost, "ollama-host", "http://localhost:11434", "deprecated alias of --llm-host")
+	modelName := fs.String("model", "qwen2.5", "model name (tool-calling capable)")
 	maxSteps := fs.Int("max-steps", 8, "max tool-calling steps per turn / monitoring pass")
-	think := fs.Bool("think", false, "enable reasoning on thinking-capable models; Ollama rejects it on others")
-	reqTimeout := fs.Duration("request-timeout", 5*time.Minute, "per-/api/chat-call IDLE timeout (max gap with no stream progress, not total duration)")
-	numCtx := fs.Int("num-ctx", 8192, "Ollama context window (num_ctx); raise on GPU hosts so long histories / big tool results fit")
+	think := fs.Bool("think", false, "enable reasoning on thinking-capable models; Ollama rejects it on others. --llm-api ollama only")
+	reqTimeout := fs.Duration("request-timeout", 5*time.Minute, "per-chat-call IDLE timeout (max gap with no stream progress, not total duration)")
+	numCtx := fs.Int("num-ctx", 8192, "Ollama context window (num_ctx); raise on GPU hosts so long histories / big tool results fit. --llm-api ollama only")
 	maxToolResult := fs.Int("max-tool-result", nodewatch.DefaultMaxToolResult, "max bytes of one tool result fed to the model; raise together with --num-ctx")
 	scenarioName := fs.String("scenario", "healthy", "bundled scenario name or a YAML file path")
 	listScenarios := fs.Bool("list-scenarios", false, "list the bundled scenarios and exit")
@@ -65,7 +68,7 @@ func run(ctx context.Context, args []string) error {
 	}
 
 	cfg := nodewatch.Config{
-		OllamaHost: *ollamaHost, Model: *modelName, MaxSteps: *maxSteps,
+		API: *llmAPI, LLMHost: llmHost, Model: *modelName, MaxSteps: *maxSteps,
 		Think: *think, RequestTimeout: *reqTimeout, NumCtx: *numCtx, MaxToolResult: *maxToolResult,
 	}
 	cfg.WithDefaults()
@@ -81,8 +84,11 @@ func run(ctx context.Context, args []string) error {
 		registry := nodewatch.NewRegistry()
 		registry.AddAll(mockReadTools(scen, allow))
 		registry.Add(nodewatch.NotifyTool(logger))
-		agent := nodewatch.NewOllamaAgent(cfg, registry, logger)
-		logger.Info("nodewatchmock: observe pass", "scenario", scen.Name, "model", cfg.Model, "ollama", cfg.OllamaHost)
+		agent, err := nodewatch.NewLLMAgent(cfg, registry, logger)
+		if err != nil {
+			return err
+		}
+		logger.Info("nodewatchmock: observe pass", "scenario", scen.Name, "model", cfg.Model, "api", cfg.API, "llm", cfg.LLMHost)
 		return agent.Run(ctx)
 	}
 
@@ -106,7 +112,11 @@ func run(ctx context.Context, args []string) error {
 	for _, t := range nodewatch.ProbeTools() {
 		chatRegistry.AddClientSide(t)
 	}
-	chatServer := nodewatch.NewChatServer(nodewatch.NewOllamaAgent(cfg, chatRegistry, logger))
+	chatAgent, err := nodewatch.NewLLMAgent(cfg, chatRegistry, logger)
+	if err != nil {
+		return err
+	}
+	chatServer := nodewatch.NewChatServer(chatAgent)
 
 	head := fmt.Sprintf("scenario %s · %s", scen.Name, cfg.Model)
 	p := tea.NewProgram(newModel(ctx, chatServer, scen, head), tea.WithAltScreen(), tea.WithContext(ctx))

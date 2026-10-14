@@ -6,26 +6,38 @@ package nodewatch
 
 import "time"
 
+// Config.API values.
+const (
+	APIOllama = "ollama"
+	APIOpenAI = "openai"
+)
+
 // Config drives the agent; cmd/nodewatch loads it from flags/YAML.
 type Config struct {
-	// Ollama (config-driven; the agent runs where Ollama lives, not where it is built).
-	OllamaHost string // e.g. http://localhost:11434
-	Model      string // tool-calling capable model, e.g. qwen2.5
-	MaxSteps   int    // loop step cap per run
+	// LLM server (config-driven; the agent runs where the server is reachable, not
+	// where it is built). API selects the wire protocol: APIOllama (Ollama's native
+	// /api/chat) or APIOpenAI (/v1/chat/completions — llama-server, vLLM, Ollama /v1).
+	API      string
+	LLMHost  string // base URL, e.g. http://localhost:11434
+	Model    string // tool-calling capable model, e.g. qwen2.5
+	MaxSteps int    // loop step cap per run
 	// Think asks a thinking-capable model (qwen3, gemma4, …) to reason before each
 	// answer; the reasoning arrives separately (message.thinking) and is surfaced as
 	// "thinking" chat events. Ollama rejects think=true on non-thinking models, so
-	// this stays opt-in rather than defaulting on.
+	// this stays opt-in rather than defaulting on. APIOllama only: the OpenAI API has
+	// no portable switch, so there it is the server's setting.
 	Think bool
-	// RequestTimeout bounds the IDLE time within one /api/chat call — the longest gap
+	// RequestTimeout bounds the IDLE time within one chat call — the longest gap
 	// with no progress (no new stream chunk / no response), not the total call duration.
 	// A healthy CPU-only generation streams for minutes and must NOT be capped on total
-	// time (that killed calls mid-stream); this only fires when Ollama actually stalls.
+	// time (that killed calls mid-stream); this only fires when the server actually
+	// stalls.
 	RequestTimeout time.Duration
-	// NumCtx is the Ollama context window (num_ctx). The 8192 default is sized for a
-	// small CPU-bound model: big enough that accumulating tool results don't overflow
-	// mid-loop, small enough to fit its RAM. On a GPU box raise it (32768+) so long
-	// chat histories and log-heavy tool results actually fit.
+	// NumCtx is the Ollama context window (num_ctx; APIOllama only — an OpenAI-API
+	// server fixes its window at startup, e.g. llama-server -c). The 8192 default is
+	// sized for a small CPU-bound model: big enough that accumulating tool results
+	// don't overflow mid-loop, small enough to fit its RAM. On a GPU box raise it
+	// (32768+) so long chat histories and log-heavy tool results actually fit.
 	NumCtx int
 	// MaxToolResult caps how many bytes of one tool result reach the model (0 =
 	// DefaultMaxToolResult). The default suits NumCtx 8192; raise the two together —
@@ -48,8 +60,11 @@ type Config struct {
 
 // WithDefaults fills unset fields with sensible values.
 func (c *Config) WithDefaults() {
-	if c.OllamaHost == "" {
-		c.OllamaHost = "http://localhost:11434"
+	if c.API == "" {
+		c.API = APIOllama
+	}
+	if c.LLMHost == "" {
+		c.LLMHost = "http://localhost:11434"
 	}
 	if c.Model == "" {
 		c.Model = "qwen2.5"

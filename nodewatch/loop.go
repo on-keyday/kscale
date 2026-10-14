@@ -56,11 +56,13 @@ type Agent struct {
 	// (DefaultMaxToolResult unless overridden via Config.MaxToolResult).
 	maxToolResult int
 	logger        *slog.Logger
-	// modelName / think identify the backing Ollama model, surfaced to the model
-	// itself in the system prompt so it knows what it is running as (self-calibration
-	// for a small local model). Empty modelName omits the runtime line (e.g. in tests).
+	// modelName / think / servedVia identify the backing model and server, surfaced to
+	// the model itself in the system prompt so it knows what it is running as
+	// (self-calibration for a small local model). Empty modelName omits the runtime
+	// line (e.g. in tests).
 	modelName string
 	think     bool
+	servedVia string
 }
 
 // NewAgent wires an agent. maxSteps bounds the tool-calling loop per run.
@@ -68,20 +70,38 @@ func NewAgent(model chatModel, registry *Registry, maxSteps int, logger *slog.Lo
 	return &Agent{model: model, registry: registry, maxSteps: maxSteps, maxToolResult: DefaultMaxToolResult, logger: logger}
 }
 
-// NewOllamaAgent builds an Agent backed by a real Ollama client (the exported entry
-// point for cmd/nodewatch; chatModel is unexported so callers go through this).
-func NewOllamaAgent(cfg Config, registry *Registry, logger *slog.Logger) *Agent {
-	a := NewAgent(newOllamaClient(cfg.OllamaHost, cfg.Model, cfg.Think, cfg.RequestTimeout, cfg.NumCtx), registry, cfg.MaxSteps, logger)
+// NewLLMAgent builds an Agent backed by a real LLM client for cfg.API (the exported
+// entry point for cmd/nodewatch; chatModel is unexported so callers go through this).
+func NewLLMAgent(cfg Config, registry *Registry, logger *slog.Logger) (*Agent, error) {
+	var model chatModel
+	var servedVia string
+	think := cfg.Think
+	switch cfg.API {
+	case APIOllama:
+		model = newOllamaClient(cfg.LLMHost, cfg.Model, cfg.Think, cfg.RequestTimeout, cfg.NumCtx)
+		servedVia = "Ollama"
+	case APIOpenAI:
+		if cfg.Think {
+			logger.Warn("nodewatch: think is ignored with the openai API — enable reasoning on the server instead")
+			think = false
+		}
+		model = newOpenAIClient(cfg.LLMHost, cfg.Model, cfg.RequestTimeout)
+		servedVia = "an OpenAI-compatible server"
+	default:
+		return nil, fmt.Errorf("nodewatch: unknown LLM API %q (want %q or %q)", cfg.API, APIOllama, APIOpenAI)
+	}
+	a := NewAgent(model, registry, cfg.MaxSteps, logger)
 	a.modelName = cfg.Model
-	a.think = cfg.Think
+	a.think = think
+	a.servedVia = servedVia
 	if cfg.MaxToolResult > 0 {
 		a.maxToolResult = cfg.MaxToolResult
 	}
-	return a
+	return a, nil
 }
 
 // systemContent appends a runtime-identity line to a base system prompt, telling the
-// model which local Ollama model it is running as. Kept factual so the model can
+// model which local model it is running as. Kept factual so the model can
 // self-calibrate: a small local model should keep reasoning tight and lean on tools
 // rather than prior knowledge. Omitted when modelName is unset (tests).
 func (a *Agent) systemContent(base string) string {
@@ -92,7 +112,7 @@ func (a *Agent) systemContent(base string) string {
 	if a.think {
 		mode = " with thinking enabled"
 	}
-	return base + fmt.Sprintf("\nRuntime: you are running as the local model %q served via Ollama%s — a resource-constrained local model, not a large hosted one. Keep your reasoning and output tight, and rely on the tools for facts rather than assuming from prior knowledge.", a.modelName, mode)
+	return base + fmt.Sprintf("\nRuntime: you are running as the local model %q served via %s%s — a resource-constrained local model, not a large hosted one. Keep your reasoning and output tight, and rely on the tools for facts rather than assuming from prior knowledge.", a.modelName, a.servedVia, mode)
 }
 
 // Run executes one monitoring pass: the model calls read tools, then notify. It
