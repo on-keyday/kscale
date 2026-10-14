@@ -5,7 +5,6 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"fmt"
-	"strings"
 	"sync"
 	"testing"
 	"time"
@@ -500,8 +499,9 @@ func TestApplyDoesNotWaitForPull(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if len(list) != 1 || list[0].Name != "web" || list[0].State != "PULLING" || list[0].Image != "nginx:1" {
-		t.Fatalf("list while pulling = %+v", list)
+	want := Status{Name: "web", Image: "nginx:1", Pull: PullInfo{State: PullStatePulling, Image: "nginx:1"}}
+	if len(list) != 1 || list[0] != want {
+		t.Fatalf("list while pulling = %+v, want %+v", list, want)
 	}
 	// A converge during the pull must neither start a second pull nor create anything.
 	waitFor(t, func() bool { return f.pullCount() == 1 })
@@ -549,7 +549,8 @@ func TestImageChangeKeepsOldRunning(t *testing.T) {
 		t.Fatalf("old container disturbed while the new image pulls: %+v", c)
 	}
 	list, _ := e.List(ctx)
-	if len(list) != 1 || list[0].Image != "nginx:1" || list[0].State != "RUNNING (next image nginx:2: PULLING)" {
+	if len(list) != 1 || list[0].Image != "nginx:1" || list[0].State != "RUNNING" ||
+		list[0].Pull != (PullInfo{State: PullStatePulling, Image: "nginx:2"}) {
 		t.Fatalf("list during image change = %+v", list)
 	}
 	close(f.pullGate)
@@ -593,7 +594,8 @@ func TestPullFailureBacksOff(t *testing.T) {
 		t.Fatal(err)
 	}
 	list, _ := e.List(ctx)
-	if len(list) != 1 || !strings.HasPrefix(list[0].State, "PULL_FAILED: registry down") {
+	if p := list[0].Pull; len(list) != 1 || list[0].State != "" || p.State != PullStateFailed ||
+		p.Error != "registry down" || !p.RetryAt.Equal(clock.Add(pullBackoffBase)) {
 		t.Fatalf("failed pull not reported: %+v", list)
 	}
 	if err := e.Converge(ctx); err != nil {

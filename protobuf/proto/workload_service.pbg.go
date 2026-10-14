@@ -731,11 +731,15 @@ func (p *WorkloadServiceApplyContainersRequest) Append(w []byte) ([]byte, error)
 }
 
 type WorkloadServiceContainerStatus struct {
-	Name         string `json:"name,omitempty"`
-	ContainerId  string `json:"container_id,omitempty"`
-	Image        string `json:"image,omitempty"`
-	State        string `json:"state,omitempty"`
-	PodSandboxId string `json:"pod_sandbox_id,omitempty"`
+	Name              string `json:"name,omitempty"`
+	ContainerId       string `json:"container_id,omitempty"`
+	Image             string `json:"image,omitempty"`
+	State             string `json:"state,omitempty"`
+	PodSandboxId      string `json:"pod_sandbox_id,omitempty"`
+	PullState         string `json:"pull_state,omitempty"`
+	PullImage         string `json:"pull_image,omitempty"`
+	PullError         string `json:"pull_error,omitempty"`
+	PullRetryAtUnixMs int64  `json:"pull_retry_at_unix_ms,omitempty"`
 }
 
 func (p *WorkloadServiceContainerStatus) Read(data io.Reader) error {
@@ -779,6 +783,30 @@ func (p *WorkloadServiceContainerStatus) Read(data io.Reader) error {
 				return fmt.Errorf("field PodSandboxId unexpected wire type. expect LengthDelimited but got %s", field.Tag.Type())
 			}
 			p.PodSandboxId = unsafe.String(unsafe.SliceData((*val)), len((*val)))
+		case 6:
+			val := field.ValueData()
+			if val == nil {
+				return fmt.Errorf("field PullState unexpected wire type. expect LengthDelimited but got %s", field.Tag.Type())
+			}
+			p.PullState = unsafe.String(unsafe.SliceData((*val)), len((*val)))
+		case 7:
+			val := field.ValueData()
+			if val == nil {
+				return fmt.Errorf("field PullImage unexpected wire type. expect LengthDelimited but got %s", field.Tag.Type())
+			}
+			p.PullImage = unsafe.String(unsafe.SliceData((*val)), len((*val)))
+		case 8:
+			val := field.ValueData()
+			if val == nil {
+				return fmt.Errorf("field PullError unexpected wire type. expect LengthDelimited but got %s", field.Tag.Type())
+			}
+			p.PullError = unsafe.String(unsafe.SliceData((*val)), len((*val)))
+		case 9:
+			val := field.ValueVi()
+			if val == nil {
+				return fmt.Errorf("field PullRetryAtUnixMs unexpected wire type. expect Varint but got %s", field.Tag.Type())
+			}
+			p.PullRetryAtUnixMs = int64((*val).Value)
 		default:
 			// skip unknown
 		}
@@ -826,6 +854,30 @@ func (p *WorkloadServiceContainerStatus) ReadBuffer(data *bytes.Reader) error {
 				return fmt.Errorf("field PodSandboxId unexpected wire type. expect LengthDelimited but got %s", field.Tag.Type())
 			}
 			p.PodSandboxId = unsafe.String(unsafe.SliceData((*val)), len((*val)))
+		case 6:
+			val := field.ValueData()
+			if val == nil {
+				return fmt.Errorf("field PullState unexpected wire type. expect LengthDelimited but got %s", field.Tag.Type())
+			}
+			p.PullState = unsafe.String(unsafe.SliceData((*val)), len((*val)))
+		case 7:
+			val := field.ValueData()
+			if val == nil {
+				return fmt.Errorf("field PullImage unexpected wire type. expect LengthDelimited but got %s", field.Tag.Type())
+			}
+			p.PullImage = unsafe.String(unsafe.SliceData((*val)), len((*val)))
+		case 8:
+			val := field.ValueData()
+			if val == nil {
+				return fmt.Errorf("field PullError unexpected wire type. expect LengthDelimited but got %s", field.Tag.Type())
+			}
+			p.PullError = unsafe.String(unsafe.SliceData((*val)), len((*val)))
+		case 9:
+			val := field.ValueVi()
+			if val == nil {
+				return fmt.Errorf("field PullRetryAtUnixMs unexpected wire type. expect Varint but got %s", field.Tag.Type())
+			}
+			p.PullRetryAtUnixMs = int64((*val).Value)
 		default:
 			// skip unknown
 		}
@@ -870,6 +922,30 @@ func (p *WorkloadServiceContainerStatus) Decode(data []byte) error {
 				return fmt.Errorf("field PodSandboxId unexpected wire type. expect LengthDelimited but got %s", field.Tag.Type())
 			}
 			p.PodSandboxId = unsafe.String(unsafe.SliceData((*val)), len((*val)))
+		case 6:
+			val := field.ValueData()
+			if val == nil {
+				return fmt.Errorf("field PullState unexpected wire type. expect LengthDelimited but got %s", field.Tag.Type())
+			}
+			p.PullState = unsafe.String(unsafe.SliceData((*val)), len((*val)))
+		case 7:
+			val := field.ValueData()
+			if val == nil {
+				return fmt.Errorf("field PullImage unexpected wire type. expect LengthDelimited but got %s", field.Tag.Type())
+			}
+			p.PullImage = unsafe.String(unsafe.SliceData((*val)), len((*val)))
+		case 8:
+			val := field.ValueData()
+			if val == nil {
+				return fmt.Errorf("field PullError unexpected wire type. expect LengthDelimited but got %s", field.Tag.Type())
+			}
+			p.PullError = unsafe.String(unsafe.SliceData((*val)), len((*val)))
+		case 9:
+			val := field.ValueVi()
+			if val == nil {
+				return fmt.Errorf("field PullRetryAtUnixMs unexpected wire type. expect Varint but got %s", field.Tag.Type())
+			}
+			p.PullRetryAtUnixMs = int64((*val).Value)
 		default:
 			// skip unknown
 		}
@@ -925,6 +1001,41 @@ func (p *WorkloadServiceContainerStatus) Encode(w io.Writer) error {
 			return err
 		}
 	}
+	field.Tag.SetNumber(6)
+	if len(p.PullState) > 0 {
+		field.Tag.SetType(wire.WireType_LengthDelimited)
+		field.SetLength(wire.Varint{Value: uint64(len(p.PullState))})
+		field.SetValueData([]byte(p.PullState))
+		if err := field.Write(w); err != nil {
+			return err
+		}
+	}
+	field.Tag.SetNumber(7)
+	if len(p.PullImage) > 0 {
+		field.Tag.SetType(wire.WireType_LengthDelimited)
+		field.SetLength(wire.Varint{Value: uint64(len(p.PullImage))})
+		field.SetValueData([]byte(p.PullImage))
+		if err := field.Write(w); err != nil {
+			return err
+		}
+	}
+	field.Tag.SetNumber(8)
+	if len(p.PullError) > 0 {
+		field.Tag.SetType(wire.WireType_LengthDelimited)
+		field.SetLength(wire.Varint{Value: uint64(len(p.PullError))})
+		field.SetValueData([]byte(p.PullError))
+		if err := field.Write(w); err != nil {
+			return err
+		}
+	}
+	field.Tag.SetNumber(9)
+	if p.PullRetryAtUnixMs != 0 {
+		field.Tag.SetType(wire.WireType_Varint)
+		field.SetValueVi(wire.Varint{Value: uint64(p.PullRetryAtUnixMs)})
+		if err := field.Write(w); err != nil {
+			return err
+		}
+	}
 	return nil
 }
 func (p *WorkloadServiceContainerStatus) EncodeBuffer(w *bytes.Buffer) error {
@@ -970,6 +1081,41 @@ func (p *WorkloadServiceContainerStatus) EncodeBuffer(w *bytes.Buffer) error {
 		field.Tag.SetType(wire.WireType_LengthDelimited)
 		field.SetLength(wire.Varint{Value: uint64(len(p.PodSandboxId))})
 		field.SetValueData([]byte(p.PodSandboxId))
+		if err := field.WriteBuffer(w); err != nil {
+			return err
+		}
+	}
+	field.Tag.SetNumber(6)
+	if len(p.PullState) > 0 {
+		field.Tag.SetType(wire.WireType_LengthDelimited)
+		field.SetLength(wire.Varint{Value: uint64(len(p.PullState))})
+		field.SetValueData([]byte(p.PullState))
+		if err := field.WriteBuffer(w); err != nil {
+			return err
+		}
+	}
+	field.Tag.SetNumber(7)
+	if len(p.PullImage) > 0 {
+		field.Tag.SetType(wire.WireType_LengthDelimited)
+		field.SetLength(wire.Varint{Value: uint64(len(p.PullImage))})
+		field.SetValueData([]byte(p.PullImage))
+		if err := field.WriteBuffer(w); err != nil {
+			return err
+		}
+	}
+	field.Tag.SetNumber(8)
+	if len(p.PullError) > 0 {
+		field.Tag.SetType(wire.WireType_LengthDelimited)
+		field.SetLength(wire.Varint{Value: uint64(len(p.PullError))})
+		field.SetValueData([]byte(p.PullError))
+		if err := field.WriteBuffer(w); err != nil {
+			return err
+		}
+	}
+	field.Tag.SetNumber(9)
+	if p.PullRetryAtUnixMs != 0 {
+		field.Tag.SetType(wire.WireType_Varint)
+		field.SetValueVi(wire.Varint{Value: uint64(p.PullRetryAtUnixMs)})
 		if err := field.WriteBuffer(w); err != nil {
 			return err
 		}
@@ -1027,6 +1173,49 @@ func (p *WorkloadServiceContainerStatus) Append(w []byte) ([]byte, error) {
 		field.Tag.SetType(wire.WireType_LengthDelimited)
 		field.SetLength(wire.Varint{Value: uint64(len(p.PodSandboxId))})
 		field.SetValueData([]byte(p.PodSandboxId))
+		if appendTmp, err := field.Append(w); err != nil {
+			return nil, err
+		} else {
+			w = appendTmp
+		}
+	}
+	field.Tag.SetNumber(6)
+	if len(p.PullState) > 0 {
+		field.Tag.SetType(wire.WireType_LengthDelimited)
+		field.SetLength(wire.Varint{Value: uint64(len(p.PullState))})
+		field.SetValueData([]byte(p.PullState))
+		if appendTmp, err := field.Append(w); err != nil {
+			return nil, err
+		} else {
+			w = appendTmp
+		}
+	}
+	field.Tag.SetNumber(7)
+	if len(p.PullImage) > 0 {
+		field.Tag.SetType(wire.WireType_LengthDelimited)
+		field.SetLength(wire.Varint{Value: uint64(len(p.PullImage))})
+		field.SetValueData([]byte(p.PullImage))
+		if appendTmp, err := field.Append(w); err != nil {
+			return nil, err
+		} else {
+			w = appendTmp
+		}
+	}
+	field.Tag.SetNumber(8)
+	if len(p.PullError) > 0 {
+		field.Tag.SetType(wire.WireType_LengthDelimited)
+		field.SetLength(wire.Varint{Value: uint64(len(p.PullError))})
+		field.SetValueData([]byte(p.PullError))
+		if appendTmp, err := field.Append(w); err != nil {
+			return nil, err
+		} else {
+			w = appendTmp
+		}
+	}
+	field.Tag.SetNumber(9)
+	if p.PullRetryAtUnixMs != 0 {
+		field.Tag.SetType(wire.WireType_Varint)
+		field.SetValueVi(wire.Varint{Value: uint64(p.PullRetryAtUnixMs)})
 		if appendTmp, err := field.Append(w); err != nil {
 			return nil, err
 		} else {

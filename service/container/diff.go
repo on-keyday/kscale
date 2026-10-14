@@ -6,6 +6,7 @@ import (
 	"log/slog"
 	"sort"
 	"strings"
+	"time"
 
 	"github.com/on-keyday/kscale/dpbroker"
 	pb "github.com/on-keyday/kscale/protobuf/proto"
@@ -32,9 +33,9 @@ var _ pb.ContainerServiceServer = (*Service)(nil)
 // diverges from the DESIRED container set matching that node. Per divergent container it
 // emits one line:
 //
-//	<node> <name>: +missing (desired but not present)
+//	<node> <name>: +missing (desired, not present[; pulling X | ; pull of X failed: E, retry in Ns])
 //	<node> <name>: -extra   (kscale-managed but not desired — pending removal)
-//	<node> <name>: state=EXITED [image desired=X actual=Y]   (present but not RUNNING / image drift)
+//	<node> <name>: state=EXITED [image desired=X actual=Y] [(pulling X)]   (present but not RUNNING / image drift / its replacement image still pulling)
 //
 // An empty result means every workload node is in sync with the desired state. Read-only:
 // it only queries (ListContainers), never applies — the converge loop is what reconciles.
@@ -67,8 +68,13 @@ func (s *Service) Diff(ctx context.Context, _ *pbaccess.ResourceContainerActionD
 			d, wantIt := desired[name]
 			a, haveIt := actual[name]
 			switch {
-			case wantIt && !haveIt:
-				entries = append(entries, fmt.Sprintf("%s %s: +missing (desired, not present)", node, name))
+			case wantIt && (!haveIt || a.ContainerId == ""):
+				// No container yet; an entry without one only reports a pending pull.
+				reason := "desired, not present"
+				if haveIt && a.PullState != "" {
+					reason += "; " + pullNote(a)
+				}
+				entries = append(entries, fmt.Sprintf("%s %s: +missing (%s)", node, name, reason))
 			case !wantIt && haveIt:
 				entries = append(entries, fmt.Sprintf("%s %s: -extra (present, not desired)", node, name))
 			default: // present in both — check running + image drift
@@ -79,6 +85,9 @@ func (s *Service) Diff(ctx context.Context, _ *pbaccess.ResourceContainerActionD
 				if d.Image != a.Image {
 					notes = append(notes, fmt.Sprintf("image desired=%s actual=%s", d.Image, a.Image))
 				}
+				if a.PullState != "" {
+					notes = append(notes, "("+pullNote(a)+")")
+				}
 				if len(notes) > 0 {
 					entries = append(entries, fmt.Sprintf("%s %s: %s", node, name, strings.Join(notes, " ")))
 				}
@@ -86,6 +95,20 @@ func (s *Service) Diff(ctx context.Context, _ *pbaccess.ResourceContainerActionD
 		}
 	}
 	return &pbaccess.ResourceContainerActionDiffResponseDTO{Entries: entries}, nil
+}
+
+// pullNote renders a pending background image pull: "pulling X", or "pull of X
+// failed: <err>, retry in Ns".
+func pullNote(a *pb.WorkloadServiceContainerStatus) string {
+	if a.PullState != "FAILED" {
+		return "pulling " + a.PullImage
+	}
+	note := fmt.Sprintf("pull of %s failed: %s", a.PullImage, a.PullError)
+	if a.PullRetryAtUnixMs > 0 {
+		in := max(time.Until(time.UnixMilli(a.PullRetryAtUnixMs)), 0).Round(time.Second)
+		note += fmt.Sprintf(", retry in %s", in)
+	}
+	return note
 }
 
 // unionSortedNames returns the sorted union of keys across the desired and actual maps,

@@ -126,13 +126,16 @@ type Endpoint struct {
 	Ports     []Port
 }
 
-// Status is the observed state of one managed container.
+// Status is the observed state of one managed container. A desired container
+// whose image is still pulling gets one too: with no container yet (ContainerID
+// and State empty), or on the container it will replace (Pull.Image != Image).
 type Status struct {
 	Name         string
 	ContainerID  string
 	Image        string
-	State        string
+	State        string // CRI state (stateString); "" = no container yet
 	PodSandboxID string
+	Pull         PullInfo // zero = no pull pending
 }
 
 // Engine converges a desired container set onto a Runtime. Safe for concurrent
@@ -379,10 +382,9 @@ func (e *Engine) teardownSandbox(ctx context.Context, id string) error {
 	return nil
 }
 
-// List reports the observed state of every managed container. A desired container
-// waiting on its image shows the pull: as its own entry (State "PULLING" /
-// "PULL_FAILED: ...") when nothing runs under that name yet, or appended to the
-// current container's state when that one is about to be replaced.
+// List reports the observed state of every managed container, plus an entry for
+// each desired container that has none yet but whose image is pulling. Pull
+// carries a pending pull either way (see Status).
 func (e *Engine) List(ctx context.Context) ([]Status, error) {
 	e.mu.Lock()
 	defer e.mu.Unlock()
@@ -396,26 +398,24 @@ func (e *Engine) List(ctx context.Context) ([]Status, error) {
 		if c.Image != nil {
 			image = c.Image.Image
 		}
-		state := stateString(c.State)
-		if spec, ok := e.desired[name]; ok && spec.Image != image {
-			if ps := e.pullStatus(spec.Image); ps != "" {
-				state += " (next image " + spec.Image + ": " + ps + ")"
-			}
-		}
-		out = append(out, Status{
+		st := Status{
 			Name:         name,
 			ContainerID:  c.Id,
 			Image:        image,
-			State:        state,
+			State:        stateString(c.State),
 			PodSandboxID: c.PodSandboxId,
-		})
+		}
+		if spec, ok := e.desired[name]; ok && spec.Image != image {
+			st.Pull = e.pullInfo(spec.Image)
+		}
+		out = append(out, st)
 	}
 	for name, spec := range e.desired {
 		if _, ok := ctrs[name]; ok {
 			continue
 		}
-		if ps := e.pullStatus(spec.Image); ps != "" {
-			out = append(out, Status{Name: name, Image: spec.Image, State: ps})
+		if pi := e.pullInfo(spec.Image); pi.State != "" {
+			out = append(out, Status{Name: name, Image: spec.Image, Pull: pi})
 		}
 	}
 	sort.Slice(out, func(i, j int) bool { return out[i].Name < out[j].Name })

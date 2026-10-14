@@ -34,13 +34,20 @@ message WorkloadServiceApplyContainersRequest {
     repeated WorkloadServiceContainerSpec containers = 1;
 }
 
-// ContainerStatus is the observed state of one managed container.
+// ContainerStatus is the observed state of one managed container. A desired
+// container whose image is still being pulled in the background also gets an
+// entry: with no container yet (container_id/state empty) or, when it replaces a
+// running one, on that container's entry with pull_image naming the next image.
 message WorkloadServiceContainerStatus {
     string name = 1;
     string container_id = 2;
     string image = 3;
-    string state = 4; // CRI ContainerState: CREATED | RUNNING | EXITED | UNKNOWN
+    string state = 4; // CRI ContainerState: CREATED | RUNNING | EXITED | UNKNOWN; "" = no container yet
     string pod_sandbox_id = 5;
+    string pull_state = 6; // "" (no pull pending) | "PULLING" | "FAILED"
+    string pull_image = 7; // the image being pulled (set with pull_state)
+    string pull_error = 8; // FAILED: the last attempt's error
+    int64 pull_retry_at_unix_ms = 9; // FAILED: when the next attempt may start
 }
 
 message WorkloadServiceListContainersResponse {

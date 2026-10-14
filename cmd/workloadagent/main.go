@@ -261,13 +261,20 @@ func (s *workloadService) ListContainers(ctx context.Context, _ *wkt.Empty) (*pb
 	}
 	resp := &pb.WorkloadServiceListContainersResponse{}
 	for _, st := range statuses {
-		resp.Containers = append(resp.Containers, &pb.WorkloadServiceContainerStatus{
+		cs := &pb.WorkloadServiceContainerStatus{
 			Name:         st.Name,
 			ContainerId:  st.ContainerID,
 			Image:        st.Image,
 			State:        st.State,
 			PodSandboxId: st.PodSandboxID,
-		})
+			PullState:    st.Pull.State,
+			PullImage:    st.Pull.Image,
+			PullError:    st.Pull.Error,
+		}
+		if !st.Pull.RetryAt.IsZero() {
+			cs.PullRetryAtUnixMs = st.Pull.RetryAt.UnixMilli()
+		}
+		resp.Containers = append(resp.Containers, cs)
 	}
 	return resp, nil
 }

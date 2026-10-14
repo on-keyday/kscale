@@ -153,20 +153,34 @@ func (e *Engine) prunePulls() {
 	}
 }
 
-// pullStatus is the user-facing state of image's background pull, "" if none.
-func (e *Engine) pullStatus(image string) string {
+// PullInfo is a pending background pull as List reports it.
+type PullInfo struct {
+	State   string    // "" (none) | PullStatePulling | PullStateFailed
+	Image   string    // the image being pulled
+	Error   string    // PullStateFailed: the last attempt's error
+	RetryAt time.Time // PullStateFailed: when the next attempt may start
+}
+
+// PullInfo.State values (the wire's pull_state).
+const (
+	PullStatePulling = "PULLING"
+	PullStateFailed  = "FAILED"
+)
+
+// pullInfo reports image's background pull; zero if none is pending.
+func (e *Engine) pullInfo(image string) PullInfo {
 	e.pmu.Lock()
 	defer e.pmu.Unlock()
 	ps := e.pulls[image]
 	switch {
 	case ps == nil:
-		return ""
+		return PullInfo{}
 	case ps.inFlight:
-		return "PULLING"
+		return PullInfo{State: PullStatePulling, Image: image}
 	case ps.err != nil:
-		return fmt.Sprintf("PULL_FAILED: %v (retry in %s)", ps.err, max(ps.retryAt.Sub(e.now()), 0).Round(time.Second))
+		return PullInfo{State: PullStateFailed, Image: image, Error: ps.err.Error(), RetryAt: ps.retryAt}
 	default:
-		return ""
+		return PullInfo{}
 	}
 }
 
