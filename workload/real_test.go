@@ -22,6 +22,7 @@ func TestRealConverge(t *testing.T) {
 	}
 	client := cri.NewClient(socket, nil)
 	e := workload.NewEngine(client, nil)
+	defer e.Close()
 	ctx := context.Background()
 
 	spec := workload.Spec{
@@ -43,10 +44,14 @@ func TestRealConverge(t *testing.T) {
 		t.Fatalf("Apply: %v", err)
 	}
 
-	// Poll until the container reports RUNNING (image pull + start take a moment).
+	// Poll until the container reports RUNNING. The pull runs in the background, so
+	// converge each round (what the agent's loop does on PullDone / its ticker).
 	var final workload.Status
 	deadline := time.Now().Add(60 * time.Second)
 	for time.Now().Before(deadline) {
+		if err := e.Converge(ctx); err != nil {
+			t.Fatalf("Converge: %v", err)
+		}
 		list, err := e.List(ctx)
 		if err != nil {
 			t.Fatalf("List: %v", err)

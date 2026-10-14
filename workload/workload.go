@@ -18,6 +18,7 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"time"
 
 	criapi "github.com/on-keyday/kscale/protobuf/proto/cri"
 )
@@ -54,6 +55,7 @@ type Runtime interface {
 	RemoveContainer(context.Context, *criapi.RemoveContainerRequest) (*criapi.RemoveContainerResponse, error)
 	ListContainers(context.Context, *criapi.ListContainersRequest) (*criapi.ListContainersResponse, error)
 	PodSandboxStatus(context.Context, *criapi.PodSandboxStatusRequest) (*criapi.PodSandboxStatusResponse, error)
+	ImageStatus(context.Context, *criapi.ImageStatusRequest) (*criapi.ImageStatusResponse, error)
 }
 
 // Spec is one desired container (the WorkloadService wire spec, decoupled from
@@ -135,23 +137,47 @@ type Status struct {
 
 // Engine converges a desired container set onto a Runtime. Safe for concurrent
 // use; Apply and Converge serialize on a single mutex so a timer-driven converge
-// never races an Apply.
+// never races an Apply. Image pulls run in the background (pull.go) and are not
+// under that mutex.
 type Engine struct {
 	rt     Runtime
 	logger *slog.Logger
 
 	mu      sync.Mutex
 	desired map[string]Spec
+
+	puller     Puller
+	pullSem    chan struct{}
+	pullCtx    context.Context
+	pullCancel context.CancelFunc
+	pullWG     sync.WaitGroup
+	pullDone   chan struct{}
+	pmu        sync.Mutex // guards pulls; never held across a CRI call
+	pulls      map[string]*pullState
+	now        func() time.Time
 }
 
-func NewEngine(rt Runtime, logger *slog.Logger) *Engine {
+// NewEngine builds an Engine over rt. Pulls go through rt unless WithPuller says
+// otherwise; Close stops them.
+func NewEngine(rt Runtime, logger *slog.Logger, opts ...Option) *Engine {
 	if logger == nil {
 		logger = slog.New(slog.DiscardHandler)
 	}
-	return &Engine{rt: rt, logger: logger, desired: map[string]Spec{}}
+	e := &Engine{
+		rt: rt, logger: logger, desired: map[string]Spec{},
+		puller: rt, pullSem: make(chan struct{}, 2), pullDone: make(chan struct{}, 1),
+		pulls: map[string]*pullState{}, now: time.Now,
+	}
+	e.pullCtx, e.pullCancel = context.WithCancel(context.Background())
+	for _, o := range opts {
+		o(e)
+	}
+	return e
 }
 
-// Apply replaces the desired set with specs and converges once.
+// Apply replaces the desired set with specs and converges once. It does not wait
+// for image pulls: a container whose image is still downloading starts on a later
+// converge (see PullDone).
 func (e *Engine) Apply(ctx context.Context, specs []Spec) error {
 	e.mu.Lock()
 	defer e.mu.Unlock()
@@ -232,6 +258,7 @@ func (e *Engine) convergeLocked(ctx context.Context) error {
 			errs = append(errs, fmt.Errorf("ensure %q: %w", name, err))
 		}
 	}
+	e.prunePulls()
 
 	if len(errs) > 0 {
 		return fmt.Errorf("converge: %w", errors.Join(errs...))
@@ -241,7 +268,10 @@ func (e *Engine) convergeLocked(ctx context.Context) error {
 
 // ensure reconciles one desired container given its current sandbox/container (or
 // nil). A container that matches the desired spec hash is left alone when running
-// (or when exited under restart=never); everything else is recreated.
+// (or when exited under restart=never); everything else is recreated — once its
+// image is present. Until then the current container (if any) is left untouched
+// and a background pull is requested, so an image change never means downtime
+// for the length of the download.
 func (e *Engine) ensure(ctx context.Context, spec Spec, pod *criapi.PodSandbox, ctr *criapi.Container) error {
 	if err := spec.validate(); err != nil {
 		return err
@@ -259,6 +289,10 @@ func (e *Engine) ensure(ctx context.Context, spec Spec, pod *criapi.PodSandbox, 
 		// CREATED, or EXITED+restart=always → recreate below.
 	}
 
+	if ok, err := e.imageReady(ctx, spec.Image); err != nil || !ok {
+		return err // !ok: pulling in the background; a later converge recreates
+	}
+
 	// Recreate: tear down the stale container and sandbox for this name.
 	if ctr != nil {
 		if err := e.teardownContainer(ctx, ctr.Id); err != nil {
@@ -269,12 +303,6 @@ func (e *Engine) ensure(ctx context.Context, spec Spec, pod *criapi.PodSandbox, 
 		if err := e.teardownSandbox(ctx, pod.Id); err != nil {
 			return err
 		}
-	}
-
-	if _, err := e.rt.PullImage(ctx, &criapi.PullImageRequest{
-		Image: &criapi.ImageSpec{Image: spec.Image},
-	}); err != nil {
-		return fmt.Errorf("pull image %q: %w", spec.Image, err)
 	}
 
 	sandboxConfig := e.sandboxConfig(spec)
@@ -351,7 +379,10 @@ func (e *Engine) teardownSandbox(ctx context.Context, id string) error {
 	return nil
 }
 
-// List reports the observed state of every managed container.
+// List reports the observed state of every managed container. A desired container
+// waiting on its image shows the pull: as its own entry (State "PULLING" /
+// "PULL_FAILED: ...") when nothing runs under that name yet, or appended to the
+// current container's state when that one is about to be replaced.
 func (e *Engine) List(ctx context.Context) ([]Status, error) {
 	e.mu.Lock()
 	defer e.mu.Unlock()
@@ -365,13 +396,27 @@ func (e *Engine) List(ctx context.Context) ([]Status, error) {
 		if c.Image != nil {
 			image = c.Image.Image
 		}
+		state := stateString(c.State)
+		if spec, ok := e.desired[name]; ok && spec.Image != image {
+			if ps := e.pullStatus(spec.Image); ps != "" {
+				state += " (next image " + spec.Image + ": " + ps + ")"
+			}
+		}
 		out = append(out, Status{
 			Name:         name,
 			ContainerID:  c.Id,
 			Image:        image,
-			State:        stateString(c.State),
+			State:        state,
 			PodSandboxID: c.PodSandboxId,
 		})
+	}
+	for name, spec := range e.desired {
+		if _, ok := ctrs[name]; ok {
+			continue
+		}
+		if ps := e.pullStatus(spec.Image); ps != "" {
+			out = append(out, Status{Name: name, Image: spec.Image, State: ps})
+		}
 	}
 	sort.Slice(out, func(i, j int) bool { return out[i].Name < out[j].Name })
 	return out, nil

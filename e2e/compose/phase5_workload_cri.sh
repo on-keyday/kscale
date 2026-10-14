@@ -5,7 +5,8 @@
 # sandbox. The workload node shares popcache's netns (the s1/s2 co-location), so the
 # container sits behind the same VIP-on-lo that l4lb IPIP-forwards to.
 #
-# Needs registry access: the engine always PullImage's (busybox from docker.io) and
+# Needs registry access: the engine pulls busybox from docker.io when absent (in the
+# background; the container starts on the converge its completion kicks) and
 # containerd pulls its pause image for the sandbox. SYSTEM docker only.
 set -e
 cd "$(dirname "$0")"

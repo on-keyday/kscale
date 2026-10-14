@@ -50,6 +50,7 @@ func main() {
 	node := fs.String("node", "node1", "this workload node's name")
 	criSocket := fs.String("cri-socket", "/run/containerd/containerd.sock", "CRI (containerd) unix socket")
 	convergeEvery := fs.Duration("converge-interval", 30*time.Second, "periodic reconcile interval (restart policy + crash healing)")
+	pullTimeout := fs.Duration("pull-timeout", 30*time.Minute, "upper bound on one image pull (pulls run in the background on their own CRI connection; a stalled download is also cut by containerd's own progress timeout)")
 	fileDir := fs.String("file-dir", "", "node-local file store (default <data>/dp_files)")
 	domainFlag := fs.String("ca-domain", domain, "CA domain — must match the control plane's --ca-domain")
 	netdpObj := fs.String("netdp-obj", "", "load this eBPF datapath object at boot (dev/test). Normally the object comes from the control plane (workload_netdp_object). Loading needs CAP_BPF + CAP_NET_ADMIN")
@@ -60,9 +61,14 @@ func main() {
 	defer stop()
 
 	// Lazy CRI client — containerd may come up alongside/after the agent; the first
-	// RPC that finds it down errors and the next converge retries.
+	// RPC that finds it down errors and the next converge retries. Pulls get their
+	// own connection: a pull is one RPC that can run for many minutes, and a
+	// connection's receive timeout applies to (and on expiry aborts) every call on it.
 	criClient := cri.NewClient(*criSocket, logger)
-	engine := workload.NewEngine(criClient, logger)
+	pullClient := cri.NewClient(*criSocket, logger)
+	pullClient.SetReceiveTimeout(*pullTimeout)
+	engine := workload.NewEngine(criClient, logger, workload.WithPuller(pullClient))
+	defer engine.Close()
 
 	// The datapath records state from boot; its object arrives from the CP (or
 	// --netdp-obj). A boot object that cannot load is fatal: silently running
@@ -83,7 +89,8 @@ func main() {
 	epSync := &endpointSync{engine: engine, dp: dp, logger: logger}
 
 	// Periodic converge: honour restart=always + heal crashed sandboxes using the
-	// last-applied desired set, independent of control-plane pushes.
+	// last-applied desired set, independent of control-plane pushes. A finished
+	// image pull triggers one at once so its container starts without waiting a tick.
 	safe.Go(logger, "workload-converge", func() {
 		t := time.NewTicker(*convergeEvery)
 		defer t.Stop()
@@ -92,11 +99,12 @@ func main() {
 			case <-ctx.Done():
 				return
 			case <-t.C:
-				if err := engine.Converge(ctx); err != nil {
-					logger.Warn("workload: periodic converge", "error", err)
-				}
-				epSync.run(ctx)
+			case <-engine.PullDone():
 			}
+			if err := engine.Converge(ctx); err != nil {
+				logger.Warn("workload: periodic converge", "error", err)
+			}
+			epSync.run(ctx)
 		}
 	})
 

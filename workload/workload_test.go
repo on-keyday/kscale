@@ -5,7 +5,10 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"fmt"
+	"strings"
+	"sync"
 	"testing"
+	"time"
 
 	criapi "github.com/on-keyday/kscale/protobuf/proto/cri"
 )
@@ -13,11 +16,17 @@ import (
 // fakeRuntime models a containerd-ish CRI: sandboxes and containers as maps,
 // mutated by the lifecycle calls and filtered by label on the List calls. It
 // records call counts so tests can assert idempotency (no needless recreate).
+// The image side (images/pulled/pullGate/pullErr) is guarded by imu because
+// pulls run on the engine's background goroutines.
 type fakeRuntime struct {
 	nextID   int
 	pods     map[string]*criapi.PodSandbox
 	ctrs     map[string]*criapi.Container
+	imu      sync.Mutex
+	images   map[string]bool // present in the runtime
 	pulled   []string
+	pullGate chan struct{} // if set, PullImage blocks until it is closed
+	pullErr  error         // if set, PullImage fails with it
 	creates  int
 	removes  int
 	startErr error                           // if set, StartContainer fails once
@@ -27,7 +36,7 @@ type fakeRuntime struct {
 
 func newFake() *fakeRuntime {
 	return &fakeRuntime{pods: map[string]*criapi.PodSandbox{}, ctrs: map[string]*criapi.Container{},
-		modes: map[string]criapi.NamespaceMode{}, podIPs: map[string]string{}}
+		images: map[string]bool{}, modes: map[string]criapi.NamespaceMode{}, podIPs: map[string]string{}}
 }
 
 func (f *fakeRuntime) id(prefix string) string {
@@ -44,9 +53,59 @@ func labelMatch(have map[string]string, want map[string]string) bool {
 	return true
 }
 
-func (f *fakeRuntime) PullImage(_ context.Context, r *criapi.PullImageRequest) (*criapi.PullImageResponse, error) {
+func (f *fakeRuntime) PullImage(ctx context.Context, r *criapi.PullImageRequest) (*criapi.PullImageResponse, error) {
+	f.imu.Lock()
 	f.pulled = append(f.pulled, r.Image.Image)
+	gate, perr := f.pullGate, f.pullErr
+	f.imu.Unlock()
+	if gate != nil {
+		select {
+		case <-gate:
+		case <-ctx.Done():
+			return nil, ctx.Err()
+		}
+	}
+	if perr != nil {
+		return nil, perr
+	}
+	f.imu.Lock()
+	f.images[r.Image.Image] = true
+	f.imu.Unlock()
 	return &criapi.PullImageResponse{ImageRef: r.Image.Image}, nil
+}
+
+func (f *fakeRuntime) ImageStatus(_ context.Context, r *criapi.ImageStatusRequest) (*criapi.ImageStatusResponse, error) {
+	f.imu.Lock()
+	defer f.imu.Unlock()
+	if !f.images[r.Image.Image] {
+		return &criapi.ImageStatusResponse{}, nil // containerd: absent = nil image, no error
+	}
+	return &criapi.ImageStatusResponse{Image: &criapi.Image{Id: r.Image.Image}}, nil
+}
+
+func (f *fakeRuntime) pullCount() int {
+	f.imu.Lock()
+	defer f.imu.Unlock()
+	return len(f.pulled)
+}
+
+func waitFor(t *testing.T, cond func() bool) {
+	t.Helper()
+	for deadline := time.Now().Add(5 * time.Second); !cond(); time.Sleep(time.Millisecond) {
+		if time.Now().After(deadline) {
+			t.Fatal("condition not reached within 5s")
+		}
+	}
+}
+
+// applySettled applies specs, lets the background pulls it started land, and
+// converges once more — the synchronous outcome the lifecycle tests assert on.
+func applySettled(ctx context.Context, e *Engine, specs []Spec) error {
+	if err := e.Apply(ctx, specs); err != nil {
+		return err
+	}
+	e.pullWG.Wait()
+	return e.Converge(ctx)
 }
 
 func (f *fakeRuntime) RunPodSandbox(_ context.Context, r *criapi.RunPodSandboxRequest) (*criapi.RunPodSandboxResponse, error) {
@@ -163,7 +222,7 @@ func nginx() Spec {
 func TestApplyCreatesAndRuns(t *testing.T) {
 	f := newFake()
 	e := NewEngine(f, nil)
-	if err := e.Apply(context.Background(), []Spec{nginx()}); err != nil {
+	if err := applySettled(context.Background(), e, []Spec{nginx()}); err != nil {
 		t.Fatalf("Apply: %v", err)
 	}
 	c := f.byName("web")
@@ -182,13 +241,13 @@ func TestReapplySameSpecIsNoop(t *testing.T) {
 	f := newFake()
 	e := NewEngine(f, nil)
 	ctx := context.Background()
-	if err := e.Apply(ctx, []Spec{nginx()}); err != nil {
+	if err := applySettled(ctx, e, []Spec{nginx()}); err != nil {
 		t.Fatal(err)
 	}
 	createsAfterFirst := f.creates
 	// Re-apply identical spec several times; nothing should be recreated.
 	for i := 0; i < 3; i++ {
-		if err := e.Apply(ctx, []Spec{nginx()}); err != nil {
+		if err := applySettled(ctx, e, []Spec{nginx()}); err != nil {
 			t.Fatal(err)
 		}
 	}
@@ -207,14 +266,14 @@ func TestChangedSpecRecreates(t *testing.T) {
 	f := newFake()
 	e := NewEngine(f, nil)
 	ctx := context.Background()
-	if err := e.Apply(ctx, []Spec{nginx()}); err != nil {
+	if err := applySettled(ctx, e, []Spec{nginx()}); err != nil {
 		t.Fatal(err)
 	}
 	oldID := f.byName("web").Id
 
 	changed := nginx()
 	changed.Image = "nginx:2"
-	if err := e.Apply(ctx, []Spec{changed}); err != nil {
+	if err := applySettled(ctx, e, []Spec{changed}); err != nil {
 		t.Fatal(err)
 	}
 	c := f.byName("web")
@@ -234,14 +293,14 @@ func TestUndesiredIsRemoved(t *testing.T) {
 	e := NewEngine(f, nil)
 	ctx := context.Background()
 	two := []Spec{nginx(), {Name: "api", Image: "api:1", Restart: "never"}}
-	if err := e.Apply(ctx, two); err != nil {
+	if err := applySettled(ctx, e, two); err != nil {
 		t.Fatal(err)
 	}
 	if len(f.ctrs) != 2 {
 		t.Fatalf("expected 2 containers, got %d", len(f.ctrs))
 	}
 	// Drop "api" from the desired set.
-	if err := e.Apply(ctx, []Spec{nginx()}); err != nil {
+	if err := applySettled(ctx, e, []Spec{nginx()}); err != nil {
 		t.Fatal(err)
 	}
 	if f.byName("api") != nil {
@@ -256,7 +315,7 @@ func TestRestartAlwaysRecreatesExited(t *testing.T) {
 	f := newFake()
 	e := NewEngine(f, nil)
 	ctx := context.Background()
-	if err := e.Apply(ctx, []Spec{nginx()}); err != nil {
+	if err := applySettled(ctx, e, []Spec{nginx()}); err != nil {
 		t.Fatal(err)
 	}
 	// Simulate a crash: the container exits out from under us.
@@ -277,7 +336,7 @@ func TestRestartNeverLeavesExited(t *testing.T) {
 	e := NewEngine(f, nil)
 	ctx := context.Background()
 	spec := Spec{Name: "job", Image: "job:1", Restart: "never"}
-	if err := e.Apply(ctx, []Spec{spec}); err != nil {
+	if err := applySettled(ctx, e, []Spec{spec}); err != nil {
 		t.Fatal(err)
 	}
 	f.byName("job").State = criapi.ContainerState_CONTAINER_EXITED
@@ -296,7 +355,7 @@ func TestListReportsState(t *testing.T) {
 	f := newFake()
 	e := NewEngine(f, nil)
 	ctx := context.Background()
-	if err := e.Apply(ctx, []Spec{nginx(), {Name: "api", Image: "api:1"}}); err != nil {
+	if err := applySettled(ctx, e, []Spec{nginx(), {Name: "api", Image: "api:1"}}); err != nil {
 		t.Fatal(err)
 	}
 	list, err := e.List(ctx)
@@ -318,7 +377,7 @@ func TestCreateFailureRollsBackSandbox(t *testing.T) {
 	// Make the first StartContainer fail; the container is created but never runs,
 	// so Apply returns an error and the next converge must heal it.
 	f.startErr = fmt.Errorf("boom")
-	err := e.Apply(ctx, []Spec{nginx()})
+	err := applySettled(ctx, e, []Spec{nginx()})
 	if err == nil {
 		t.Fatal("expected Apply to surface the start failure")
 	}
@@ -340,7 +399,7 @@ func TestNetworkModeSelectsNamespace(t *testing.T) {
 	e := NewEngine(f, nil)
 	pod := Spec{Name: "pod", Image: "a:1", Network: NetworkPod, Ports: []string{"tcp:8080"}}
 	host := Spec{Name: "host", Image: "a:1"}
-	if err := e.Apply(context.Background(), []Spec{pod, host}); err != nil {
+	if err := applySettled(context.Background(), e, []Spec{pod, host}); err != nil {
 		t.Fatal(err)
 	}
 	if m := f.modes[f.podOf("pod")]; m != criapi.NamespaceMode_POD {
@@ -374,7 +433,7 @@ func TestEndpointsReportPodNetworkOnly(t *testing.T) {
 	e := NewEngine(f, nil)
 	ctx := context.Background()
 	pod := Spec{Name: "web", Image: "a:1", Network: NetworkPod, Ports: []string{"tcp:8080", "tcp:9090"}}
-	if err := e.Apply(ctx, []Spec{pod, {Name: "host", Image: "a:1"}}); err != nil {
+	if err := applySettled(ctx, e, []Spec{pod, {Name: "host", Image: "a:1"}}); err != nil {
 		t.Fatal(err)
 	}
 	eps, err := e.Endpoints(ctx)
@@ -420,5 +479,159 @@ func TestHashStableWithoutNetworkFields(t *testing.T) {
 	withPod.Network = NetworkPod
 	if specHash(s) == specHash(withPod) {
 		t.Fatal("network change must change the hash")
+	}
+}
+
+// TestApplyDoesNotWaitForPull: Apply returns while the image is still downloading,
+// List shows the pull, and the container starts once it lands.
+func TestApplyDoesNotWaitForPull(t *testing.T) {
+	f := newFake()
+	f.pullGate = make(chan struct{})
+	e := NewEngine(f, nil)
+	defer e.Close()
+	ctx := context.Background()
+	if err := e.Apply(ctx, []Spec{nginx()}); err != nil {
+		t.Fatalf("Apply: %v", err)
+	}
+	if len(f.ctrs) != 0 || len(f.pods) != 0 {
+		t.Fatalf("created before the image arrived: %d ctrs %d pods", len(f.ctrs), len(f.pods))
+	}
+	list, err := e.List(ctx)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(list) != 1 || list[0].Name != "web" || list[0].State != "PULLING" || list[0].Image != "nginx:1" {
+		t.Fatalf("list while pulling = %+v", list)
+	}
+	// A converge during the pull must neither start a second pull nor create anything.
+	waitFor(t, func() bool { return f.pullCount() == 1 })
+	if err := e.Converge(ctx); err != nil {
+		t.Fatal(err)
+	}
+	if n := f.pullCount(); n != 1 {
+		t.Fatalf("pulls = %d, want 1 (deduplicated)", n)
+	}
+	close(f.pullGate)
+	select {
+	case <-e.PullDone():
+	case <-time.After(5 * time.Second):
+		t.Fatal("PullDone never fired")
+	}
+	if err := e.Converge(ctx); err != nil {
+		t.Fatal(err)
+	}
+	if c := f.byName("web"); c == nil || c.State != criapi.ContainerState_CONTAINER_RUNNING {
+		t.Fatalf("web not running after the pull: %+v", c)
+	}
+}
+
+// TestImageChangeKeepsOldRunning: the old container serves until the new image is
+// present — no teardown for the length of the download.
+func TestImageChangeKeepsOldRunning(t *testing.T) {
+	f := newFake()
+	e := NewEngine(f, nil)
+	defer e.Close()
+	ctx := context.Background()
+	if err := applySettled(ctx, e, []Spec{nginx()}); err != nil {
+		t.Fatal(err)
+	}
+	oldID := f.byName("web").Id
+
+	f.imu.Lock()
+	f.pullGate = make(chan struct{})
+	f.imu.Unlock()
+	changed := nginx()
+	changed.Image = "nginx:2"
+	if err := e.Apply(ctx, []Spec{changed}); err != nil {
+		t.Fatal(err)
+	}
+	if c := f.byName("web"); c == nil || c.Id != oldID || c.State != criapi.ContainerState_CONTAINER_RUNNING {
+		t.Fatalf("old container disturbed while the new image pulls: %+v", c)
+	}
+	list, _ := e.List(ctx)
+	if len(list) != 1 || list[0].Image != "nginx:1" || list[0].State != "RUNNING (next image nginx:2: PULLING)" {
+		t.Fatalf("list during image change = %+v", list)
+	}
+	close(f.pullGate)
+	e.pullWG.Wait()
+	if err := e.Converge(ctx); err != nil {
+		t.Fatal(err)
+	}
+	if c := f.byName("web"); c == nil || c.Id == oldID || c.Image.Image != "nginx:2" {
+		t.Fatalf("not replaced after the pull: %+v", c)
+	}
+}
+
+// TestPresentImageNotPulled: IfNotPresent — an image the runtime has is used as is.
+func TestPresentImageNotPulled(t *testing.T) {
+	f := newFake()
+	f.images["nginx:1"] = true
+	e := NewEngine(f, nil)
+	defer e.Close()
+	if err := e.Apply(context.Background(), []Spec{nginx()}); err != nil {
+		t.Fatal(err)
+	}
+	if n := f.pullCount(); n != 0 {
+		t.Fatalf("pulled a present image (%d pulls)", n)
+	}
+	if c := f.byName("web"); c == nil || c.State != criapi.ContainerState_CONTAINER_RUNNING {
+		t.Fatalf("web not started synchronously with a present image: %+v", c)
+	}
+}
+
+// TestPullFailureBacksOff: a failed pull is reported, not retried before its
+// backoff expires, and retried after.
+func TestPullFailureBacksOff(t *testing.T) {
+	f := newFake()
+	f.pullErr = fmt.Errorf("registry down")
+	e := NewEngine(f, nil)
+	defer e.Close()
+	clock := time.Unix(1_000_000, 0)
+	e.now = func() time.Time { return clock }
+	ctx := context.Background()
+	if err := applySettled(ctx, e, []Spec{nginx()}); err != nil {
+		t.Fatal(err)
+	}
+	list, _ := e.List(ctx)
+	if len(list) != 1 || !strings.HasPrefix(list[0].State, "PULL_FAILED: registry down") {
+		t.Fatalf("failed pull not reported: %+v", list)
+	}
+	if err := e.Converge(ctx); err != nil {
+		t.Fatal(err)
+	}
+	e.pullWG.Wait()
+	if n := f.pullCount(); n != 1 {
+		t.Fatalf("retried within the backoff: %d pulls", n)
+	}
+
+	f.imu.Lock()
+	f.pullErr = nil
+	f.imu.Unlock()
+	clock = clock.Add(pullBackoffBase + time.Second)
+	if err := applySettled(ctx, e, []Spec{nginx()}); err != nil {
+		t.Fatal(err)
+	}
+	if n := f.pullCount(); n != 2 {
+		t.Fatalf("pulls after backoff = %d, want 2", n)
+	}
+	if c := f.byName("web"); c == nil || c.State != criapi.ContainerState_CONTAINER_RUNNING {
+		t.Fatalf("web not running after the retried pull: %+v", c)
+	}
+}
+
+// TestCloseCancelsPull: Close aborts an in-flight pull instead of waiting it out.
+func TestCloseCancelsPull(t *testing.T) {
+	f := newFake()
+	f.pullGate = make(chan struct{}) // never released
+	e := NewEngine(f, nil)
+	if err := e.Apply(context.Background(), []Spec{nginx()}); err != nil {
+		t.Fatal(err)
+	}
+	done := make(chan struct{})
+	go func() { e.Close(); close(done) }()
+	select {
+	case <-done:
+	case <-time.After(5 * time.Second):
+		t.Fatal("Close blocked on an in-flight pull")
 	}
 }
