@@ -25,9 +25,11 @@ type NodeFileDesired interface {
 // desired change, on node connect, and when the source cplane_file's content is updated
 // (onCPFileUpload). Hand-written (custom) because the content is sourced from the CP file
 // store rather than copied from a DTO field. Idempotent — SendFile overwrites — so a
-// re-push is harmless. Note: re-shipping the bytes does NOT reload any consumer (l4lb keeps
-// its already-loaded objects until its resource is re-applied); that timing is the
-// operator's to control.
+// re-push is harmless. Note: re-shipping the bytes does NOT reload any consumer by itself.
+// l4lb keeps its loaded objects until the next l4lb_object push finds their content
+// changed — an explicit re-apply, or the node's next reconnect (CP restart included),
+// since the CP re-pushes l4lb_object on every connect. So a new object staged here goes
+// live at the latest on the next reconnect; stage it only when it is meant to run.
 func NodeFile(ctx context.Context, store NodeFileDesired, broker *dpbroker.Broker, readCPFile func(string) ([]byte, error), onCPFileUpload func(func(name string)), status *Status, logger *slog.Logger) {
 	send := func(item *pbaccess.ResourceNodeFileActionGetResponseDTO, p *peer.Peer) {
 		content, err := readCPFile(item.CplaneFile)

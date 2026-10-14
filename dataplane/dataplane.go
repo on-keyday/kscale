@@ -695,7 +695,7 @@ func (s *dpService) ListFiles(ctx context.Context, req *pb.DataplaneServiceListF
 
 func (s *dpService) SendFile(ctx context.Context, req *pb.DataplaneServiceSendFileRequest) (*wkt.Empty, error) {
 	name := filepath.Base(req.SaveAs)
-	if err := os.WriteFile(filepath.Join(s.fileDir, name), req.Content, 0o644); err != nil {
+	if err := writeFileAtomic(filepath.Join(s.fileDir, name), req.Content, 0o644); err != nil {
 		return nil, err
 	}
 	s.logger.Info("dataplane: SendFile received", "name", name, "bytes", len(req.Content))
@@ -703,6 +703,30 @@ func (s *dpService) SendFile(ctx context.Context, req *pb.DataplaneServiceSendFi
 		r.OnFileReceived(name)
 	}
 	return &wkt.Empty{}, nil
+}
+
+// writeFileAtomic replaces path with data via a temp file + rename in the same
+// directory, so a concurrent reader sees either the old or the new content, never a
+// truncated one. The CP re-ships node files on every reconnect while other
+// reconcilers may be reading them (l4lb hashing / loading its eBPF objects).
+func writeFileAtomic(path string, data []byte, perm os.FileMode) error {
+	tmp, err := os.CreateTemp(filepath.Dir(path), "."+filepath.Base(path)+".tmp-*")
+	if err != nil {
+		return err
+	}
+	defer os.Remove(tmp.Name()) // no-op once renamed
+	if _, err := tmp.Write(data); err != nil {
+		tmp.Close()
+		return err
+	}
+	if err := tmp.Chmod(perm); err != nil {
+		tmp.Close()
+		return err
+	}
+	if err := tmp.Close(); err != nil {
+		return err
+	}
+	return os.Rename(tmp.Name(), path)
 }
 
 func (s *dpService) RemoveFile(ctx context.Context, req *pb.DataplaneServiceRemoveFileRequest) (*wkt.Empty, error) {

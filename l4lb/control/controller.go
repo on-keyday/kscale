@@ -13,9 +13,12 @@ package control
 
 import (
 	"context"
+	"crypto/sha256"
+	"encoding/hex"
 	"fmt"
 	"log/slog"
 	"net/netip"
+	"os"
 	"sort"
 	"sync"
 
@@ -100,6 +103,70 @@ type Controller struct {
 	// lc tracks the authoritative app lifecycle (Initialized/Running/Stopped/Error),
 	// reported as the first Stats entry's AppStatus.
 	lc *stat.AppLifecycle
+	// loaded identifies the eBPF objects the running driver was built from (zero
+	// while stopped), so a SetBalancerObject naming the same objects is a no-op.
+	loaded objectIdentity
+}
+
+// objectIdentity is what a driver was built from: the object paths and pin dir,
+// plus the content hash of each object file ("" for an unset path).
+type objectIdentity struct {
+	bin, crypto, pinDir string
+	binSum, cryptoSum   string
+}
+
+// identify hashes the object files fix names. An unreadable file is reported as
+// an error: the caller treats that as "changed" and lets the driver build fail
+// with the real cause.
+func identify(fix *l4lbdrv.FixedConfig) (objectIdentity, error) {
+	id := objectIdentity{bin: fix.BinPath, crypto: fix.CryptoBin, pinDir: fix.EBPFPinDir}
+	var err error
+	if id.binSum, err = fileSum(fix.BinPath); err != nil {
+		return id, err
+	}
+	id.cryptoSum, err = fileSum(fix.CryptoBin)
+	return id, err
+}
+
+func fileSum(path string) (string, error) {
+	if path == "" {
+		return "", nil
+	}
+	b, err := os.ReadFile(path)
+	if err != nil {
+		return "", err
+	}
+	sum := sha256.Sum256(b)
+	return hex.EncodeToString(sum[:]), nil
+}
+
+// buildLocked creates the driver from the staged config and records what it was
+// built from. Caller holds c.mu and has cleared c.drv.
+func (c *Controller) buildLocked(why string) error {
+	id, idErr := identify(c.fix)
+	d, err := c.factory(c.fix, c.dyn)
+	if err != nil {
+		c.lc.SetError()
+		return err
+	}
+	c.drv = d
+	c.loaded = id
+	if idErr != nil {
+		c.loaded = objectIdentity{} // unknown: the next SetBalancerObject reloads
+	}
+	c.lc.SetRunning()
+	if c.logger != nil {
+		c.logger.Info("l4lb: driver built", "why", why, "object", id.bin, "object_sha256", short(id.binSum),
+			"crypto_object", id.crypto, "crypto_sha256", short(id.cryptoSum), "pin_dir", id.pinDir)
+	}
+	return nil
+}
+
+func short(sum string) string {
+	if len(sum) > 16 {
+		return sum[:16]
+	}
+	return sum
 }
 
 // SetServerID records the CP-assigned ServerID (reported back as LbId).
@@ -255,19 +322,21 @@ func (c *Controller) Start(_ context.Context) error {
 	if c.drv != nil {
 		return fmt.Errorf("l4lb: already started")
 	}
-	d, err := c.factory(c.fix, c.dyn)
-	if err != nil {
-		c.lc.SetError()
+	if err := c.buildLocked("start"); err != nil {
 		return fmt.Errorf("l4lb: start: %w", err)
 	}
-	c.drv = d
-	c.lc.SetRunning()
 	return nil
 }
 
 // SetBalancerObject configures which eBPF objects this l4lb node loads (the l4lb_object
 // resource). The paths are staged into the fixed config and take effect at the next
-// StartDataplane; if the dataplane is already running, the driver is reloaded live.
+// StartDataplane; if the dataplane is already running, the driver is reloaded live —
+// but only when the objects actually differ from what it was built from (paths, pin
+// dir, or file content). The control plane re-pushes the desired object on every
+// (re)connect, CP restarts included, and reconcile assumes a repeated push is a no-op;
+// reloading unconditionally re-attached XDP each time
+// (notes/bugs/bug_2026_10_15_l4lb_object_reload_on_every_connect.md). A new file
+// shipped under the same name is still picked up: its content hash differs.
 func (c *Controller) SetBalancerObject(binPath, cryptoBin, pinDir string) error {
 	c.mu.Lock()
 	defer c.mu.Unlock()
@@ -277,17 +346,17 @@ func (c *Controller) SetBalancerObject(binPath, cryptoBin, pinDir string) error 
 	if c.drv == nil {
 		return nil // staged; applied at the next Start
 	}
-	if err := c.drv.Close(); err != nil {
+	if next, err := identify(c.fix); err == nil && next == c.loaded {
+		return nil // same objects as running: nothing to reload
+	}
+	if err := c.drv.Close(); err != nil && c.logger != nil {
 		c.logger.Warn("l4lb: close on balancer-object reload", "error", err)
 	}
 	c.drv = nil
-	d, err := c.factory(c.fix, c.dyn)
-	if err != nil {
-		c.lc.SetError()
+	c.loaded = objectIdentity{}
+	if err := c.buildLocked("balancer object changed"); err != nil {
 		return fmt.Errorf("l4lb: reload balancer object: %w", err)
 	}
-	c.drv = d
-	c.lc.SetRunning()
 	return nil
 }
 
@@ -300,6 +369,7 @@ func (c *Controller) Stop() error {
 	}
 	err := c.drv.Close()
 	c.drv = nil
+	c.loaded = objectIdentity{}
 	c.lc.SetStopped()
 	return err
 }
