@@ -1,5 +1,5 @@
 {
-    "appended_categories": ["workload"],
+    "appended_categories": ["workload", "dp_object"],
     "nested_categories": [
         "interface_spec"
     ],
@@ -416,6 +416,13 @@
                 "netdpmetrics.NetdpMetrics{InSteeredTotal: 3}"
             ],
             "string_format": "fmt.Sprintf(\"%v\", &$src)"
+        },
+        {
+            "name": "loaded_objects",
+            "display_name": "Loaded Objects",
+            "type": "[]string",
+            "category": "dp_object",
+            "proto_presence": true
         }
     ],
     "prometheus": [

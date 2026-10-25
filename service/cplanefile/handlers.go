@@ -7,9 +7,11 @@ package cplanefile
 
 import (
 	"context"
+	"fmt"
 	"os"
 	"path/filepath"
 	"sort"
+	"strings"
 	"sync"
 
 	pb "github.com/on-keyday/kscale/protobuf/proto"
@@ -58,6 +60,9 @@ func (s *Store) Read(name string) ([]byte, error) { return os.ReadFile(s.Path(na
 type Handlers struct {
 	pb.UnimplementedCplaneFileServiceServer
 	Store *Store
+	// InUse, set by the control plane, names the declarations that still reference a
+	// stored file (dp_object entries); Delete refuses while it returns any. Optional.
+	InUse func(name string) []string
 }
 
 var _ pb.CplaneFileServiceServer = (*Handlers)(nil)
@@ -88,6 +93,11 @@ func (h *Handlers) List(ctx context.Context, _ *pbaccess.ResourceCplaneFileActio
 
 func (h *Handlers) Delete(ctx context.Context, req *pbaccess.ResourceCplaneFileActionDeleteArgsDTO) (*pbaccess.ResourceCplaneFileActionDeleteResponseDTO, error) {
 	name := filepath.Base(req.FileName)
+	if h.InUse != nil {
+		if refs := h.InUse(name); len(refs) > 0 {
+			return nil, fmt.Errorf("cplane file %q is in use by %s", name, strings.Join(refs, ", "))
+		}
+	}
 	if err := os.Remove(h.Store.Path(name)); err != nil && !os.IsNotExist(err) {
 		return nil, err
 	}

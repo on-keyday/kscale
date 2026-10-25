@@ -193,6 +193,27 @@ message DataplaneServiceSetBalancerObjectRequest {
     string pin_dir = 3;       // eBPF pin directory (e.g. /sys/fs/bpf)
 }
 
+// ObjectFile is one file of a dp_object load unit: its role within the slot (e.g.
+// "main" / "crypto"), its name in the CP file store, and its content inline.
+message ObjectFile {
+    string role = 1;
+    string name = 2;
+    bytes content = 3;
+}
+
+// DesiredObject is one slot's load unit: the files the agent loads together.
+message DesiredObject {
+    string slot = 1;
+    repeated ObjectFile files = 2;
+}
+
+// SyncObjects carries a node's FULL desired dp_object set. The agent loads each
+// slot's file set at once (skipping a set it already runs), unloads slots that are
+// absent, and removes object files nothing loaded references.
+message DataplaneServiceSyncObjectsRequest {
+    repeated DesiredObject objects = 1;
+}
+
 service DataplaneService {
     rpc ListFiles(DataplaneServiceListFilesRequest) returns (DataplaneServiceListFilesResponse);
     rpc RemoveFile(DataplaneServiceRemoveFileRequest) returns (google.protobuf.Empty);
@@ -216,6 +237,9 @@ service DataplaneService {
     // SetBalancerObject configures which eBPF objects an l4lb node loads (l4lb_object
     // resource). No-op on non-l4lb nodes.
     rpc SetBalancerObject(DataplaneServiceSetBalancerObjectRequest) returns (google.protobuf.Empty);
+    // SyncObjects converges the node's loaded eBPF objects to the dp_object resource
+    // (the full desired set for this node, file contents inline).
+    rpc SyncObjects(DataplaneServiceSyncObjectsRequest) returns (google.protobuf.Empty);
     // StreamLogs is the southbound log path: the control plane (the RPC client)
     // opens it on a node when an admin subscribes (the stream lifecycle IS the
     // on/off toggle — no separate enable flag), and the node (the server) streams

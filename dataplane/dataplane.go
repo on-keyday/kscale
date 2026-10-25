@@ -135,6 +135,9 @@ func Run(ctx context.Context, cfg Config, logger *slog.Logger) error {
 	if err := os.MkdirAll(fileDir, 0o755); err != nil {
 		return fmt.Errorf("dataplane: file dir: %w", err)
 	}
+	// dp_object sets live outside the file store (the dp-file plane can't touch them)
+	// and outlive a connection: what a slot runs survives reconnects.
+	objects := newAgentObjects(filepath.Join(cfg.DataDir, "dp_objects"), cfg.Hooks, logger)
 
 	savePath := filepath.Join(cfg.DataDir, "client."+cfg.App+".boot")
 	tokenPath := filepath.Join(cfg.DataDir, "bootstrap."+cfg.App+".token")
@@ -183,7 +186,7 @@ func Run(ctx context.Context, cfg Config, logger *slog.Logger) error {
 
 		logger.Info("dataplane: connected; serving DataplaneService",
 			"addr", cfg.Addr, "common_name", cn, "dp_type", cfg.Hooks.DpType())
-		err = serve(ctx, p, cfg, cn, fileDir, logger)
+		err = serve(ctx, p, cfg, cn, fileDir, objects, logger)
 		if ctx.Err() != nil {
 			return ctx.Err()
 		}
@@ -211,7 +214,7 @@ func serverIDFromCN(cn string) uint32 {
 // serve registers the common DataplaneService (+ RegisterExtra) on a fresh RPC
 // manager, wires the magic registry (RPCS -> RPC dispatch, HTTP -> metrics when
 // the dp exposes prometheus), and runs the accept-loop until it errors.
-func serve(ctx context.Context, p *peer.Peer, cfg Config, cn, fileDir string, logger *slog.Logger) error {
+func serve(ctx context.Context, p *peer.Peer, cfg Config, cn, fileDir string, objects *objectManager, logger *slog.Logger) error {
 	// Serve on the peer's per-connection context: when the connection dies
 	// (transport error, peer close, or liveness timeout) it is cancelled, so the
 	// AcceptBidirectionalStream loop below returns and Run()'s reconnect loop
@@ -228,7 +231,7 @@ func serve(ctx context.Context, p *peer.Peer, cfg Config, cn, fileDir string, lo
 	// it from the stable CN here is self-consistent (the node's connid generator and
 	// its reported LbId agree) and needs no extra RPC round-trip.
 	cfg.Hooks.SetServerID(serverIDFromCN(cn))
-	pb.RegisterDataplaneServiceServer(mgr, &dpService{hooks: cfg.Hooks, fileDir: fileDir, cn: cn, peer: p, runCtx: runCtx, logger: logger})
+	pb.RegisterDataplaneServiceServer(mgr, &dpService{hooks: cfg.Hooks, fileDir: fileDir, objects: objects, cn: cn, peer: p, runCtx: runCtx, logger: logger})
 	if cfg.RegisterExtra != nil {
 		cfg.RegisterExtra(mgr)
 	}
@@ -497,6 +500,7 @@ type dpService struct {
 	pb.UnimplementedDataplaneServiceServer
 	hooks   Hooks
 	fileDir string
+	objects *objectManager
 	cn      string
 	peer    *peer.Peer
 	// runCtx is the agent-lifetime ctx (Run's), not the connection's.
@@ -545,6 +549,9 @@ func (s *dpService) StreamStats(ctx context.Context, _ *wkt.Empty, stream *pb.Da
 				}
 			}
 			stats := append([]*pbstat.Stats{base}, s.hooks.Stats()...)
+			if st := s.objectStat(); st != nil {
+				stats = append(stats, st)
+			}
 			if err := stream.Send(&pbstat.StatBatch{Stats: stats}); err != nil {
 				return err
 			}
@@ -634,6 +641,25 @@ func (s *dpService) SetBalancerObject(ctx context.Context, req *pb.DataplaneServ
 		return nil, err
 	}
 	return &wkt.Empty{}, nil
+}
+
+// SyncObjects converges this node's dp_object slots to the pushed full set.
+func (s *dpService) SyncObjects(ctx context.Context, req *pb.DataplaneServiceSyncObjectsRequest) (*wkt.Empty, error) {
+	if err := s.objects.Sync(req.Objects); err != nil {
+		return nil, err
+	}
+	return &wkt.Empty{}, nil
+}
+
+// objectStat is the Stats entry reporting what each dp_object slot runs (its own
+// entry: CdnAppRealtime readers take one entry per dp, so it must not ride there).
+// nil while nothing is loaded.
+func (s *dpService) objectStat() *pbstat.Stats {
+	items := s.objects.LoadedItems()
+	if len(items) == 0 {
+		return nil
+	}
+	return &pbstat.Stats{DpObject: &pbstat.DpObjectStat{LoadedObjects: &pbstat.StringList{Items: items}}}
 }
 
 // GetTransferState returns a representative stub; real trsf state is a TODO.

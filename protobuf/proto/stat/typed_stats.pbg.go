@@ -6157,6 +6157,153 @@ func (p *WorkloadStat) Append(w []byte) ([]byte, error) {
 	return w, nil
 }
 
+type DpObjectStat struct {
+	LoadedObjects *StringList `json:"loaded_objects,omitempty"`
+}
+
+func (p *DpObjectStat) Read(data io.Reader) error {
+	var field wire.Field
+	for {
+		err := field.Read(data)
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			return fmt.Errorf("decode: %w", err)
+		}
+		switch field.Tag.Number() {
+		case 1:
+			val := field.ValueData()
+			if val == nil {
+				return fmt.Errorf("field LoadedObjects unexpected wire type. expect LengthDelimited but got %s", field.Tag.Type())
+			}
+			p.LoadedObjects = new(StringList)
+			if err := p.LoadedObjects.Decode((*val)); err != nil {
+				return err
+			}
+		default:
+			// skip unknown
+		}
+	}
+	return nil
+}
+func (p *DpObjectStat) ReadBuffer(data *bytes.Reader) error {
+	var field wire.Field
+	for {
+		err := field.ReadBuffer(data)
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			return fmt.Errorf("decode: %w", err)
+		}
+		switch field.Tag.Number() {
+		case 1:
+			val := field.ValueData()
+			if val == nil {
+				return fmt.Errorf("field LoadedObjects unexpected wire type. expect LengthDelimited but got %s", field.Tag.Type())
+			}
+			p.LoadedObjects = new(StringList)
+			if err := p.LoadedObjects.Decode((*val)); err != nil {
+				return err
+			}
+		default:
+			// skip unknown
+		}
+	}
+	return nil
+}
+func (p *DpObjectStat) Decode(data []byte) error {
+	var field wire.Field
+	for len(data) > 0 {
+		remain, err := field.Decode(data)
+		if err != nil {
+			return fmt.Errorf("decode: %w", err)
+		}
+		switch field.Tag.Number() {
+		case 1:
+			val := field.ValueData()
+			if val == nil {
+				return fmt.Errorf("field LoadedObjects unexpected wire type. expect LengthDelimited but got %s", field.Tag.Type())
+			}
+			p.LoadedObjects = new(StringList)
+			if err := p.LoadedObjects.Decode((*val)); err != nil {
+				return err
+			}
+		default:
+			// skip unknown
+		}
+		data = remain
+	}
+	return nil
+}
+
+func (p *DpObjectStat) Encode(w io.Writer) error {
+	var field wire.Field
+	field.Tag.SetNumber(1)
+	if p.LoadedObjects != nil {
+		field.Tag.SetType(wire.WireType_LengthDelimited)
+		{
+			mBuf := make([]byte, 0)
+			if appendTmp, err := p.LoadedObjects.Append(mBuf); err != nil {
+				return err
+			} else {
+				mBuf = appendTmp
+			}
+			field.SetLength(wire.Varint{Value: uint64(len(mBuf))})
+			field.SetValueData(mBuf)
+		}
+		if err := field.Write(w); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+func (p *DpObjectStat) EncodeBuffer(w *bytes.Buffer) error {
+	var field wire.Field
+	field.Tag.SetNumber(1)
+	if p.LoadedObjects != nil {
+		field.Tag.SetType(wire.WireType_LengthDelimited)
+		{
+			mBuf := make([]byte, 0)
+			if appendTmp, err := p.LoadedObjects.Append(mBuf); err != nil {
+				return err
+			} else {
+				mBuf = appendTmp
+			}
+			field.SetLength(wire.Varint{Value: uint64(len(mBuf))})
+			field.SetValueData(mBuf)
+		}
+		if err := field.WriteBuffer(w); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+func (p *DpObjectStat) Append(w []byte) ([]byte, error) {
+	var field wire.Field
+	field.Tag.SetNumber(1)
+	if p.LoadedObjects != nil {
+		field.Tag.SetType(wire.WireType_LengthDelimited)
+		{
+			mBuf := make([]byte, 0)
+			if appendTmp, err := p.LoadedObjects.Append(mBuf); err != nil {
+				return nil, err
+			} else {
+				mBuf = appendTmp
+			}
+			field.SetLength(wire.Varint{Value: uint64(len(mBuf))})
+			field.SetValueData(mBuf)
+		}
+		if appendTmp, err := field.Append(w); err != nil {
+			return nil, err
+		} else {
+			w = appendTmp
+		}
+	}
+	return w, nil
+}
+
 type Stats struct {
 	L4Lb            *L4LbStat            `json:"l4lb,omitempty"`
 	Connection      *ConnectionStat      `json:"connection,omitempty"`
@@ -6174,6 +6321,7 @@ type Stats struct {
 	CommonName      string               `json:"common_name,omitempty"`
 	DpType          string               `json:"dp_type,omitempty"`
 	Workload        *WorkloadStat        `json:"workload,omitempty"`
+	DpObject        *DpObjectStat        `json:"dp_object,omitempty"`
 }
 
 func (p *Stats) Read(data io.Reader) error {
@@ -6323,6 +6471,15 @@ func (p *Stats) Read(data io.Reader) error {
 			}
 			p.Workload = new(WorkloadStat)
 			if err := p.Workload.Decode((*val)); err != nil {
+				return err
+			}
+		case 17:
+			val := field.ValueData()
+			if val == nil {
+				return fmt.Errorf("field DpObject unexpected wire type. expect LengthDelimited but got %s", field.Tag.Type())
+			}
+			p.DpObject = new(DpObjectStat)
+			if err := p.DpObject.Decode((*val)); err != nil {
 				return err
 			}
 		default:
@@ -6480,6 +6637,15 @@ func (p *Stats) ReadBuffer(data *bytes.Reader) error {
 			if err := p.Workload.Decode((*val)); err != nil {
 				return err
 			}
+		case 17:
+			val := field.ValueData()
+			if val == nil {
+				return fmt.Errorf("field DpObject unexpected wire type. expect LengthDelimited but got %s", field.Tag.Type())
+			}
+			p.DpObject = new(DpObjectStat)
+			if err := p.DpObject.Decode((*val)); err != nil {
+				return err
+			}
 		default:
 			// skip unknown
 		}
@@ -6630,6 +6796,15 @@ func (p *Stats) Decode(data []byte) error {
 			}
 			p.Workload = new(WorkloadStat)
 			if err := p.Workload.Decode((*val)); err != nil {
+				return err
+			}
+		case 17:
+			val := field.ValueData()
+			if val == nil {
+				return fmt.Errorf("field DpObject unexpected wire type. expect LengthDelimited but got %s", field.Tag.Type())
+			}
+			p.DpObject = new(DpObjectStat)
+			if err := p.DpObject.Decode((*val)); err != nil {
 				return err
 			}
 		default:
@@ -6898,6 +7073,23 @@ func (p *Stats) Encode(w io.Writer) error {
 			return err
 		}
 	}
+	field.Tag.SetNumber(17)
+	if p.DpObject != nil {
+		field.Tag.SetType(wire.WireType_LengthDelimited)
+		{
+			mBuf := make([]byte, 0)
+			if appendTmp, err := p.DpObject.Append(mBuf); err != nil {
+				return err
+			} else {
+				mBuf = appendTmp
+			}
+			field.SetLength(wire.Varint{Value: uint64(len(mBuf))})
+			field.SetValueData(mBuf)
+		}
+		if err := field.Write(w); err != nil {
+			return err
+		}
+	}
 	return nil
 }
 func (p *Stats) EncodeBuffer(w *bytes.Buffer) error {
@@ -7147,6 +7339,23 @@ func (p *Stats) EncodeBuffer(w *bytes.Buffer) error {
 		{
 			mBuf := make([]byte, 0)
 			if appendTmp, err := p.Workload.Append(mBuf); err != nil {
+				return err
+			} else {
+				mBuf = appendTmp
+			}
+			field.SetLength(wire.Varint{Value: uint64(len(mBuf))})
+			field.SetValueData(mBuf)
+		}
+		if err := field.WriteBuffer(w); err != nil {
+			return err
+		}
+	}
+	field.Tag.SetNumber(17)
+	if p.DpObject != nil {
+		field.Tag.SetType(wire.WireType_LengthDelimited)
+		{
+			mBuf := make([]byte, 0)
+			if appendTmp, err := p.DpObject.Append(mBuf); err != nil {
 				return err
 			} else {
 				mBuf = appendTmp
@@ -7437,6 +7646,25 @@ func (p *Stats) Append(w []byte) ([]byte, error) {
 		{
 			mBuf := make([]byte, 0)
 			if appendTmp, err := p.Workload.Append(mBuf); err != nil {
+				return nil, err
+			} else {
+				mBuf = appendTmp
+			}
+			field.SetLength(wire.Varint{Value: uint64(len(mBuf))})
+			field.SetValueData(mBuf)
+		}
+		if appendTmp, err := field.Append(w); err != nil {
+			return nil, err
+		} else {
+			w = appendTmp
+		}
+	}
+	field.Tag.SetNumber(17)
+	if p.DpObject != nil {
+		field.Tag.SetType(wire.WireType_LengthDelimited)
+		{
+			mBuf := make([]byte, 0)
+			if appendTmp, err := p.DpObject.Append(mBuf); err != nil {
 				return nil, err
 			} else {
 				mBuf = appendTmp

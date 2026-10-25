@@ -173,6 +173,24 @@ message ResourceDpFileActionSendArgsDTO {
     string save_as = 3;
 }
 
+message ResourceDpObjectActionApplyArgsDTO {
+    string name = 1;
+    string node = 2;
+    string slot = 3;
+    repeated string files = 4;
+}
+
+message ResourceDpObjectActionDeleteArgsDTO {
+    string name = 1;
+}
+
+message ResourceDpObjectActionGetArgsDTO {
+    string name = 1;
+}
+
+message ResourceDpObjectActionListArgsDTO {
+}
+
 message ResourceDpOperationsActionDownloadFileArgsDTO {
     string file_name = 1;
     uint32 file_seq = 2;
@@ -702,6 +720,28 @@ message ResourceDpFileActionListResponseDTO {
 
 message ResourceDpFileActionSendResponseDTO {
     string save_as = 1;
+}
+
+message ResourceDpObjectActionApplyResponseDTO {
+    string name = 1;
+    string node = 2;
+    string slot = 3;
+    repeated string files = 4;
+}
+
+message ResourceDpObjectActionDeleteResponseDTO {
+    string name = 1;
+}
+
+message ResourceDpObjectActionGetResponseDTO {
+    string name = 1;
+    string node = 2;
+    string slot = 3;
+    repeated string files = 4;
+}
+
+message ResourceDpObjectActionListResponseDTO {
+    repeated ResourceDpObjectActionGetResponseDTO items = 1;
 }
 
 message ResourceExpectedNodeActionApplyResponseDTO {

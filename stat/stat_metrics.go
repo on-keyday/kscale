@@ -117,6 +117,8 @@ const StatManagedDNSZones = "managed_dns_zones"
 
 const StatNetdpStats = "netdp_stats"
 
+const StatLoadedObjects = "loaded_objects"
+
 var StatMetricsL4lb = []string{
 	StatSourceIPPacketCount,
 	StatPacketSizeDistribution,
@@ -209,6 +211,10 @@ var StatMetricsDnsSpec = []string{
 
 var StatMetricsWorkload = []string{
 	StatNetdpStats,
+}
+
+var StatMetricsDpObject = []string{
+	StatLoadedObjects,
 }
 
 func AppendSourceIPPacketCountString(buf *strings.Builder, indent string, value l4lbdrv.SrcIPCounts) {
@@ -563,6 +569,13 @@ func AppendNetdpStatsString(buf *strings.Builder, indent string, value netdpmetr
 	buf.WriteString("\n")
 }
 
+func AppendLoadedObjectsString(buf *strings.Builder, indent string, value []string) {
+	buf.WriteString(indent)
+	buf.WriteString("Loaded Objects: ")
+	buf.WriteString(fmt.Sprintf("%v", value))
+	buf.WriteString("\n")
+}
+
 type L4lbStat struct {
 	SourceIPPacketCount                 l4lbdrv.SrcIPCounts                `json:"src_ips"`
 	PacketSizeDistribution              l4lbdrv.PacketSizeDist             `json:"packet_sizes"`
@@ -655,6 +668,10 @@ type DnsSpecStat struct {
 
 type WorkloadStat struct {
 	NetdpStats netdpmetrics.NetdpMetrics `json:"netdp_stats"`
+}
+
+type DpObjectStat struct {
+	LoadedObjects []string `json:"loaded_objects"`
 }
 
 func (s *L4lbStat) Equal(other *L4lbStat) bool {
@@ -1036,4 +1053,18 @@ func (s *WorkloadStat) Equal(other *WorkloadStat) bool {
 
 func (s *WorkloadStat) AppendString(buf *strings.Builder, indent string) {
 	AppendNetdpStatsString(buf, indent, s.NetdpStats)
+}
+
+func (s *DpObjectStat) Equal(other *DpObjectStat) bool {
+	if other == nil {
+		return false
+	}
+	if !slices.Equal(s.LoadedObjects, other.LoadedObjects) {
+		return false
+	}
+	return true
+}
+
+func (s *DpObjectStat) AppendString(buf *strings.Builder, indent string) {
+	AppendLoadedObjectsString(buf, indent, s.LoadedObjects)
 }

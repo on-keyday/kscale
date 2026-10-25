@@ -434,3 +434,18 @@ func (s *WorkloadStat) FromProto(in *pbstat.WorkloadStat) {
 	s.NetdpStats.OutErrTotal = in.OutErrTotal
 	s.NetdpStats.SteeredPorts = in.SteeredPorts
 }
+
+func (s *DpObjectStat) ToProto() *pbstat.DpObjectStat {
+	out := &pbstat.DpObjectStat{}
+	out.LoadedObjects = &pbstat.StringList{Items: append([]string(nil), s.LoadedObjects...)}
+	return out
+}
+
+func (s *DpObjectStat) FromProto(in *pbstat.DpObjectStat) {
+	if in == nil {
+		return
+	}
+	if in.LoadedObjects != nil {
+		s.LoadedObjects = append([]string(nil), in.LoadedObjects.Items...)
+	}
+}

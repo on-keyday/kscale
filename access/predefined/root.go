@@ -103,6 +103,12 @@ func Resources() []access.ResourceTemplate {
 			ResourceWorkloadNetdpObjectActionList,
 			ResourceWorkloadNetdpObjectActionDelete,
 		}),
+		access.NewResourceTemplate("dp_object", nil, []access.Attribute{}, []access.Action{
+			ResourceDpObjectActionApply,
+			ResourceDpObjectActionGet,
+			ResourceDpObjectActionList,
+			ResourceDpObjectActionDelete,
+		}),
 		access.NewResourceTemplate("bootstrap_token", nil, []access.Attribute{}, []access.Action{
 			ResourceBootstrapTokenActionIssue,
 			ResourceBootstrapTokenActionRevoke,
@@ -496,6 +502,24 @@ var ResourceWorkloadNetdpObjectActionList = access.NewAction("list", []string{})
 var ResourceWorkloadNetdpObjectActionDelete = access.NewAction("delete", []string{"node"})
 
 const ResourceWorkloadNetdpObjectActionDeleteArgNode = "node"
+
+const ResourceDpObject = "dp_object"
+
+var ResourceDpObjectActionApply = access.NewAction("apply", []string{"name", "node", "slot", "files"})
+
+const ResourceDpObjectActionApplyArgName = "name"
+const ResourceDpObjectActionApplyArgNode = "node"
+const ResourceDpObjectActionApplyArgSlot = "slot"
+const ResourceDpObjectActionApplyArgFiles = "files"
+
+var ResourceDpObjectActionGet = access.NewAction("get", []string{"name"})
+
+const ResourceDpObjectActionGetArgName = "name"
+
+var ResourceDpObjectActionList = access.NewAction("list", []string{})
+var ResourceDpObjectActionDelete = access.NewAction("delete", []string{"name"})
+
+const ResourceDpObjectActionDeleteArgName = "name"
 
 const ResourceBootstrapToken = "bootstrap_token"
 
@@ -986,6 +1010,22 @@ var PolicyDpFileManager = policy.NewAndPolicy("DpFileManager",
 			policy.NewOrPolicy("UserHasRequiredRole",
 				policy.MustParsePolicy("HumanUserHasManagementRole", "$user.roles list_contains `admin`"),
 			),
+		),
+	),
+)
+
+var PolicyDpObjectManager = policy.NewAndPolicy("DpObjectManager",
+	policy.MustParsePolicy("ResourceIsDpObject", "$resource.name == `dp_object`"),
+	policy.NewOrPolicy("DpObjectManagerActions",
+		policy.MustParsePolicy("ActionIsApply", "$action.name == `apply`"),
+		policy.MustParsePolicy("ActionIsList", "$action.name == `list`"),
+		policy.MustParsePolicy("ActionIsGet", "$action.name == `get`"),
+		policy.MustParsePolicy("ActionIsDelete", "$action.name == `delete`"),
+	),
+	policy.NewOrPolicy("DpObjectManager",
+		policy.NewAndPolicy("CanManageDpObjects",
+			policy.MustParsePolicy("UserAuthorityIsManager", "$user.authority.full_name suffix $env.authority.admin.ca.manager."),
+			policy.MustParsePolicy("UserHasAdminRole", "$user.roles list_contains `admin`"),
 		),
 	),
 )
@@ -1542,6 +1582,7 @@ func AllowPolicies() []access.Policy {
 		PolicyDnsConfigManager,
 		PolicyDnsConfigMonitor,
 		PolicyDpFileManager,
+		PolicyDpObjectManager,
 		PolicyAllowRealtimeStatsAccess,
 		PolicyExpectedNodeManager,
 		PolicyExpectedNodeMonitor,
@@ -1886,6 +1927,32 @@ var PolicyMap = map[string]map[string]*access.PolicyList{
 			Deny: []access.Policy{},
 			Allow: []access.Policy{
 				PolicyDpFileManager,
+			},
+		},
+	},
+	"dp_object": map[string]*access.PolicyList{
+		"apply": &access.PolicyList{
+			Deny: []access.Policy{},
+			Allow: []access.Policy{
+				PolicyDpObjectManager,
+			},
+		},
+		"list": &access.PolicyList{
+			Deny: []access.Policy{},
+			Allow: []access.Policy{
+				PolicyDpObjectManager,
+			},
+		},
+		"get": &access.PolicyList{
+			Deny: []access.Policy{},
+			Allow: []access.Policy{
+				PolicyDpObjectManager,
+			},
+		},
+		"delete": &access.PolicyList{
+			Deny: []access.Policy{},
+			Allow: []access.Policy{
+				PolicyDpObjectManager,
 			},
 		},
 	},

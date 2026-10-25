@@ -1,0 +1,27 @@
+{
+    "name": "DpObjectManager",
+    "policy": "Allow",
+    "description": "Declare which eBPF object sets dataplane nodes load. Admin only.",
+    "resource": "dp_object",
+    "action": [
+        "apply",
+        "list",
+        "get",
+        "delete"
+    ],
+    "or": [
+        {
+            "name": "CanManageDpObjects",
+            "and": [
+                {
+                    "name": "UserAuthorityIsManager",
+                    "condition": "$user.authority.full_name suffix $env.authority.admin.ca.manager."
+                },
+                {
+                    "name": "UserHasAdminRole",
+                    "condition": "$user.roles list_contains `admin`"
+                }
+            ]
+        }
+    ]
+}

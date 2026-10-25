@@ -58,6 +58,7 @@ import (
 	"github.com/on-keyday/kscale/service/dataplanenode"
 	"github.com/on-keyday/kscale/service/dnsconfig"
 	"github.com/on-keyday/kscale/service/dpfile"
+	"github.com/on-keyday/kscale/service/dpobject"
 	"github.com/on-keyday/kscale/service/expectednode"
 	"github.com/on-keyday/kscale/service/iface"
 	"github.com/on-keyday/kscale/service/l4lbobject"
@@ -521,6 +522,8 @@ func run(ctx context.Context, logger *slog.Logger, args []string) error {
 	service.RegisterL4LbObject(mgr, gd, l4lbObjectStore)
 	netdpObjectStore := workloadnetdpobject.New()
 	service.RegisterWorkloadNetdpObject(mgr, gd, netdpObjectStore)
+	dpObjectStore := dpobject.New()
+	service.RegisterDpObject(mgr, gd, dpObjectStore)
 	service.RegisterBootstrapToken(mgr, gd, &bootstraptoken.Handlers{Generate: caObj.GenerateBootstrapToken, RevokeToken: caObj.RevokeBootstrapToken, Domain: demo.Domain})
 	// acme: obtain Let's Encrypt certs via DNS-01 (fanned to the dns dataplane) and
 	// distribute to popcache over the transport.
@@ -601,7 +604,13 @@ func run(ctx context.Context, logger *slog.Logger, args []string) error {
 	alertEval := &alert.Evaluator{Broker: broker, Stat: statCache, Reconcile: reconcileStatus, CA: caObj, Logger: logger}
 	safe.Go(logger, "alert-evaluator", func() { alertEval.Run(ctx, 30*time.Second) })
 	service.RegisterAlert(mgr, gd, &alertsvc.Handlers{Eval: alertEval})
-	service.RegisterCplaneFile(mgr, gd, &cplanefile.Handlers{Store: cplaneFiles})
+	service.RegisterCplaneFile(mgr, gd, &cplanefile.Handlers{Store: cplaneFiles, InUse: func(name string) []string {
+		var users []string
+		for _, ref := range reconcile.DpObjectReferences(dpObjectStore.Desired(), name) {
+			users = append(users, "dp_object "+ref)
+		}
+		return users
+	}})
 	service.RegisterDpFile(mgr, gd, &dpfile.Handlers{Broker: broker, CplaneFiles: cplaneFiles, Logger: logger})
 	service.RegisterStats(mgr, gd, &stats.Handlers{Cache: statCache, Broker: broker, Logger: logger, SelfGatherer: cpMetrics})
 	service.RegisterLogs(mgr, gd, &logs.Handlers{Broker: broker, Logger: logger, ResolveAgent: agents.Resolve, ListAgents: agents.List})
@@ -672,6 +681,7 @@ func run(ctx context.Context, logger *slog.Logger, args []string) error {
 	desiredMgr.Register("container", containerStore)
 	desiredMgr.Register("l4lb_object", l4lbObjectStore)
 	desiredMgr.Register("workload_netdp_object", netdpObjectStore)
+	desiredMgr.Register("dp_object", dpObjectStore)
 	if err := desiredMgr.Load(); err != nil {
 		return err
 	}
@@ -719,6 +729,9 @@ func run(ctx context.Context, logger *slog.Logger, args []string) error {
 	// Reconcile which eBPF objects each l4lb node loads (DataplaneService.SetBalancerObject).
 	reconcile.L4LbObject(ctx, l4lbObjectStore, broker, reconcileStatus, logger)
 	reconcile.WorkloadNetdpObject(ctx, netdpObjectStore, broker, reconcileStatus, logger)
+	// Reconcile dp_object: each node's full set of slot load units, file contents read
+	// from the CP store and pushed inline (DataplaneService.SyncObjects).
+	reconcile.DpObject(ctx, dpObjectStore, broker, cplaneFiles.Read, cplaneFiles.OnUpload, reconcileStatus, logger)
 	// node_run: converge each declared node's desired run-state (`node start`/`stop`
 	// intent) — start survives agent/CP restarts, failures back off then hold.
 	// Registered LAST so its OnConnect fires after every config plane has pushed:
@@ -741,6 +754,7 @@ func run(ctx context.Context, logger *slog.Logger, args []string) error {
 	containerStore.ConfirmPush = func() error { return reconcileStatus.ResourceError("container") }
 	l4lbObjectStore.ConfirmPush = func() error { return reconcileStatus.ResourceError("l4lb_object") }
 	netdpObjectStore.ConfirmPush = func() error { return reconcileStatus.ResourceError("workload_netdp_object") }
+	dpObjectStore.ConfirmPush = func() error { return reconcileStatus.ResourceError("dp_object") }
 
 	srv := peer.NewServer(ep, demo.PingInterval, access.NewContextCollector())
 	// Dataplane peers (app = a dp type) are registered in the broker for the

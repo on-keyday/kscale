@@ -150,6 +150,17 @@ func RegisterWorkloadNetdpObject(mgr *rpc.RPCManager, gd GateDeps, inner pb.Work
 	})
 }
 
+// RegisterDpObject wraps inner in DpObjectGated (authz + audit) and registers it.
+func RegisterDpObject(mgr *rpc.RPCManager, gd GateDeps, inner pb.DpObjectServiceServer) {
+	pb.RegisterDpObjectServiceServer(mgr, &DpObjectGated{
+		Inner:      inner,
+		Controller: gd.Controller,
+		Resource:   gd.Resources[predefined.ResourceDpObject],
+		Root:       gd.Root,
+		Audit:      gd.Audit,
+	})
+}
+
 // RegisterBootstrapToken wraps inner in BootstrapTokenGated (authz + audit) and registers it.
 func RegisterBootstrapToken(mgr *rpc.RPCManager, gd GateDeps, inner pb.BootstrapTokenServiceServer) {
 	pb.RegisterBootstrapTokenServiceServer(mgr, &BootstrapTokenGated{

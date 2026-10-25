@@ -310,6 +310,20 @@ func TestWorkloadStatProtoRoundTrip(t *testing.T) {
 		t.Errorf("FromProto did not round-trip")
 	}
 }
+func TestDpObjectStatProtoRoundTrip(t *testing.T) {
+	s := &DpObjectStat{}
+	s.LoadedObjects = []string{"sample0"}
+
+	p := s.ToProto()
+	if p == nil {
+		t.Fatalf("ToProto returned nil")
+	}
+	s2 := &DpObjectStat{}
+	s2.FromProto(p)
+	if !s.Equal(s2) {
+		t.Errorf("FromProto did not round-trip")
+	}
+}
 func TestL4lbStatAppendString(t *testing.T) {
 	s := &L4lbStat{}
 	s.SourceIPPacketCount = l4lbdrv.SrcIPCounts{
@@ -670,6 +684,18 @@ func TestWorkloadStatAppendString(t *testing.T) {
 	output := buf.String()
 	if !strings.Contains(output, "Workload Datapath Stats: ") {
 		t.Errorf("AppendString output missing metric Workload Datapath Stats")
+	}
+	fmt.Printf("AppendString output:\n%s", output)
+}
+func TestDpObjectStatAppendString(t *testing.T) {
+	s := &DpObjectStat{}
+	s.LoadedObjects = []string{"sample0"}
+
+	var buf strings.Builder
+	s.AppendString(&buf, "")
+	output := buf.String()
+	if !strings.Contains(output, "Loaded Objects: ") {
+		t.Errorf("AppendString output missing metric Loaded Objects")
 	}
 	fmt.Printf("AppendString output:\n%s", output)
 }

@@ -728,6 +728,38 @@ resources:
                 type: string
               - name: object
                 type: string
+    # dp_object: one eBPF load unit on a dataplane node — the files a node agent's slot
+    # loads TOGETHER, declared once (delivery + selection in one entry; replaces the
+    # per-dp_type *_object resources). node is a selector (a node, "<dp_type>/*" or
+    # "*"); per slot, the most specific matching entry wins. files are
+    # "<role>=<cplane_file>" (e.g. "main=lb-1a2b.o"). Custom reconcile
+    # (reconcile/dp_object.go): the CP reads the files from its store and pushes each
+    # node's full set inline via DataplaneService.SyncObjects; the agent loads a slot's
+    # set at once, unloads slots no entry declares, and garbage-collects object files
+    # nothing loaded references. A cplane_file a dp_object references can't be deleted.
+    # See notes/ai/2026_10_26_packet_observation_design.md.
+    - name: dp_object
+      description: An eBPF object set a dataplane node loads into one slot (per-node; reconciled via DataplaneService.SyncObjects)
+      command_name: dp-object
+      kind: resource
+      rpc_service: true
+      schema:
+          key: name
+          declarative: true
+          generated_store: true
+          verbs: [apply, get, list, delete]
+          reconcile:
+              custom: true
+              dp_type: "*"
+          fields:
+              - name: name
+                type: string
+              - name: node
+                type: string
+              - name: slot
+                type: string
+              - name: files
+                type: "[]string"
     # bootstrap_token: carved from the ca_management facade. An operation-only
     # resource (no schema/CRUD): issue mints a token (returns the secret) and
     # revoke presents a token to revoke it — the CA has no token list/get, so this

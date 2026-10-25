@@ -5380,6 +5380,582 @@ func (p *DataplaneServiceSetBalancerObjectRequest) Append(w []byte) ([]byte, err
 	return w, nil
 }
 
+type ObjectFile struct {
+	Role    string `json:"role,omitempty"`
+	Name    string `json:"name,omitempty"`
+	Content []byte `json:"content,omitempty"`
+}
+
+func (p *ObjectFile) Read(data io.Reader) error {
+	var field wire.Field
+	for {
+		err := field.Read(data)
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			return fmt.Errorf("decode: %w", err)
+		}
+		switch field.Tag.Number() {
+		case 1:
+			val := field.ValueData()
+			if val == nil {
+				return fmt.Errorf("field Role unexpected wire type. expect LengthDelimited but got %s", field.Tag.Type())
+			}
+			p.Role = unsafe.String(unsafe.SliceData((*val)), len((*val)))
+		case 2:
+			val := field.ValueData()
+			if val == nil {
+				return fmt.Errorf("field Name unexpected wire type. expect LengthDelimited but got %s", field.Tag.Type())
+			}
+			p.Name = unsafe.String(unsafe.SliceData((*val)), len((*val)))
+		case 3:
+			val := field.ValueData()
+			if val == nil {
+				return fmt.Errorf("field Content unexpected wire type. expect LengthDelimited but got %s", field.Tag.Type())
+			}
+			p.Content = (*val)
+		default:
+			// skip unknown
+		}
+	}
+	return nil
+}
+func (p *ObjectFile) ReadBuffer(data *bytes.Reader) error {
+	var field wire.Field
+	for {
+		err := field.ReadBuffer(data)
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			return fmt.Errorf("decode: %w", err)
+		}
+		switch field.Tag.Number() {
+		case 1:
+			val := field.ValueData()
+			if val == nil {
+				return fmt.Errorf("field Role unexpected wire type. expect LengthDelimited but got %s", field.Tag.Type())
+			}
+			p.Role = unsafe.String(unsafe.SliceData((*val)), len((*val)))
+		case 2:
+			val := field.ValueData()
+			if val == nil {
+				return fmt.Errorf("field Name unexpected wire type. expect LengthDelimited but got %s", field.Tag.Type())
+			}
+			p.Name = unsafe.String(unsafe.SliceData((*val)), len((*val)))
+		case 3:
+			val := field.ValueData()
+			if val == nil {
+				return fmt.Errorf("field Content unexpected wire type. expect LengthDelimited but got %s", field.Tag.Type())
+			}
+			p.Content = (*val)
+		default:
+			// skip unknown
+		}
+	}
+	return nil
+}
+func (p *ObjectFile) Decode(data []byte) error {
+	var field wire.Field
+	for len(data) > 0 {
+		remain, err := field.Decode(data)
+		if err != nil {
+			return fmt.Errorf("decode: %w", err)
+		}
+		switch field.Tag.Number() {
+		case 1:
+			val := field.ValueData()
+			if val == nil {
+				return fmt.Errorf("field Role unexpected wire type. expect LengthDelimited but got %s", field.Tag.Type())
+			}
+			p.Role = unsafe.String(unsafe.SliceData((*val)), len((*val)))
+		case 2:
+			val := field.ValueData()
+			if val == nil {
+				return fmt.Errorf("field Name unexpected wire type. expect LengthDelimited but got %s", field.Tag.Type())
+			}
+			p.Name = unsafe.String(unsafe.SliceData((*val)), len((*val)))
+		case 3:
+			val := field.ValueData()
+			if val == nil {
+				return fmt.Errorf("field Content unexpected wire type. expect LengthDelimited but got %s", field.Tag.Type())
+			}
+			p.Content = (*val)
+		default:
+			// skip unknown
+		}
+		data = remain
+	}
+	return nil
+}
+
+func (p *ObjectFile) Encode(w io.Writer) error {
+	var field wire.Field
+	field.Tag.SetNumber(1)
+	if len(p.Role) > 0 {
+		field.Tag.SetType(wire.WireType_LengthDelimited)
+		field.SetLength(wire.Varint{Value: uint64(len(p.Role))})
+		field.SetValueData([]byte(p.Role))
+		if err := field.Write(w); err != nil {
+			return err
+		}
+	}
+	field.Tag.SetNumber(2)
+	if len(p.Name) > 0 {
+		field.Tag.SetType(wire.WireType_LengthDelimited)
+		field.SetLength(wire.Varint{Value: uint64(len(p.Name))})
+		field.SetValueData([]byte(p.Name))
+		if err := field.Write(w); err != nil {
+			return err
+		}
+	}
+	field.Tag.SetNumber(3)
+	if len(p.Content) > 0 {
+		field.Tag.SetType(wire.WireType_LengthDelimited)
+		field.SetLength(wire.Varint{Value: uint64(len(p.Content))})
+		field.SetValueData(p.Content)
+		if err := field.Write(w); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+func (p *ObjectFile) EncodeBuffer(w *bytes.Buffer) error {
+	var field wire.Field
+	field.Tag.SetNumber(1)
+	if len(p.Role) > 0 {
+		field.Tag.SetType(wire.WireType_LengthDelimited)
+		field.SetLength(wire.Varint{Value: uint64(len(p.Role))})
+		field.SetValueData([]byte(p.Role))
+		if err := field.WriteBuffer(w); err != nil {
+			return err
+		}
+	}
+	field.Tag.SetNumber(2)
+	if len(p.Name) > 0 {
+		field.Tag.SetType(wire.WireType_LengthDelimited)
+		field.SetLength(wire.Varint{Value: uint64(len(p.Name))})
+		field.SetValueData([]byte(p.Name))
+		if err := field.WriteBuffer(w); err != nil {
+			return err
+		}
+	}
+	field.Tag.SetNumber(3)
+	if len(p.Content) > 0 {
+		field.Tag.SetType(wire.WireType_LengthDelimited)
+		field.SetLength(wire.Varint{Value: uint64(len(p.Content))})
+		field.SetValueData(p.Content)
+		if err := field.WriteBuffer(w); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+func (p *ObjectFile) Append(w []byte) ([]byte, error) {
+	var field wire.Field
+	field.Tag.SetNumber(1)
+	if len(p.Role) > 0 {
+		field.Tag.SetType(wire.WireType_LengthDelimited)
+		field.SetLength(wire.Varint{Value: uint64(len(p.Role))})
+		field.SetValueData([]byte(p.Role))
+		if appendTmp, err := field.Append(w); err != nil {
+			return nil, err
+		} else {
+			w = appendTmp
+		}
+	}
+	field.Tag.SetNumber(2)
+	if len(p.Name) > 0 {
+		field.Tag.SetType(wire.WireType_LengthDelimited)
+		field.SetLength(wire.Varint{Value: uint64(len(p.Name))})
+		field.SetValueData([]byte(p.Name))
+		if appendTmp, err := field.Append(w); err != nil {
+			return nil, err
+		} else {
+			w = appendTmp
+		}
+	}
+	field.Tag.SetNumber(3)
+	if len(p.Content) > 0 {
+		field.Tag.SetType(wire.WireType_LengthDelimited)
+		field.SetLength(wire.Varint{Value: uint64(len(p.Content))})
+		field.SetValueData(p.Content)
+		if appendTmp, err := field.Append(w); err != nil {
+			return nil, err
+		} else {
+			w = appendTmp
+		}
+	}
+	return w, nil
+}
+
+type DesiredObject struct {
+	Slot  string        `json:"slot,omitempty"`
+	Files []*ObjectFile `json:"files,omitempty"`
+}
+
+func (p *DesiredObject) Read(data io.Reader) error {
+	var field wire.Field
+	for {
+		err := field.Read(data)
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			return fmt.Errorf("decode: %w", err)
+		}
+		switch field.Tag.Number() {
+		case 1:
+			val := field.ValueData()
+			if val == nil {
+				return fmt.Errorf("field Slot unexpected wire type. expect LengthDelimited but got %s", field.Tag.Type())
+			}
+			p.Slot = unsafe.String(unsafe.SliceData((*val)), len((*val)))
+		case 2:
+			val := field.ValueData()
+			if val == nil {
+				return fmt.Errorf("field Files unexpected wire type. expect LengthDelimited but got %s", field.Tag.Type())
+			}
+			{
+				var tmp *ObjectFile
+				tmp = new(ObjectFile)
+				if err := tmp.Decode((*val)); err != nil {
+					return err
+				}
+				p.Files = append(p.Files, tmp)
+			}
+		default:
+			// skip unknown
+		}
+	}
+	return nil
+}
+func (p *DesiredObject) ReadBuffer(data *bytes.Reader) error {
+	var field wire.Field
+	for {
+		err := field.ReadBuffer(data)
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			return fmt.Errorf("decode: %w", err)
+		}
+		switch field.Tag.Number() {
+		case 1:
+			val := field.ValueData()
+			if val == nil {
+				return fmt.Errorf("field Slot unexpected wire type. expect LengthDelimited but got %s", field.Tag.Type())
+			}
+			p.Slot = unsafe.String(unsafe.SliceData((*val)), len((*val)))
+		case 2:
+			val := field.ValueData()
+			if val == nil {
+				return fmt.Errorf("field Files unexpected wire type. expect LengthDelimited but got %s", field.Tag.Type())
+			}
+			{
+				var tmp *ObjectFile
+				tmp = new(ObjectFile)
+				if err := tmp.Decode((*val)); err != nil {
+					return err
+				}
+				p.Files = append(p.Files, tmp)
+			}
+		default:
+			// skip unknown
+		}
+	}
+	return nil
+}
+func (p *DesiredObject) Decode(data []byte) error {
+	var field wire.Field
+	for len(data) > 0 {
+		remain, err := field.Decode(data)
+		if err != nil {
+			return fmt.Errorf("decode: %w", err)
+		}
+		switch field.Tag.Number() {
+		case 1:
+			val := field.ValueData()
+			if val == nil {
+				return fmt.Errorf("field Slot unexpected wire type. expect LengthDelimited but got %s", field.Tag.Type())
+			}
+			p.Slot = unsafe.String(unsafe.SliceData((*val)), len((*val)))
+		case 2:
+			val := field.ValueData()
+			if val == nil {
+				return fmt.Errorf("field Files unexpected wire type. expect LengthDelimited but got %s", field.Tag.Type())
+			}
+			{
+				var tmp *ObjectFile
+				tmp = new(ObjectFile)
+				if err := tmp.Decode((*val)); err != nil {
+					return err
+				}
+				p.Files = append(p.Files, tmp)
+			}
+		default:
+			// skip unknown
+		}
+		data = remain
+	}
+	return nil
+}
+
+func (p *DesiredObject) Encode(w io.Writer) error {
+	var field wire.Field
+	field.Tag.SetNumber(1)
+	if len(p.Slot) > 0 {
+		field.Tag.SetType(wire.WireType_LengthDelimited)
+		field.SetLength(wire.Varint{Value: uint64(len(p.Slot))})
+		field.SetValueData([]byte(p.Slot))
+		if err := field.Write(w); err != nil {
+			return err
+		}
+	}
+	field.Tag.SetNumber(2)
+	for _, v := range p.Files {
+		field.Tag.SetType(wire.WireType_LengthDelimited)
+		{
+			mBuf := make([]byte, 0)
+			if appendTmp, err := v.Append(mBuf); err != nil {
+				return err
+			} else {
+				mBuf = appendTmp
+			}
+			field.SetLength(wire.Varint{Value: uint64(len(mBuf))})
+			field.SetValueData(mBuf)
+		}
+		if err := field.Write(w); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+func (p *DesiredObject) EncodeBuffer(w *bytes.Buffer) error {
+	var field wire.Field
+	field.Tag.SetNumber(1)
+	if len(p.Slot) > 0 {
+		field.Tag.SetType(wire.WireType_LengthDelimited)
+		field.SetLength(wire.Varint{Value: uint64(len(p.Slot))})
+		field.SetValueData([]byte(p.Slot))
+		if err := field.WriteBuffer(w); err != nil {
+			return err
+		}
+	}
+	field.Tag.SetNumber(2)
+	for _, v := range p.Files {
+		field.Tag.SetType(wire.WireType_LengthDelimited)
+		{
+			mBuf := make([]byte, 0)
+			if appendTmp, err := v.Append(mBuf); err != nil {
+				return err
+			} else {
+				mBuf = appendTmp
+			}
+			field.SetLength(wire.Varint{Value: uint64(len(mBuf))})
+			field.SetValueData(mBuf)
+		}
+		if err := field.WriteBuffer(w); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+func (p *DesiredObject) Append(w []byte) ([]byte, error) {
+	var field wire.Field
+	field.Tag.SetNumber(1)
+	if len(p.Slot) > 0 {
+		field.Tag.SetType(wire.WireType_LengthDelimited)
+		field.SetLength(wire.Varint{Value: uint64(len(p.Slot))})
+		field.SetValueData([]byte(p.Slot))
+		if appendTmp, err := field.Append(w); err != nil {
+			return nil, err
+		} else {
+			w = appendTmp
+		}
+	}
+	field.Tag.SetNumber(2)
+	for _, v := range p.Files {
+		field.Tag.SetType(wire.WireType_LengthDelimited)
+		{
+			mBuf := make([]byte, 0)
+			if appendTmp, err := v.Append(mBuf); err != nil {
+				return nil, err
+			} else {
+				mBuf = appendTmp
+			}
+			field.SetLength(wire.Varint{Value: uint64(len(mBuf))})
+			field.SetValueData(mBuf)
+		}
+		if appendTmp, err := field.Append(w); err != nil {
+			return nil, err
+		} else {
+			w = appendTmp
+		}
+	}
+	return w, nil
+}
+
+type DataplaneServiceSyncObjectsRequest struct {
+	Objects []*DesiredObject `json:"objects,omitempty"`
+}
+
+func (p *DataplaneServiceSyncObjectsRequest) Read(data io.Reader) error {
+	var field wire.Field
+	for {
+		err := field.Read(data)
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			return fmt.Errorf("decode: %w", err)
+		}
+		switch field.Tag.Number() {
+		case 1:
+			val := field.ValueData()
+			if val == nil {
+				return fmt.Errorf("field Objects unexpected wire type. expect LengthDelimited but got %s", field.Tag.Type())
+			}
+			{
+				var tmp *DesiredObject
+				tmp = new(DesiredObject)
+				if err := tmp.Decode((*val)); err != nil {
+					return err
+				}
+				p.Objects = append(p.Objects, tmp)
+			}
+		default:
+			// skip unknown
+		}
+	}
+	return nil
+}
+func (p *DataplaneServiceSyncObjectsRequest) ReadBuffer(data *bytes.Reader) error {
+	var field wire.Field
+	for {
+		err := field.ReadBuffer(data)
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			return fmt.Errorf("decode: %w", err)
+		}
+		switch field.Tag.Number() {
+		case 1:
+			val := field.ValueData()
+			if val == nil {
+				return fmt.Errorf("field Objects unexpected wire type. expect LengthDelimited but got %s", field.Tag.Type())
+			}
+			{
+				var tmp *DesiredObject
+				tmp = new(DesiredObject)
+				if err := tmp.Decode((*val)); err != nil {
+					return err
+				}
+				p.Objects = append(p.Objects, tmp)
+			}
+		default:
+			// skip unknown
+		}
+	}
+	return nil
+}
+func (p *DataplaneServiceSyncObjectsRequest) Decode(data []byte) error {
+	var field wire.Field
+	for len(data) > 0 {
+		remain, err := field.Decode(data)
+		if err != nil {
+			return fmt.Errorf("decode: %w", err)
+		}
+		switch field.Tag.Number() {
+		case 1:
+			val := field.ValueData()
+			if val == nil {
+				return fmt.Errorf("field Objects unexpected wire type. expect LengthDelimited but got %s", field.Tag.Type())
+			}
+			{
+				var tmp *DesiredObject
+				tmp = new(DesiredObject)
+				if err := tmp.Decode((*val)); err != nil {
+					return err
+				}
+				p.Objects = append(p.Objects, tmp)
+			}
+		default:
+			// skip unknown
+		}
+		data = remain
+	}
+	return nil
+}
+
+func (p *DataplaneServiceSyncObjectsRequest) Encode(w io.Writer) error {
+	var field wire.Field
+	field.Tag.SetNumber(1)
+	for _, v := range p.Objects {
+		field.Tag.SetType(wire.WireType_LengthDelimited)
+		{
+			mBuf := make([]byte, 0)
+			if appendTmp, err := v.Append(mBuf); err != nil {
+				return err
+			} else {
+				mBuf = appendTmp
+			}
+			field.SetLength(wire.Varint{Value: uint64(len(mBuf))})
+			field.SetValueData(mBuf)
+		}
+		if err := field.Write(w); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+func (p *DataplaneServiceSyncObjectsRequest) EncodeBuffer(w *bytes.Buffer) error {
+	var field wire.Field
+	field.Tag.SetNumber(1)
+	for _, v := range p.Objects {
+		field.Tag.SetType(wire.WireType_LengthDelimited)
+		{
+			mBuf := make([]byte, 0)
+			if appendTmp, err := v.Append(mBuf); err != nil {
+				return err
+			} else {
+				mBuf = appendTmp
+			}
+			field.SetLength(wire.Varint{Value: uint64(len(mBuf))})
+			field.SetValueData(mBuf)
+		}
+		if err := field.WriteBuffer(w); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+func (p *DataplaneServiceSyncObjectsRequest) Append(w []byte) ([]byte, error) {
+	var field wire.Field
+	field.Tag.SetNumber(1)
+	for _, v := range p.Objects {
+		field.Tag.SetType(wire.WireType_LengthDelimited)
+		{
+			mBuf := make([]byte, 0)
+			if appendTmp, err := v.Append(mBuf); err != nil {
+				return nil, err
+			} else {
+				mBuf = appendTmp
+			}
+			field.SetLength(wire.Varint{Value: uint64(len(mBuf))})
+			field.SetValueData(mBuf)
+		}
+		if appendTmp, err := field.Append(w); err != nil {
+			return nil, err
+		} else {
+			w = appendTmp
+		}
+	}
+	return w, nil
+}
+
 type DataplaneServiceServer interface {
 	ListFiles(context.Context, *DataplaneServiceListFilesRequest) (*DataplaneServiceListFilesResponse, error)
 	RemoveFile(context.Context, *DataplaneServiceRemoveFileRequest) (*wkt.Empty, error)
@@ -5397,6 +5973,7 @@ type DataplaneServiceServer interface {
 	SetLogLevel(context.Context, *DataplaneServiceSetLogLevelRequest) (*wkt.Empty, error)
 	GetLogLevel(context.Context, *wkt.Empty) (*DataplaneServiceGetLogLevelResponse, error)
 	SetBalancerObject(context.Context, *DataplaneServiceSetBalancerObjectRequest) (*wkt.Empty, error)
+	SyncObjects(context.Context, *DataplaneServiceSyncObjectsRequest) (*wkt.Empty, error)
 	StreamLogs(context.Context, *wkt.Empty, *DataplaneServiceStreamLogsServerStream) error
 	TailLogs(context.Context, *DataplaneServiceTailLogsRequest) (*DataplaneServiceTailLogsResponse, error)
 	StreamStats(context.Context, *wkt.Empty, *DataplaneServiceStreamStatsServerStream) error
@@ -5473,6 +6050,10 @@ func (s *UnimplementedDataplaneServiceServer) SetBalancerObject(context.Context,
 	return nil, errors.New("method ksdk.rpc.DataplaneService.SetBalancerObject not implemented")
 }
 
+func (s *UnimplementedDataplaneServiceServer) SyncObjects(context.Context, *DataplaneServiceSyncObjectsRequest) (*wkt.Empty, error) {
+	return nil, errors.New("method ksdk.rpc.DataplaneService.SyncObjects not implemented")
+}
+
 func (s *UnimplementedDataplaneServiceServer) StreamLogs(context.Context, *wkt.Empty, *DataplaneServiceStreamLogsServerStream) error {
 	return errors.New("method ksdk.rpc.DataplaneService.StreamLogs not implemented")
 }
@@ -5502,6 +6083,7 @@ type DataplaneServiceClient interface {
 	SetLogLevel(context.Context, *DataplaneServiceSetLogLevelRequest) (*wkt.Empty, error)
 	GetLogLevel(context.Context, *wkt.Empty) (*DataplaneServiceGetLogLevelResponse, error)
 	SetBalancerObject(context.Context, *DataplaneServiceSetBalancerObjectRequest) (*wkt.Empty, error)
+	SyncObjects(context.Context, *DataplaneServiceSyncObjectsRequest) (*wkt.Empty, error)
 	StreamLogs(context.Context, *wkt.Empty) (*DataplaneServiceStreamLogsClientStream, error)
 	TailLogs(context.Context, *DataplaneServiceTailLogsRequest) (*DataplaneServiceTailLogsResponse, error)
 	StreamStats(context.Context, *wkt.Empty) (*DataplaneServiceStreamStatsClientStream, error)
@@ -5573,6 +6155,10 @@ func (c *DefaultDataplaneServiceClient) GetLogLevel(arg0 context.Context, arg1 *
 
 func (c *DefaultDataplaneServiceClient) SetBalancerObject(arg0 context.Context, arg1 *DataplaneServiceSetBalancerObjectRequest) (*wkt.Empty, error) {
 	return wire.NewCall[DataplaneServiceSetBalancerObjectRequest, wkt.Empty](arg0, "ksdk.rpc.DataplaneService", "SetBalancerObject", c.stream, arg1)
+}
+
+func (c *DefaultDataplaneServiceClient) SyncObjects(arg0 context.Context, arg1 *DataplaneServiceSyncObjectsRequest) (*wkt.Empty, error) {
+	return wire.NewCall[DataplaneServiceSyncObjectsRequest, wkt.Empty](arg0, "ksdk.rpc.DataplaneService", "SyncObjects", c.stream, arg1)
 }
 
 func (c *DefaultDataplaneServiceClient) StreamLogs(arg0 context.Context, arg1 *wkt.Empty) (*DataplaneServiceStreamLogsClientStream, error) {
@@ -5779,6 +6365,18 @@ func RegisterDataplaneServiceServer(reg rpc.Registry, impl DataplaneServiceServe
 				return nil, err
 			}
 			resp, err := impl.SetBalancerObject(ctx, req)
+			if err != nil {
+				return nil, err
+			}
+			return resp.Append(nil)
+		})
+	reg.RegisterMethod("ksdk.rpc.DataplaneService", "SyncObjects",
+		func(ctx context.Context, body []byte) ([]byte, error) {
+			req := &DataplaneServiceSyncObjectsRequest{}
+			if err := req.Decode(body); err != nil {
+				return nil, err
+			}
+			resp, err := impl.SyncObjects(ctx, req)
 			if err != nil {
 				return nil, err
 			}

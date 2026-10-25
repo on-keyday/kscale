@@ -142,6 +142,10 @@ message WorkloadStat {
     uint64 steered_ports = 7;
 }
 
+message DpObjectStat {
+    StringList loaded_objects = 1;
+}
+
 // Stats is the wire envelope for the `stats` admin response.
 // Each sub-message is optional; the broker populates only the
 // categories that apply to the dataplane type being reported.
@@ -166,5 +170,6 @@ message Stats {
     // dp_type is the dataplane type ("l4lb" / "popcache" / etc.).
     string dp_type = 15;
     WorkloadStat workload = 16;
+    DpObjectStat dp_object = 17;
 }
 
