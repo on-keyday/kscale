@@ -17,7 +17,8 @@ import "google/protobuf/empty.proto";
 // "name:/containerPath" with an optional ":ro" suffix, name being an
 // agent-managed directory under the node's volume root. mounts (raw
 // "hostPath:containerPath") is rejected by the agent and kept for wire
-// compatibility only.
+// compatibility only. devices are CDI names ("vendor/class=name", e.g.
+// "nvidia.com/gpu=all") passed to CRI as CDI_devices.
 message WorkloadServiceContainerSpec {
     string name = 1;
     string image = 2;
@@ -29,6 +30,7 @@ message WorkloadServiceContainerSpec {
     string network = 8; // "" / "host" (node netns) | "pod" (own netns via the kscale CNI)
     repeated string ports = 9; // "tcp:8080"; only for network "pod"
     repeated string volumes = 10; // "name:/containerPath[:ro]"
+    repeated string devices = 11; // CDI names "vendor/class=name"
 }
 
 // ApplyContainers hands the agent the FULL desired set for this node. The agent

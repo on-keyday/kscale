@@ -32,3 +32,28 @@ func TestApplyRejectsHostMounts(t *testing.T) {
 		t.Fatalf("volume spec not stored intact: %+v", d)
 	}
 }
+
+// TestApplyDevices: a malformed device name is refused at apply time; a CDI name
+// is stored intact and comes back from Get.
+func TestApplyDevices(t *testing.T) {
+	ctx := context.Background()
+	s := &container.Service{Handlers: container.New()}
+	_, err := s.Apply(ctx, &pbaccess.ResourceContainerActionApplyArgsDTO{
+		Name: "bad", Node: "*", Image: "busybox:1.37", Devices: []string{"/dev/nvidia0"},
+	})
+	if err == nil || !strings.Contains(err.Error(), "CDI name") {
+		t.Fatalf("malformed device accepted (err=%v)", err)
+	}
+	if len(s.Desired()) != 0 {
+		t.Fatalf("rejected spec was stored: %+v", s.Desired())
+	}
+	if _, err := s.Apply(ctx, &pbaccess.ResourceContainerActionApplyArgsDTO{
+		Name: "llm", Node: "*", Image: "llama:cuda", Devices: []string{"nvidia.com/gpu=all"},
+	}); err != nil {
+		t.Fatalf("CDI device rejected: %v", err)
+	}
+	got, err := s.Get(ctx, &pbaccess.ResourceContainerActionGetArgsDTO{Name: "llm"})
+	if err != nil || len(got.Devices) != 1 || got.Devices[0] != "nvidia.com/gpu=all" {
+		t.Fatalf("device not stored intact: %+v, %v", got, err)
+	}
+}

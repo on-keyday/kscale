@@ -97,6 +97,8 @@ services:
     network_mode: "service:popcache"
     command: ["--addr", "10.5.0.2:9443", "--data", "/data", "--node", "node1",
               "--converge-interval", "5s"]
+    # OCI runtime for the node's containerd: runc (default) or youki (phase 8).
+    environment: ["E2E_OCI_RUNTIME=${E2E_OCI_RUNTIME:-runc}"]
     volumes: ["shared:/data", "wlroot:/var/lib/containerd"]
     depends_on: [popcache]
     profiles: ["workload-cri"]

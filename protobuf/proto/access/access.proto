@@ -94,6 +94,7 @@ message ResourceContainerActionApplyArgsDTO {
     string network = 9;
     repeated string ports = 10;
     repeated string volumes = 11;
+    repeated string devices = 12;
 }
 
 message ResourceContainerActionDeleteArgsDTO {
@@ -618,6 +619,7 @@ message ResourceContainerActionApplyResponseDTO {
     string network = 9;
     repeated string ports = 10;
     repeated string volumes = 11;
+    repeated string devices = 12;
 }
 
 message ResourceContainerActionDeleteResponseDTO {
@@ -640,6 +642,7 @@ message ResourceContainerActionGetResponseDTO {
     string network = 9;
     repeated string ports = 10;
     repeated string volumes = 11;
+    repeated string devices = 12;
 }
 
 message ResourceContainerActionListResponseDTO {

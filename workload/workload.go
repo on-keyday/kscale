@@ -71,6 +71,7 @@ type Spec struct {
 	Network string   // "" / "host" (node netns) | "pod" (own netns via the kscale CNI)
 	Ports   []string // "tcp:8080"; only for Network "pod"
 	Volumes []string // "name:/containerPath[:ro]" — agent-managed dirs (volume.go)
+	Devices []string // CDI names "vendor/class=name", e.g. "nvidia.com/gpu=all" (device.go)
 }
 
 // Port is one parsed Spec.Ports entry.
@@ -109,6 +110,9 @@ func (s Spec) Validate() error {
 		return errHostMounts
 	}
 	if _, err := ParseVolumes(s.Volumes); err != nil {
+		return err
+	}
+	if err := ValidateDevices(s.Devices); err != nil {
 		return err
 	}
 	switch s.Network {
@@ -367,13 +371,14 @@ func (e *Engine) sandboxConfig(spec Spec) *criapi.PodSandboxConfig {
 
 func (e *Engine) containerConfig(spec Spec, hash string, mounts []*criapi.Mount) *criapi.ContainerConfig {
 	return &criapi.ContainerConfig{
-		Metadata: &criapi.ContainerMetadata{Name: spec.Name},
-		Image:    &criapi.ImageSpec{Image: spec.Image},
-		Command:  spec.Command,
-		Args:     spec.Args,
-		Envs:     parseEnv(spec.Env),
-		Mounts:   mounts,
-		Labels:   map[string]string{labelManaged: "true", labelSpecHash: hash},
+		Metadata:   &criapi.ContainerMetadata{Name: spec.Name},
+		Image:      &criapi.ImageSpec{Image: spec.Image},
+		Command:    spec.Command,
+		Args:       spec.Args,
+		Envs:       parseEnv(spec.Env),
+		Mounts:     mounts,
+		CDIDevices: cdiDevices(spec.Devices),
+		Labels:     map[string]string{labelManaged: "true", labelSpecHash: hash},
 	}
 }
 
@@ -520,6 +525,12 @@ func specHash(s Spec) string {
 	}
 	if len(s.Volumes) > 0 {
 		write(s.Volumes...)
+	}
+	if len(s.Devices) > 0 {
+		// Tagged so ["x"] in Devices never hashes like ["x"] in Volumes on a spec
+		// that has no volumes.
+		write("devices")
+		write(s.Devices...)
 	}
 	// 32 hex chars (128 bit) — collision-safe and within CRI's 63-char label limit.
 	return hex.EncodeToString(h.Sum(nil))[:32]

@@ -46,6 +46,7 @@ func (h *Handlers) Apply(ctx context.Context, req *pbaccess.ResourceContainerAct
 		Network: req.Network,
 		Ports:   req.Ports,
 		Volumes: req.Volumes,
+		Devices: req.Devices,
 	}
 	h.store[req.Name] = obj
 	resp := &pbaccess.ResourceContainerActionApplyResponseDTO{
@@ -60,6 +61,7 @@ func (h *Handlers) Apply(ctx context.Context, req *pbaccess.ResourceContainerAct
 		Network: req.Network,
 		Ports:   req.Ports,
 		Volumes: req.Volumes,
+		Devices: req.Devices,
 	}
 	h.mu.Unlock()
 	h.notify()

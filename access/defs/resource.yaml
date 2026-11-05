@@ -608,7 +608,10 @@ resources:
     # agent-managed directories under the node's volume root; mounts (raw hostPath)
     # are REJECTED — a root container with an arbitrary hostPath owns the whole node
     # (notes/ai/2026_10_14_container_hostpath_root.md). The field stays only so the
-    # generated field numbers don't shift. Custom reconcile (the CRI converge lives
+    # generated field numbers don't shift. devices are CDI names ("nvidia.com/gpu=all")
+    # resolved by containerd against the node's CDI specs — what they can grant is
+    # bounded by what the node's root published under /etc/cdi
+    # (notes/ai/2026_11_06_container_cdi_devices.md). Custom reconcile (the CRI converge lives
     # in reconcile/container.go, not a single RPC method).
     - name: container
       description: A container workload to run on a node (declarative; reconciled to the node's container runtime via CRI)
@@ -649,6 +652,8 @@ resources:
               - name: ports
                 type: "[]string"
               - name: volumes
+                type: "[]string"
+              - name: devices
                 type: "[]string"
       # diff: observed-status / drift on demand. For each connected workload node, ask
       # its actual CRI state (WorkloadService.ListContainers) and compare against the

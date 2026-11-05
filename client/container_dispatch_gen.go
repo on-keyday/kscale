@@ -65,6 +65,13 @@ func DispatchContainer(ctx context.Context, c pb.ContainerServiceClient, action 
 			}
 			dto.Volumes = l
 		}
+		if v, ok := args["devices"]; ok {
+			l, err := parseStringList(v)
+			if err != nil {
+				return "", fmt.Errorf("arg devices: %w", err)
+			}
+			dto.Devices = l
+		}
 		resp, err := c.Apply(ctx, dto)
 		if err != nil {
 			return "", err

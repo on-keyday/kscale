@@ -249,6 +249,7 @@ func (s *workloadService) ApplyContainers(ctx context.Context, req *pb.WorkloadS
 			Network: c.Network,
 			Ports:   c.Ports,
 			Volumes: c.Volumes,
+			Devices: c.Devices,
 		})
 	}
 	err := s.engine.Apply(ctx, specs)

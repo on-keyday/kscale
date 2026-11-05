@@ -34,13 +34,14 @@ type fakeRuntime struct {
 	startErr error                           // if set, StartContainer fails once
 	modes    map[string]criapi.NamespaceMode // sandbox id -> requested network mode
 	mounts   map[string][]*criapi.Mount      // container id -> requested mounts
+	cdi      map[string][]*criapi.CDIDevice  // container id -> requested CDI devices
 	podIPs   map[string]string               // sandbox id -> IP PodSandboxStatus reports
 }
 
 func newFake() *fakeRuntime {
 	return &fakeRuntime{pods: map[string]*criapi.PodSandbox{}, ctrs: map[string]*criapi.Container{},
 		images: map[string]bool{}, modes: map[string]criapi.NamespaceMode{}, podIPs: map[string]string{},
-		mounts: map[string][]*criapi.Mount{}}
+		mounts: map[string][]*criapi.Mount{}, cdi: map[string][]*criapi.CDIDevice{}}
 }
 
 func (f *fakeRuntime) id(prefix string) string {
@@ -164,6 +165,7 @@ func (f *fakeRuntime) CreateContainer(_ context.Context, r *criapi.CreateContain
 	f.creates++
 	id := f.id("ctr")
 	f.mounts[id] = r.Config.Mounts
+	f.cdi[id] = r.Config.CDIDevices
 	f.ctrs[id] = &criapi.Container{
 		Id:           id,
 		PodSandboxId: r.PodSandboxId,

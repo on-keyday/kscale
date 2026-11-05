@@ -2102,6 +2102,7 @@ type ResourceContainerActionApplyArgsDTO struct {
 	Network string   `json:"network,omitempty"`
 	Ports   []string `json:"ports,omitempty"`
 	Volumes []string `json:"volumes,omitempty"`
+	Devices []string `json:"devices,omitempty"`
 }
 
 func (p *ResourceContainerActionApplyArgsDTO) Read(data io.Reader) error {
@@ -2204,6 +2205,16 @@ func (p *ResourceContainerActionApplyArgsDTO) Read(data io.Reader) error {
 				var tmp string
 				tmp = unsafe.String(unsafe.SliceData((*val)), len((*val)))
 				p.Volumes = append(p.Volumes, tmp)
+			}
+		case 12:
+			val := field.ValueData()
+			if val == nil {
+				return fmt.Errorf("field Devices unexpected wire type. expect LengthDelimited but got %s", field.Tag.Type())
+			}
+			{
+				var tmp string
+				tmp = unsafe.String(unsafe.SliceData((*val)), len((*val)))
+				p.Devices = append(p.Devices, tmp)
 			}
 		default:
 			// skip unknown
@@ -2312,6 +2323,16 @@ func (p *ResourceContainerActionApplyArgsDTO) ReadBuffer(data *bytes.Reader) err
 				tmp = unsafe.String(unsafe.SliceData((*val)), len((*val)))
 				p.Volumes = append(p.Volumes, tmp)
 			}
+		case 12:
+			val := field.ValueData()
+			if val == nil {
+				return fmt.Errorf("field Devices unexpected wire type. expect LengthDelimited but got %s", field.Tag.Type())
+			}
+			{
+				var tmp string
+				tmp = unsafe.String(unsafe.SliceData((*val)), len((*val)))
+				p.Devices = append(p.Devices, tmp)
+			}
 		default:
 			// skip unknown
 		}
@@ -2415,6 +2436,16 @@ func (p *ResourceContainerActionApplyArgsDTO) Decode(data []byte) error {
 				var tmp string
 				tmp = unsafe.String(unsafe.SliceData((*val)), len((*val)))
 				p.Volumes = append(p.Volumes, tmp)
+			}
+		case 12:
+			val := field.ValueData()
+			if val == nil {
+				return fmt.Errorf("field Devices unexpected wire type. expect LengthDelimited but got %s", field.Tag.Type())
+			}
+			{
+				var tmp string
+				tmp = unsafe.String(unsafe.SliceData((*val)), len((*val)))
+				p.Devices = append(p.Devices, tmp)
 			}
 		default:
 			// skip unknown
@@ -2525,6 +2556,15 @@ func (p *ResourceContainerActionApplyArgsDTO) Encode(w io.Writer) error {
 			return err
 		}
 	}
+	field.Tag.SetNumber(12)
+	for _, v := range p.Devices {
+		field.Tag.SetType(wire.WireType_LengthDelimited)
+		field.SetLength(wire.Varint{Value: uint64(len(v))})
+		field.SetValueData([]byte(v))
+		if err := field.Write(w); err != nil {
+			return err
+		}
+	}
 	return nil
 }
 func (p *ResourceContainerActionApplyArgsDTO) EncodeBuffer(w *bytes.Buffer) error {
@@ -2621,6 +2661,15 @@ func (p *ResourceContainerActionApplyArgsDTO) EncodeBuffer(w *bytes.Buffer) erro
 	}
 	field.Tag.SetNumber(11)
 	for _, v := range p.Volumes {
+		field.Tag.SetType(wire.WireType_LengthDelimited)
+		field.SetLength(wire.Varint{Value: uint64(len(v))})
+		field.SetValueData([]byte(v))
+		if err := field.WriteBuffer(w); err != nil {
+			return err
+		}
+	}
+	field.Tag.SetNumber(12)
+	for _, v := range p.Devices {
 		field.Tag.SetType(wire.WireType_LengthDelimited)
 		field.SetLength(wire.Varint{Value: uint64(len(v))})
 		field.SetValueData([]byte(v))
@@ -2744,6 +2793,17 @@ func (p *ResourceContainerActionApplyArgsDTO) Append(w []byte) ([]byte, error) {
 	}
 	field.Tag.SetNumber(11)
 	for _, v := range p.Volumes {
+		field.Tag.SetType(wire.WireType_LengthDelimited)
+		field.SetLength(wire.Varint{Value: uint64(len(v))})
+		field.SetValueData([]byte(v))
+		if appendTmp, err := field.Append(w); err != nil {
+			return nil, err
+		} else {
+			w = appendTmp
+		}
+	}
+	field.Tag.SetNumber(12)
+	for _, v := range p.Devices {
 		field.Tag.SetType(wire.WireType_LengthDelimited)
 		field.SetLength(wire.Varint{Value: uint64(len(v))})
 		field.SetValueData([]byte(v))
@@ -18770,6 +18830,7 @@ type ResourceContainerActionApplyResponseDTO struct {
 	Network string   `json:"network,omitempty"`
 	Ports   []string `json:"ports,omitempty"`
 	Volumes []string `json:"volumes,omitempty"`
+	Devices []string `json:"devices,omitempty"`
 }
 
 func (p *ResourceContainerActionApplyResponseDTO) Read(data io.Reader) error {
@@ -18872,6 +18933,16 @@ func (p *ResourceContainerActionApplyResponseDTO) Read(data io.Reader) error {
 				var tmp string
 				tmp = unsafe.String(unsafe.SliceData((*val)), len((*val)))
 				p.Volumes = append(p.Volumes, tmp)
+			}
+		case 12:
+			val := field.ValueData()
+			if val == nil {
+				return fmt.Errorf("field Devices unexpected wire type. expect LengthDelimited but got %s", field.Tag.Type())
+			}
+			{
+				var tmp string
+				tmp = unsafe.String(unsafe.SliceData((*val)), len((*val)))
+				p.Devices = append(p.Devices, tmp)
 			}
 		default:
 			// skip unknown
@@ -18980,6 +19051,16 @@ func (p *ResourceContainerActionApplyResponseDTO) ReadBuffer(data *bytes.Reader)
 				tmp = unsafe.String(unsafe.SliceData((*val)), len((*val)))
 				p.Volumes = append(p.Volumes, tmp)
 			}
+		case 12:
+			val := field.ValueData()
+			if val == nil {
+				return fmt.Errorf("field Devices unexpected wire type. expect LengthDelimited but got %s", field.Tag.Type())
+			}
+			{
+				var tmp string
+				tmp = unsafe.String(unsafe.SliceData((*val)), len((*val)))
+				p.Devices = append(p.Devices, tmp)
+			}
 		default:
 			// skip unknown
 		}
@@ -19083,6 +19164,16 @@ func (p *ResourceContainerActionApplyResponseDTO) Decode(data []byte) error {
 				var tmp string
 				tmp = unsafe.String(unsafe.SliceData((*val)), len((*val)))
 				p.Volumes = append(p.Volumes, tmp)
+			}
+		case 12:
+			val := field.ValueData()
+			if val == nil {
+				return fmt.Errorf("field Devices unexpected wire type. expect LengthDelimited but got %s", field.Tag.Type())
+			}
+			{
+				var tmp string
+				tmp = unsafe.String(unsafe.SliceData((*val)), len((*val)))
+				p.Devices = append(p.Devices, tmp)
 			}
 		default:
 			// skip unknown
@@ -19193,6 +19284,15 @@ func (p *ResourceContainerActionApplyResponseDTO) Encode(w io.Writer) error {
 			return err
 		}
 	}
+	field.Tag.SetNumber(12)
+	for _, v := range p.Devices {
+		field.Tag.SetType(wire.WireType_LengthDelimited)
+		field.SetLength(wire.Varint{Value: uint64(len(v))})
+		field.SetValueData([]byte(v))
+		if err := field.Write(w); err != nil {
+			return err
+		}
+	}
 	return nil
 }
 func (p *ResourceContainerActionApplyResponseDTO) EncodeBuffer(w *bytes.Buffer) error {
@@ -19289,6 +19389,15 @@ func (p *ResourceContainerActionApplyResponseDTO) EncodeBuffer(w *bytes.Buffer) 
 	}
 	field.Tag.SetNumber(11)
 	for _, v := range p.Volumes {
+		field.Tag.SetType(wire.WireType_LengthDelimited)
+		field.SetLength(wire.Varint{Value: uint64(len(v))})
+		field.SetValueData([]byte(v))
+		if err := field.WriteBuffer(w); err != nil {
+			return err
+		}
+	}
+	field.Tag.SetNumber(12)
+	for _, v := range p.Devices {
 		field.Tag.SetType(wire.WireType_LengthDelimited)
 		field.SetLength(wire.Varint{Value: uint64(len(v))})
 		field.SetValueData([]byte(v))
@@ -19412,6 +19521,17 @@ func (p *ResourceContainerActionApplyResponseDTO) Append(w []byte) ([]byte, erro
 	}
 	field.Tag.SetNumber(11)
 	for _, v := range p.Volumes {
+		field.Tag.SetType(wire.WireType_LengthDelimited)
+		field.SetLength(wire.Varint{Value: uint64(len(v))})
+		field.SetValueData([]byte(v))
+		if appendTmp, err := field.Append(w); err != nil {
+			return nil, err
+		} else {
+			w = appendTmp
+		}
+	}
+	field.Tag.SetNumber(12)
+	for _, v := range p.Devices {
 		field.Tag.SetType(wire.WireType_LengthDelimited)
 		field.SetLength(wire.Varint{Value: uint64(len(v))})
 		field.SetValueData([]byte(v))
@@ -19676,6 +19796,7 @@ type ResourceContainerActionGetResponseDTO struct {
 	Network string   `json:"network,omitempty"`
 	Ports   []string `json:"ports,omitempty"`
 	Volumes []string `json:"volumes,omitempty"`
+	Devices []string `json:"devices,omitempty"`
 }
 
 func (p *ResourceContainerActionGetResponseDTO) Read(data io.Reader) error {
@@ -19778,6 +19899,16 @@ func (p *ResourceContainerActionGetResponseDTO) Read(data io.Reader) error {
 				var tmp string
 				tmp = unsafe.String(unsafe.SliceData((*val)), len((*val)))
 				p.Volumes = append(p.Volumes, tmp)
+			}
+		case 12:
+			val := field.ValueData()
+			if val == nil {
+				return fmt.Errorf("field Devices unexpected wire type. expect LengthDelimited but got %s", field.Tag.Type())
+			}
+			{
+				var tmp string
+				tmp = unsafe.String(unsafe.SliceData((*val)), len((*val)))
+				p.Devices = append(p.Devices, tmp)
 			}
 		default:
 			// skip unknown
@@ -19886,6 +20017,16 @@ func (p *ResourceContainerActionGetResponseDTO) ReadBuffer(data *bytes.Reader) e
 				tmp = unsafe.String(unsafe.SliceData((*val)), len((*val)))
 				p.Volumes = append(p.Volumes, tmp)
 			}
+		case 12:
+			val := field.ValueData()
+			if val == nil {
+				return fmt.Errorf("field Devices unexpected wire type. expect LengthDelimited but got %s", field.Tag.Type())
+			}
+			{
+				var tmp string
+				tmp = unsafe.String(unsafe.SliceData((*val)), len((*val)))
+				p.Devices = append(p.Devices, tmp)
+			}
 		default:
 			// skip unknown
 		}
@@ -19989,6 +20130,16 @@ func (p *ResourceContainerActionGetResponseDTO) Decode(data []byte) error {
 				var tmp string
 				tmp = unsafe.String(unsafe.SliceData((*val)), len((*val)))
 				p.Volumes = append(p.Volumes, tmp)
+			}
+		case 12:
+			val := field.ValueData()
+			if val == nil {
+				return fmt.Errorf("field Devices unexpected wire type. expect LengthDelimited but got %s", field.Tag.Type())
+			}
+			{
+				var tmp string
+				tmp = unsafe.String(unsafe.SliceData((*val)), len((*val)))
+				p.Devices = append(p.Devices, tmp)
 			}
 		default:
 			// skip unknown
@@ -20099,6 +20250,15 @@ func (p *ResourceContainerActionGetResponseDTO) Encode(w io.Writer) error {
 			return err
 		}
 	}
+	field.Tag.SetNumber(12)
+	for _, v := range p.Devices {
+		field.Tag.SetType(wire.WireType_LengthDelimited)
+		field.SetLength(wire.Varint{Value: uint64(len(v))})
+		field.SetValueData([]byte(v))
+		if err := field.Write(w); err != nil {
+			return err
+		}
+	}
 	return nil
 }
 func (p *ResourceContainerActionGetResponseDTO) EncodeBuffer(w *bytes.Buffer) error {
@@ -20195,6 +20355,15 @@ func (p *ResourceContainerActionGetResponseDTO) EncodeBuffer(w *bytes.Buffer) er
 	}
 	field.Tag.SetNumber(11)
 	for _, v := range p.Volumes {
+		field.Tag.SetType(wire.WireType_LengthDelimited)
+		field.SetLength(wire.Varint{Value: uint64(len(v))})
+		field.SetValueData([]byte(v))
+		if err := field.WriteBuffer(w); err != nil {
+			return err
+		}
+	}
+	field.Tag.SetNumber(12)
+	for _, v := range p.Devices {
 		field.Tag.SetType(wire.WireType_LengthDelimited)
 		field.SetLength(wire.Varint{Value: uint64(len(v))})
 		field.SetValueData([]byte(v))
@@ -20318,6 +20487,17 @@ func (p *ResourceContainerActionGetResponseDTO) Append(w []byte) ([]byte, error)
 	}
 	field.Tag.SetNumber(11)
 	for _, v := range p.Volumes {
+		field.Tag.SetType(wire.WireType_LengthDelimited)
+		field.SetLength(wire.Varint{Value: uint64(len(v))})
+		field.SetValueData([]byte(v))
+		if appendTmp, err := field.Append(w); err != nil {
+			return nil, err
+		} else {
+			w = appendTmp
+		}
+	}
+	field.Tag.SetNumber(12)
+	for _, v := range p.Devices {
 		field.Tag.SetType(wire.WireType_LengthDelimited)
 		field.SetLength(wire.Varint{Value: uint64(len(v))})
 		field.SetValueData([]byte(v))
