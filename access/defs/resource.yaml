@@ -669,6 +669,48 @@ resources:
                 fields:
                     - name: entries
                       type: "[]string"
+    # l4_route: pin VIP-destined traffic for one (proto, port) to ONE node instead of
+    # spreading it over every popcache backend (B6, notes/ai/2026_11_06_l4_route.md).
+    # port is "tcp:8443" / "udp:9443" (the open_port syntax); node is a node selector
+    # resolving to exactly one connected node (CN, "<dp_type>/<node>" or "<node>")
+    # whose bound interface address becomes the IPIP destination — a workload node
+    # with --host-ingress, or a popcache node. Every l4lb gets the FULL route set
+    # (DataplaneService.SetPortRoutes -> XDP port_route_map, keyed by (VIP, proto,
+    # port) for every VIP it serves). The router ACL is still open_port's job; diff
+    # shows a route whose port open_port does not open, and routes that do not
+    # resolve. Custom reconcile (reconcile/l4route.go): the destination address
+    # comes from the target node's reported stats, not from the declaration.
+    - name: l4_route
+      description: Pin VIP traffic for one proto:port to one node (declarative; reconciled to every l4lb's XDP port table)
+      command_name: l4-route
+      monitor:
+          list: "List declared L4 port routes (proto:port -> node)."
+          get: "Get one declared L4 port route by name."
+          diff: "Show per route whether its node resolves to an address and whether open_port opens its port."
+      kind: resource
+      rpc_service: true
+      schema:
+          key: name
+          declarative: true
+          generated_store: true
+          verbs: [apply, get, list, delete]
+          reconcile:
+              custom: true
+              dp_type: l4lb
+          fields:
+              - name: name
+                type: string
+              - name: port
+                type: string
+              - name: node
+                type: string
+      actions:
+          - name: diff
+            command_name: diff
+            response:
+                fields:
+                    - name: entries
+                      type: "[]string"
     # l4lb_object: which eBPF objects an l4lb node loads (by file name in the node's file
     # store, put there via node_file). Generated per-node reconcile pushes object/crypto/
     # pin to the node via DataplaneService.SetBalancerObject, which (re)loads the driver.

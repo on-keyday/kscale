@@ -1152,6 +1152,136 @@ func RegisterContainerServiceServer(reg rpc.Registry, impl ContainerServiceServe
 		})
 }
 
+type L4RouteServiceServer interface {
+	Apply(context.Context, *access.ResourceL4RouteActionApplyArgsDTO) (*access.ResourceL4RouteActionApplyResponseDTO, error)
+	Get(context.Context, *access.ResourceL4RouteActionGetArgsDTO) (*access.ResourceL4RouteActionGetResponseDTO, error)
+	List(context.Context, *access.ResourceL4RouteActionListArgsDTO) (*access.ResourceL4RouteActionListResponseDTO, error)
+	Delete(context.Context, *access.ResourceL4RouteActionDeleteArgsDTO) (*access.ResourceL4RouteActionDeleteResponseDTO, error)
+	Diff(context.Context, *access.ResourceL4RouteActionDiffArgsDTO) (*access.ResourceL4RouteActionDiffResponseDTO, error)
+}
+
+type UnimplementedL4RouteServiceServer struct {
+}
+
+func (s *UnimplementedL4RouteServiceServer) Apply(context.Context, *access.ResourceL4RouteActionApplyArgsDTO) (*access.ResourceL4RouteActionApplyResponseDTO, error) {
+	return nil, errors.New("method ksdk.rpc.L4RouteService.Apply not implemented")
+}
+
+func (s *UnimplementedL4RouteServiceServer) Get(context.Context, *access.ResourceL4RouteActionGetArgsDTO) (*access.ResourceL4RouteActionGetResponseDTO, error) {
+	return nil, errors.New("method ksdk.rpc.L4RouteService.Get not implemented")
+}
+
+func (s *UnimplementedL4RouteServiceServer) List(context.Context, *access.ResourceL4RouteActionListArgsDTO) (*access.ResourceL4RouteActionListResponseDTO, error) {
+	return nil, errors.New("method ksdk.rpc.L4RouteService.List not implemented")
+}
+
+func (s *UnimplementedL4RouteServiceServer) Delete(context.Context, *access.ResourceL4RouteActionDeleteArgsDTO) (*access.ResourceL4RouteActionDeleteResponseDTO, error) {
+	return nil, errors.New("method ksdk.rpc.L4RouteService.Delete not implemented")
+}
+
+func (s *UnimplementedL4RouteServiceServer) Diff(context.Context, *access.ResourceL4RouteActionDiffArgsDTO) (*access.ResourceL4RouteActionDiffResponseDTO, error) {
+	return nil, errors.New("method ksdk.rpc.L4RouteService.Diff not implemented")
+}
+
+type L4RouteServiceClient interface {
+	Apply(context.Context, *access.ResourceL4RouteActionApplyArgsDTO) (*access.ResourceL4RouteActionApplyResponseDTO, error)
+	Get(context.Context, *access.ResourceL4RouteActionGetArgsDTO) (*access.ResourceL4RouteActionGetResponseDTO, error)
+	List(context.Context, *access.ResourceL4RouteActionListArgsDTO) (*access.ResourceL4RouteActionListResponseDTO, error)
+	Delete(context.Context, *access.ResourceL4RouteActionDeleteArgsDTO) (*access.ResourceL4RouteActionDeleteResponseDTO, error)
+	Diff(context.Context, *access.ResourceL4RouteActionDiffArgsDTO) (*access.ResourceL4RouteActionDiffResponseDTO, error)
+}
+
+type DefaultL4RouteServiceClient struct {
+	stream *wire.StreamSource
+}
+
+func (c *DefaultL4RouteServiceClient) Apply(arg0 context.Context, arg1 *access.ResourceL4RouteActionApplyArgsDTO) (*access.ResourceL4RouteActionApplyResponseDTO, error) {
+	return wire.NewCall[access.ResourceL4RouteActionApplyArgsDTO, access.ResourceL4RouteActionApplyResponseDTO](arg0, "ksdk.rpc.L4RouteService", "Apply", c.stream, arg1)
+}
+
+func (c *DefaultL4RouteServiceClient) Get(arg0 context.Context, arg1 *access.ResourceL4RouteActionGetArgsDTO) (*access.ResourceL4RouteActionGetResponseDTO, error) {
+	return wire.NewCall[access.ResourceL4RouteActionGetArgsDTO, access.ResourceL4RouteActionGetResponseDTO](arg0, "ksdk.rpc.L4RouteService", "Get", c.stream, arg1)
+}
+
+func (c *DefaultL4RouteServiceClient) List(arg0 context.Context, arg1 *access.ResourceL4RouteActionListArgsDTO) (*access.ResourceL4RouteActionListResponseDTO, error) {
+	return wire.NewCall[access.ResourceL4RouteActionListArgsDTO, access.ResourceL4RouteActionListResponseDTO](arg0, "ksdk.rpc.L4RouteService", "List", c.stream, arg1)
+}
+
+func (c *DefaultL4RouteServiceClient) Delete(arg0 context.Context, arg1 *access.ResourceL4RouteActionDeleteArgsDTO) (*access.ResourceL4RouteActionDeleteResponseDTO, error) {
+	return wire.NewCall[access.ResourceL4RouteActionDeleteArgsDTO, access.ResourceL4RouteActionDeleteResponseDTO](arg0, "ksdk.rpc.L4RouteService", "Delete", c.stream, arg1)
+}
+
+func (c *DefaultL4RouteServiceClient) Diff(arg0 context.Context, arg1 *access.ResourceL4RouteActionDiffArgsDTO) (*access.ResourceL4RouteActionDiffResponseDTO, error) {
+	return wire.NewCall[access.ResourceL4RouteActionDiffArgsDTO, access.ResourceL4RouteActionDiffResponseDTO](arg0, "ksdk.rpc.L4RouteService", "Diff", c.stream, arg1)
+}
+
+func NewL4RouteServiceClient(stream *wire.StreamSource) L4RouteServiceClient {
+	return &DefaultL4RouteServiceClient{stream: stream}
+}
+
+func RegisterL4RouteServiceServer(reg rpc.Registry, impl L4RouteServiceServer) {
+	reg.RegisterMethod("ksdk.rpc.L4RouteService", "Apply",
+		func(ctx context.Context, body []byte) ([]byte, error) {
+			req := &access.ResourceL4RouteActionApplyArgsDTO{}
+			if err := req.Decode(body); err != nil {
+				return nil, err
+			}
+			resp, err := impl.Apply(ctx, req)
+			if err != nil {
+				return nil, err
+			}
+			return resp.Append(nil)
+		})
+	reg.RegisterMethod("ksdk.rpc.L4RouteService", "Get",
+		func(ctx context.Context, body []byte) ([]byte, error) {
+			req := &access.ResourceL4RouteActionGetArgsDTO{}
+			if err := req.Decode(body); err != nil {
+				return nil, err
+			}
+			resp, err := impl.Get(ctx, req)
+			if err != nil {
+				return nil, err
+			}
+			return resp.Append(nil)
+		})
+	reg.RegisterMethod("ksdk.rpc.L4RouteService", "List",
+		func(ctx context.Context, body []byte) ([]byte, error) {
+			req := &access.ResourceL4RouteActionListArgsDTO{}
+			if err := req.Decode(body); err != nil {
+				return nil, err
+			}
+			resp, err := impl.List(ctx, req)
+			if err != nil {
+				return nil, err
+			}
+			return resp.Append(nil)
+		})
+	reg.RegisterMethod("ksdk.rpc.L4RouteService", "Delete",
+		func(ctx context.Context, body []byte) ([]byte, error) {
+			req := &access.ResourceL4RouteActionDeleteArgsDTO{}
+			if err := req.Decode(body); err != nil {
+				return nil, err
+			}
+			resp, err := impl.Delete(ctx, req)
+			if err != nil {
+				return nil, err
+			}
+			return resp.Append(nil)
+		})
+	reg.RegisterMethod("ksdk.rpc.L4RouteService", "Diff",
+		func(ctx context.Context, body []byte) ([]byte, error) {
+			req := &access.ResourceL4RouteActionDiffArgsDTO{}
+			if err := req.Decode(body); err != nil {
+				return nil, err
+			}
+			resp, err := impl.Diff(ctx, req)
+			if err != nil {
+				return nil, err
+			}
+			return resp.Append(nil)
+		})
+}
+
 type L4LbObjectServiceServer interface {
 	Apply(context.Context, *access.ResourceL4LbObjectActionApplyArgsDTO) (*access.ResourceL4LbObjectActionApplyResponseDTO, error)
 	Get(context.Context, *access.ResourceL4LbObjectActionGetArgsDTO) (*access.ResourceL4LbObjectActionGetResponseDTO, error)

@@ -214,6 +214,21 @@ message DataplaneServiceSyncObjectsRequest {
     repeated DesiredObject objects = 1;
 }
 
+// PortRoute pins VIP-destined traffic for one (proto, port) to one node: the l4lb
+// IPIP-encapsulates it to dest instead of spreading it over the popcache backends
+// (l4_route resource; XDP port_route_map). Applies to every VIP the l4lb serves.
+message PortRoute {
+    string proto = 1; // "tcp" | "udp"
+    uint32 port = 2;
+    Destination dest = 3; // the node's bound interface address (server_id unused)
+}
+
+// SetPortRoutes carries an l4lb node's FULL port-route set; routes absent from it
+// are removed.
+message DataplaneServiceSetPortRoutesRequest {
+    repeated PortRoute routes = 1;
+}
+
 service DataplaneService {
     rpc ListFiles(DataplaneServiceListFilesRequest) returns (DataplaneServiceListFilesResponse);
     rpc RemoveFile(DataplaneServiceRemoveFileRequest) returns (google.protobuf.Empty);
@@ -255,4 +270,7 @@ service DataplaneService {
     // streams a StatBatch every interval. The CP caches the latest per node for
     // the northbound Stats resource (get/watch).
     rpc StreamStats(google.protobuf.Empty) returns (stream ksdk.stat.StatBatch);
+    // SetPortRoutes replaces an l4lb node's port routes (l4_route resource). Errors
+    // on non-l4lb nodes.
+    rpc SetPortRoutes(DataplaneServiceSetPortRoutesRequest) returns (google.protobuf.Empty);
 }

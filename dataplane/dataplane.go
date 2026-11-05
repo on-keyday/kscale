@@ -643,6 +643,48 @@ func (s *dpService) SetBalancerObject(ctx context.Context, req *pb.DataplaneServ
 	return &wkt.Empty{}, nil
 }
 
+// PortRoute is one (proto, port) the l4lb pins to Dest (SetPortRoutes).
+type PortRoute struct {
+	Proto string // "tcp" | "udp"
+	Port  uint16
+	Dest  stat.DestEntry
+}
+
+// portRouteSetter is the optional l4lb capability behind SetPortRoutes.
+type portRouteSetter interface {
+	SetPortRoutes(routes []PortRoute) error
+}
+
+// SetPortRoutes replaces this l4lb node's port routes with the pushed full set.
+func (s *dpService) SetPortRoutes(ctx context.Context, req *pb.DataplaneServiceSetPortRoutesRequest) (*wkt.Empty, error) {
+	setter, ok := s.hooks.(portRouteSetter)
+	if !ok {
+		return nil, fmt.Errorf("this node does not support port routes")
+	}
+	routes := make([]PortRoute, 0, len(req.Routes))
+	for _, r := range req.Routes {
+		if r.Dest == nil {
+			return nil, fmt.Errorf("dataplane: port route %s:%d has no destination", r.Proto, r.Port)
+		}
+		if r.Port == 0 || r.Port > 65535 {
+			return nil, fmt.Errorf("dataplane: port route %s:%d: bad port", r.Proto, r.Port)
+		}
+		ip, err := netip.ParseAddr(r.Dest.IpAddr)
+		if err != nil {
+			return nil, fmt.Errorf("dataplane: port route %s:%d: invalid dest ip %q: %w", r.Proto, r.Port, r.Dest.IpAddr, err)
+		}
+		routes = append(routes, PortRoute{
+			Proto: r.Proto,
+			Port:  uint16(r.Port),
+			Dest:  stat.DestEntry{IPAddr: ip, HardwareAddr: net.HardwareAddr(r.Dest.HardwareAddr)},
+		})
+	}
+	if err := setter.SetPortRoutes(routes); err != nil {
+		return nil, err
+	}
+	return &wkt.Empty{}, nil
+}
+
 // SyncObjects converges this node's dp_object slots to the pushed full set.
 func (s *dpService) SyncObjects(ctx context.Context, req *pb.DataplaneServiceSyncObjectsRequest) (*wkt.Empty, error) {
 	if err := s.objects.Sync(req.Objects); err != nil {

@@ -128,6 +128,17 @@ func RegisterContainer(mgr *rpc.RPCManager, gd GateDeps, inner pb.ContainerServi
 	})
 }
 
+// RegisterL4Route wraps inner in L4RouteGated (authz + audit) and registers it.
+func RegisterL4Route(mgr *rpc.RPCManager, gd GateDeps, inner pb.L4RouteServiceServer) {
+	pb.RegisterL4RouteServiceServer(mgr, &L4RouteGated{
+		Inner:      inner,
+		Controller: gd.Controller,
+		Resource:   gd.Resources[predefined.ResourceL4Route],
+		Root:       gd.Root,
+		Audit:      gd.Audit,
+	})
+}
+
 // RegisterL4LbObject wraps inner in L4LbObjectGated (authz + audit) and registers it.
 func RegisterL4LbObject(mgr *rpc.RPCManager, gd GateDeps, inner pb.L4LbObjectServiceServer) {
 	pb.RegisterL4LbObjectServiceServer(mgr, &L4LbObjectGated{

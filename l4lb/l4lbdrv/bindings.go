@@ -48,6 +48,7 @@ type Bindings struct {
 	SrcIPCounters         *ebpf.Map     `ebpf:"src_ip_counters_map"`
 	PacketSizeMap         *ebpf.Map     `ebpf:"packet_size_map"`
 	ISNLsbDistributionMap *ebpf.Map     `ebpf:"isn_lsb_distribution_map"`
+	PortRouteMap          *ebpf.Map     `ebpf:"port_route_map"`
 }
 
 func (b *Bindings) Close() error {
@@ -60,6 +61,7 @@ func (b *Bindings) Close() error {
 		b.SrcIPCounters.Close(),
 		b.PacketSizeMap.Close(),
 		b.ISNLsbDistributionMap.Close(),
+		b.PortRouteMap.Close(),
 	)
 }
 

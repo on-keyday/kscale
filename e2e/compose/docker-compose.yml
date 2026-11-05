@@ -103,6 +103,22 @@ services:
     depends_on: [popcache]
     profiles: ["workload-cri"]
 
+  # A workload node WITHOUT popcache, in its own netns (phase 9): the stand-in for
+  # the GPU node. --host-ingress makes it decap the l4lb's IPIP for the ports an
+  # l4_route pins to it and deliver them to host processes (VIP on lo). No
+  # containerd: phase 9 only exercises the L4 path (CRI calls just fail softly).
+  gpunode:
+    image: kscale-e2e
+    privileged: true
+    command: ["workloadagent", "--addr", "10.5.0.2:9443", "--data", "/data", "--node", "gpu1",
+              "--host-ingress", "--cri-socket", "/run/none.sock", "--converge-interval", "1h"]
+    volumes: ["shared:/data"]
+    networks:
+      pop:
+        ipv4_address: 10.5.0.8
+    depends_on: [cp]
+    profiles: ["routed"]
+
   # Built-in authoritative DNS dataplane (measure_stats_freshness.sh): serves
   # example.test on :53 so the client can drive its request counters.
   dns:

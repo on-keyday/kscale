@@ -5956,6 +5956,405 @@ func (p *DataplaneServiceSyncObjectsRequest) Append(w []byte) ([]byte, error) {
 	return w, nil
 }
 
+type PortRoute struct {
+	Proto string       `json:"proto,omitempty"`
+	Port  uint32       `json:"port,omitempty"`
+	Dest  *Destination `json:"dest,omitempty"`
+}
+
+func (p *PortRoute) Read(data io.Reader) error {
+	var field wire.Field
+	for {
+		err := field.Read(data)
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			return fmt.Errorf("decode: %w", err)
+		}
+		switch field.Tag.Number() {
+		case 1:
+			val := field.ValueData()
+			if val == nil {
+				return fmt.Errorf("field Proto unexpected wire type. expect LengthDelimited but got %s", field.Tag.Type())
+			}
+			p.Proto = unsafe.String(unsafe.SliceData((*val)), len((*val)))
+		case 2:
+			val := field.ValueVi()
+			if val == nil {
+				return fmt.Errorf("field Port unexpected wire type. expect Varint but got %s", field.Tag.Type())
+			}
+			p.Port = uint32((*val).Value)
+		case 3:
+			val := field.ValueData()
+			if val == nil {
+				return fmt.Errorf("field Dest unexpected wire type. expect LengthDelimited but got %s", field.Tag.Type())
+			}
+			p.Dest = new(Destination)
+			if err := p.Dest.Decode((*val)); err != nil {
+				return err
+			}
+		default:
+			// skip unknown
+		}
+	}
+	return nil
+}
+func (p *PortRoute) ReadBuffer(data *bytes.Reader) error {
+	var field wire.Field
+	for {
+		err := field.ReadBuffer(data)
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			return fmt.Errorf("decode: %w", err)
+		}
+		switch field.Tag.Number() {
+		case 1:
+			val := field.ValueData()
+			if val == nil {
+				return fmt.Errorf("field Proto unexpected wire type. expect LengthDelimited but got %s", field.Tag.Type())
+			}
+			p.Proto = unsafe.String(unsafe.SliceData((*val)), len((*val)))
+		case 2:
+			val := field.ValueVi()
+			if val == nil {
+				return fmt.Errorf("field Port unexpected wire type. expect Varint but got %s", field.Tag.Type())
+			}
+			p.Port = uint32((*val).Value)
+		case 3:
+			val := field.ValueData()
+			if val == nil {
+				return fmt.Errorf("field Dest unexpected wire type. expect LengthDelimited but got %s", field.Tag.Type())
+			}
+			p.Dest = new(Destination)
+			if err := p.Dest.Decode((*val)); err != nil {
+				return err
+			}
+		default:
+			// skip unknown
+		}
+	}
+	return nil
+}
+func (p *PortRoute) Decode(data []byte) error {
+	var field wire.Field
+	for len(data) > 0 {
+		remain, err := field.Decode(data)
+		if err != nil {
+			return fmt.Errorf("decode: %w", err)
+		}
+		switch field.Tag.Number() {
+		case 1:
+			val := field.ValueData()
+			if val == nil {
+				return fmt.Errorf("field Proto unexpected wire type. expect LengthDelimited but got %s", field.Tag.Type())
+			}
+			p.Proto = unsafe.String(unsafe.SliceData((*val)), len((*val)))
+		case 2:
+			val := field.ValueVi()
+			if val == nil {
+				return fmt.Errorf("field Port unexpected wire type. expect Varint but got %s", field.Tag.Type())
+			}
+			p.Port = uint32((*val).Value)
+		case 3:
+			val := field.ValueData()
+			if val == nil {
+				return fmt.Errorf("field Dest unexpected wire type. expect LengthDelimited but got %s", field.Tag.Type())
+			}
+			p.Dest = new(Destination)
+			if err := p.Dest.Decode((*val)); err != nil {
+				return err
+			}
+		default:
+			// skip unknown
+		}
+		data = remain
+	}
+	return nil
+}
+
+func (p *PortRoute) Encode(w io.Writer) error {
+	var field wire.Field
+	field.Tag.SetNumber(1)
+	if len(p.Proto) > 0 {
+		field.Tag.SetType(wire.WireType_LengthDelimited)
+		field.SetLength(wire.Varint{Value: uint64(len(p.Proto))})
+		field.SetValueData([]byte(p.Proto))
+		if err := field.Write(w); err != nil {
+			return err
+		}
+	}
+	field.Tag.SetNumber(2)
+	if p.Port != 0 {
+		field.Tag.SetType(wire.WireType_Varint)
+		field.SetValueVi(wire.Varint{Value: uint64(p.Port)})
+		if err := field.Write(w); err != nil {
+			return err
+		}
+	}
+	field.Tag.SetNumber(3)
+	if p.Dest != nil {
+		field.Tag.SetType(wire.WireType_LengthDelimited)
+		{
+			mBuf := make([]byte, 0)
+			if appendTmp, err := p.Dest.Append(mBuf); err != nil {
+				return err
+			} else {
+				mBuf = appendTmp
+			}
+			field.SetLength(wire.Varint{Value: uint64(len(mBuf))})
+			field.SetValueData(mBuf)
+		}
+		if err := field.Write(w); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+func (p *PortRoute) EncodeBuffer(w *bytes.Buffer) error {
+	var field wire.Field
+	field.Tag.SetNumber(1)
+	if len(p.Proto) > 0 {
+		field.Tag.SetType(wire.WireType_LengthDelimited)
+		field.SetLength(wire.Varint{Value: uint64(len(p.Proto))})
+		field.SetValueData([]byte(p.Proto))
+		if err := field.WriteBuffer(w); err != nil {
+			return err
+		}
+	}
+	field.Tag.SetNumber(2)
+	if p.Port != 0 {
+		field.Tag.SetType(wire.WireType_Varint)
+		field.SetValueVi(wire.Varint{Value: uint64(p.Port)})
+		if err := field.WriteBuffer(w); err != nil {
+			return err
+		}
+	}
+	field.Tag.SetNumber(3)
+	if p.Dest != nil {
+		field.Tag.SetType(wire.WireType_LengthDelimited)
+		{
+			mBuf := make([]byte, 0)
+			if appendTmp, err := p.Dest.Append(mBuf); err != nil {
+				return err
+			} else {
+				mBuf = appendTmp
+			}
+			field.SetLength(wire.Varint{Value: uint64(len(mBuf))})
+			field.SetValueData(mBuf)
+		}
+		if err := field.WriteBuffer(w); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+func (p *PortRoute) Append(w []byte) ([]byte, error) {
+	var field wire.Field
+	field.Tag.SetNumber(1)
+	if len(p.Proto) > 0 {
+		field.Tag.SetType(wire.WireType_LengthDelimited)
+		field.SetLength(wire.Varint{Value: uint64(len(p.Proto))})
+		field.SetValueData([]byte(p.Proto))
+		if appendTmp, err := field.Append(w); err != nil {
+			return nil, err
+		} else {
+			w = appendTmp
+		}
+	}
+	field.Tag.SetNumber(2)
+	if p.Port != 0 {
+		field.Tag.SetType(wire.WireType_Varint)
+		field.SetValueVi(wire.Varint{Value: uint64(p.Port)})
+		if appendTmp, err := field.Append(w); err != nil {
+			return nil, err
+		} else {
+			w = appendTmp
+		}
+	}
+	field.Tag.SetNumber(3)
+	if p.Dest != nil {
+		field.Tag.SetType(wire.WireType_LengthDelimited)
+		{
+			mBuf := make([]byte, 0)
+			if appendTmp, err := p.Dest.Append(mBuf); err != nil {
+				return nil, err
+			} else {
+				mBuf = appendTmp
+			}
+			field.SetLength(wire.Varint{Value: uint64(len(mBuf))})
+			field.SetValueData(mBuf)
+		}
+		if appendTmp, err := field.Append(w); err != nil {
+			return nil, err
+		} else {
+			w = appendTmp
+		}
+	}
+	return w, nil
+}
+
+type DataplaneServiceSetPortRoutesRequest struct {
+	Routes []*PortRoute `json:"routes,omitempty"`
+}
+
+func (p *DataplaneServiceSetPortRoutesRequest) Read(data io.Reader) error {
+	var field wire.Field
+	for {
+		err := field.Read(data)
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			return fmt.Errorf("decode: %w", err)
+		}
+		switch field.Tag.Number() {
+		case 1:
+			val := field.ValueData()
+			if val == nil {
+				return fmt.Errorf("field Routes unexpected wire type. expect LengthDelimited but got %s", field.Tag.Type())
+			}
+			{
+				var tmp *PortRoute
+				tmp = new(PortRoute)
+				if err := tmp.Decode((*val)); err != nil {
+					return err
+				}
+				p.Routes = append(p.Routes, tmp)
+			}
+		default:
+			// skip unknown
+		}
+	}
+	return nil
+}
+func (p *DataplaneServiceSetPortRoutesRequest) ReadBuffer(data *bytes.Reader) error {
+	var field wire.Field
+	for {
+		err := field.ReadBuffer(data)
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			return fmt.Errorf("decode: %w", err)
+		}
+		switch field.Tag.Number() {
+		case 1:
+			val := field.ValueData()
+			if val == nil {
+				return fmt.Errorf("field Routes unexpected wire type. expect LengthDelimited but got %s", field.Tag.Type())
+			}
+			{
+				var tmp *PortRoute
+				tmp = new(PortRoute)
+				if err := tmp.Decode((*val)); err != nil {
+					return err
+				}
+				p.Routes = append(p.Routes, tmp)
+			}
+		default:
+			// skip unknown
+		}
+	}
+	return nil
+}
+func (p *DataplaneServiceSetPortRoutesRequest) Decode(data []byte) error {
+	var field wire.Field
+	for len(data) > 0 {
+		remain, err := field.Decode(data)
+		if err != nil {
+			return fmt.Errorf("decode: %w", err)
+		}
+		switch field.Tag.Number() {
+		case 1:
+			val := field.ValueData()
+			if val == nil {
+				return fmt.Errorf("field Routes unexpected wire type. expect LengthDelimited but got %s", field.Tag.Type())
+			}
+			{
+				var tmp *PortRoute
+				tmp = new(PortRoute)
+				if err := tmp.Decode((*val)); err != nil {
+					return err
+				}
+				p.Routes = append(p.Routes, tmp)
+			}
+		default:
+			// skip unknown
+		}
+		data = remain
+	}
+	return nil
+}
+
+func (p *DataplaneServiceSetPortRoutesRequest) Encode(w io.Writer) error {
+	var field wire.Field
+	field.Tag.SetNumber(1)
+	for _, v := range p.Routes {
+		field.Tag.SetType(wire.WireType_LengthDelimited)
+		{
+			mBuf := make([]byte, 0)
+			if appendTmp, err := v.Append(mBuf); err != nil {
+				return err
+			} else {
+				mBuf = appendTmp
+			}
+			field.SetLength(wire.Varint{Value: uint64(len(mBuf))})
+			field.SetValueData(mBuf)
+		}
+		if err := field.Write(w); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+func (p *DataplaneServiceSetPortRoutesRequest) EncodeBuffer(w *bytes.Buffer) error {
+	var field wire.Field
+	field.Tag.SetNumber(1)
+	for _, v := range p.Routes {
+		field.Tag.SetType(wire.WireType_LengthDelimited)
+		{
+			mBuf := make([]byte, 0)
+			if appendTmp, err := v.Append(mBuf); err != nil {
+				return err
+			} else {
+				mBuf = appendTmp
+			}
+			field.SetLength(wire.Varint{Value: uint64(len(mBuf))})
+			field.SetValueData(mBuf)
+		}
+		if err := field.WriteBuffer(w); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+func (p *DataplaneServiceSetPortRoutesRequest) Append(w []byte) ([]byte, error) {
+	var field wire.Field
+	field.Tag.SetNumber(1)
+	for _, v := range p.Routes {
+		field.Tag.SetType(wire.WireType_LengthDelimited)
+		{
+			mBuf := make([]byte, 0)
+			if appendTmp, err := v.Append(mBuf); err != nil {
+				return nil, err
+			} else {
+				mBuf = appendTmp
+			}
+			field.SetLength(wire.Varint{Value: uint64(len(mBuf))})
+			field.SetValueData(mBuf)
+		}
+		if appendTmp, err := field.Append(w); err != nil {
+			return nil, err
+		} else {
+			w = appendTmp
+		}
+	}
+	return w, nil
+}
+
 type DataplaneServiceServer interface {
 	ListFiles(context.Context, *DataplaneServiceListFilesRequest) (*DataplaneServiceListFilesResponse, error)
 	RemoveFile(context.Context, *DataplaneServiceRemoveFileRequest) (*wkt.Empty, error)
@@ -5977,6 +6376,7 @@ type DataplaneServiceServer interface {
 	StreamLogs(context.Context, *wkt.Empty, *DataplaneServiceStreamLogsServerStream) error
 	TailLogs(context.Context, *DataplaneServiceTailLogsRequest) (*DataplaneServiceTailLogsResponse, error)
 	StreamStats(context.Context, *wkt.Empty, *DataplaneServiceStreamStatsServerStream) error
+	SetPortRoutes(context.Context, *DataplaneServiceSetPortRoutesRequest) (*wkt.Empty, error)
 }
 
 type DataplaneServiceStreamLogsClientStream = wire.ReceiveStream[wkt.Empty, LogRecord, *wkt.Empty, *LogRecord]
@@ -6066,6 +6466,10 @@ func (s *UnimplementedDataplaneServiceServer) StreamStats(context.Context, *wkt.
 	return errors.New("method ksdk.rpc.DataplaneService.StreamStats not implemented")
 }
 
+func (s *UnimplementedDataplaneServiceServer) SetPortRoutes(context.Context, *DataplaneServiceSetPortRoutesRequest) (*wkt.Empty, error) {
+	return nil, errors.New("method ksdk.rpc.DataplaneService.SetPortRoutes not implemented")
+}
+
 type DataplaneServiceClient interface {
 	ListFiles(context.Context, *DataplaneServiceListFilesRequest) (*DataplaneServiceListFilesResponse, error)
 	RemoveFile(context.Context, *DataplaneServiceRemoveFileRequest) (*wkt.Empty, error)
@@ -6087,6 +6491,7 @@ type DataplaneServiceClient interface {
 	StreamLogs(context.Context, *wkt.Empty) (*DataplaneServiceStreamLogsClientStream, error)
 	TailLogs(context.Context, *DataplaneServiceTailLogsRequest) (*DataplaneServiceTailLogsResponse, error)
 	StreamStats(context.Context, *wkt.Empty) (*DataplaneServiceStreamStatsClientStream, error)
+	SetPortRoutes(context.Context, *DataplaneServiceSetPortRoutesRequest) (*wkt.Empty, error)
 }
 
 type DefaultDataplaneServiceClient struct {
@@ -6171,6 +6576,10 @@ func (c *DefaultDataplaneServiceClient) TailLogs(arg0 context.Context, arg1 *Dat
 
 func (c *DefaultDataplaneServiceClient) StreamStats(arg0 context.Context, arg1 *wkt.Empty) (*DataplaneServiceStreamStatsClientStream, error) {
 	return wire.NewReceiveStream[wkt.Empty, stat.StatBatch](arg0, "ksdk.rpc.DataplaneService", "StreamStats", c.stream, arg1)
+}
+
+func (c *DefaultDataplaneServiceClient) SetPortRoutes(arg0 context.Context, arg1 *DataplaneServiceSetPortRoutesRequest) (*wkt.Empty, error) {
+	return wire.NewCall[DataplaneServiceSetPortRoutesRequest, wkt.Empty](arg0, "ksdk.rpc.DataplaneService", "SetPortRoutes", c.stream, arg1)
 }
 
 func NewDataplaneServiceClient(stream *wire.StreamSource) DataplaneServiceClient {
@@ -6411,5 +6820,17 @@ func RegisterDataplaneServiceServer(reg rpc.Registry, impl DataplaneServiceServe
 			}
 			stream := wire.NewServerSendStream[stat.StatBatch, *stat.StatBatch](send)
 			return impl.StreamStats(ctx, req, stream)
+		})
+	reg.RegisterMethod("ksdk.rpc.DataplaneService", "SetPortRoutes",
+		func(ctx context.Context, body []byte) ([]byte, error) {
+			req := &DataplaneServiceSetPortRoutesRequest{}
+			if err := req.Decode(body); err != nil {
+				return nil, err
+			}
+			resp, err := impl.SetPortRoutes(ctx, req)
+			if err != nil {
+				return nil, err
+			}
+			return resp.Append(nil)
 		})
 }

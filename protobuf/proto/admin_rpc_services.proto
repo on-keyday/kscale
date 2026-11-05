@@ -83,6 +83,14 @@ service ContainerService {
     rpc Diff(ksdk.access.ResourceContainerActionDiffArgsDTO) returns (ksdk.access.ResourceContainerActionDiffResponseDTO);
 }
 
+service L4RouteService {
+    rpc Apply(ksdk.access.ResourceL4RouteActionApplyArgsDTO) returns (ksdk.access.ResourceL4RouteActionApplyResponseDTO);
+    rpc Get(ksdk.access.ResourceL4RouteActionGetArgsDTO) returns (ksdk.access.ResourceL4RouteActionGetResponseDTO);
+    rpc List(ksdk.access.ResourceL4RouteActionListArgsDTO) returns (ksdk.access.ResourceL4RouteActionListResponseDTO);
+    rpc Delete(ksdk.access.ResourceL4RouteActionDeleteArgsDTO) returns (ksdk.access.ResourceL4RouteActionDeleteResponseDTO);
+    rpc Diff(ksdk.access.ResourceL4RouteActionDiffArgsDTO) returns (ksdk.access.ResourceL4RouteActionDiffResponseDTO);
+}
+
 service L4LbObjectService {
     rpc Apply(ksdk.access.ResourceL4LbObjectActionApplyArgsDTO) returns (ksdk.access.ResourceL4LbObjectActionApplyResponseDTO);
     rpc Get(ksdk.access.ResourceL4LbObjectActionGetArgsDTO) returns (ksdk.access.ResourceL4LbObjectActionGetResponseDTO);

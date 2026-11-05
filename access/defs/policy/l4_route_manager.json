@@ -1,0 +1,28 @@
+{
+    "name": "L4RouteManager",
+    "policy": "Allow",
+    "description": "Declare L4 port routes (VIP proto:port pinned to one node). Admin only: a route decides which node receives a public port.",
+    "resource": "l4_route",
+    "action": [
+        "apply",
+        "get",
+        "list",
+        "delete",
+        "diff"
+    ],
+    "or": [
+        {
+            "name": "CanManageL4Routes",
+            "and": [
+                {
+                    "name": "UserAuthorityIsManager",
+                    "condition": "$user.authority.full_name suffix $env.authority.admin.ca.manager."
+                },
+                {
+                    "name": "UserHasAdminRole",
+                    "condition": "$user.roles list_contains `admin`"
+                }
+            ]
+        }
+    ]
+}

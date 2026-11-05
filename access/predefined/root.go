@@ -91,6 +91,13 @@ func Resources() []access.ResourceTemplate {
 			ResourceContainerActionDelete,
 			ResourceContainerActionDiff,
 		}),
+		access.NewResourceTemplate("l4_route", nil, []access.Attribute{}, []access.Action{
+			ResourceL4RouteActionApply,
+			ResourceL4RouteActionGet,
+			ResourceL4RouteActionList,
+			ResourceL4RouteActionDelete,
+			ResourceL4RouteActionDiff,
+		}),
 		access.NewResourceTemplate("l4lb_object", nil, []access.Attribute{}, []access.Action{
 			ResourceL4LbObjectActionApply,
 			ResourceL4LbObjectActionGet,
@@ -469,6 +476,25 @@ var ResourceContainerActionDelete = access.NewAction("delete", []string{"name"})
 const ResourceContainerActionDeleteArgName = "name"
 
 var ResourceContainerActionDiff = access.NewAction("diff", []string{})
+
+const ResourceL4Route = "l4_route"
+
+var ResourceL4RouteActionApply = access.NewAction("apply", []string{"name", "port", "node"})
+
+const ResourceL4RouteActionApplyArgName = "name"
+const ResourceL4RouteActionApplyArgPort = "port"
+const ResourceL4RouteActionApplyArgNode = "node"
+
+var ResourceL4RouteActionGet = access.NewAction("get", []string{"name"})
+
+const ResourceL4RouteActionGetArgName = "name"
+
+var ResourceL4RouteActionList = access.NewAction("list", []string{})
+var ResourceL4RouteActionDelete = access.NewAction("delete", []string{"name"})
+
+const ResourceL4RouteActionDeleteArgName = "name"
+
+var ResourceL4RouteActionDiff = access.NewAction("diff", []string{})
 
 const ResourceL4LbObject = "l4lb_object"
 
@@ -1108,6 +1134,38 @@ var PolicyInterfaceMonitor = policy.NewAndPolicy("InterfaceMonitor",
 	),
 )
 
+var PolicyL4RouteManager = policy.NewAndPolicy("L4RouteManager",
+	policy.MustParsePolicy("ResourceIsL4Route", "$resource.name == `l4_route`"),
+	policy.NewOrPolicy("L4RouteManagerActions",
+		policy.MustParsePolicy("ActionIsApply", "$action.name == `apply`"),
+		policy.MustParsePolicy("ActionIsGet", "$action.name == `get`"),
+		policy.MustParsePolicy("ActionIsList", "$action.name == `list`"),
+		policy.MustParsePolicy("ActionIsDelete", "$action.name == `delete`"),
+		policy.MustParsePolicy("ActionIsDiff", "$action.name == `diff`"),
+	),
+	policy.NewOrPolicy("L4RouteManager",
+		policy.NewAndPolicy("CanManageL4Routes",
+			policy.MustParsePolicy("UserAuthorityIsManager", "$user.authority.full_name suffix $env.authority.admin.ca.manager."),
+			policy.MustParsePolicy("UserHasAdminRole", "$user.roles list_contains `admin`"),
+		),
+	),
+)
+
+var PolicyL4RouteMonitor = policy.NewAndPolicy("L4RouteMonitor",
+	policy.MustParsePolicy("ResourceIsL4Route", "$resource.name == `l4_route`"),
+	policy.NewOrPolicy("L4RouteMonitorActions",
+		policy.MustParsePolicy("ActionIsList", "$action.name == `list`"),
+		policy.MustParsePolicy("ActionIsGet", "$action.name == `get`"),
+		policy.MustParsePolicy("ActionIsDiff", "$action.name == `diff`"),
+	),
+	policy.NewOrPolicy("L4RouteMonitor",
+		policy.NewAndPolicy("CanL4RouteMonitor",
+			policy.MustParsePolicy("UserAuthorityIsManager", "$user.authority.full_name suffix $env.authority.admin.ca.manager."),
+			policy.MustParsePolicy("UserHasMonitorRole", "$user.roles list_contains `monitor`"),
+		),
+	),
+)
+
 var PolicyAllowL4LBFileDownload = policy.NewAndPolicy("AllowL4LBFileDownload",
 	policy.MustParsePolicy("ResourceIsDpOperations", "$resource.name == `dp_operations`"),
 	policy.MustParsePolicy("ActionIsDownloadFile", "$action.name == `download_file`"),
@@ -1589,6 +1647,8 @@ func AllowPolicies() []access.Policy {
 		PolicyExpectedNodeMonitor,
 		PolicyInterfaceManager,
 		PolicyInterfaceMonitor,
+		PolicyL4RouteManager,
+		PolicyL4RouteMonitor,
 		PolicyAllowL4LBFileDownload,
 		PolicyL4LbObjectManager,
 		PolicyAllowListAuthorities,
@@ -2025,6 +2085,41 @@ var PolicyMap = map[string]map[string]*access.PolicyList{
 			Deny: []access.Policy{},
 			Allow: []access.Policy{
 				PolicyInterfaceManager,
+			},
+		},
+	},
+	"l4_route": map[string]*access.PolicyList{
+		"apply": &access.PolicyList{
+			Deny: []access.Policy{},
+			Allow: []access.Policy{
+				PolicyL4RouteManager,
+			},
+		},
+		"get": &access.PolicyList{
+			Deny: []access.Policy{},
+			Allow: []access.Policy{
+				PolicyL4RouteManager,
+				PolicyL4RouteMonitor,
+			},
+		},
+		"list": &access.PolicyList{
+			Deny: []access.Policy{},
+			Allow: []access.Policy{
+				PolicyL4RouteManager,
+				PolicyL4RouteMonitor,
+			},
+		},
+		"delete": &access.PolicyList{
+			Deny: []access.Policy{},
+			Allow: []access.Policy{
+				PolicyL4RouteManager,
+			},
+		},
+		"diff": &access.PolicyList{
+			Deny: []access.Policy{},
+			Allow: []access.Policy{
+				PolicyL4RouteManager,
+				PolicyL4RouteMonitor,
 			},
 		},
 	},

@@ -13,9 +13,12 @@ import (
 // Source: ../c/lb.c
 
 const (
-	DESTINATIONS_SIZE  = 255 // ../c/lb.c:132
-	IP_KEY_FAMILY_IPV4 = 0   // ../c/lb.c:764
-	IP_KEY_FAMILY_IPV6 = 1   // ../c/lb.c:765
+	DESTINATIONS_SIZE         = 255 // ../c/lb.c:133
+	PORT_ROUTE_ACTION_FORWARD = 1   // ../c/lb.c:153
+	PORT_ROUTE_MAP_SIZE       = 256 // ../c/lb.c:154
+	PORT_ROUTE_VALUE_SIZE     = 18  // ../c/lb.c:166
+	IP_KEY_FAMILY_IPV4        = 0   // ../c/lb.c:821
+	IP_KEY_FAMILY_IPV6        = 1   // ../c/lb.c:822
 )
 
 type StatCounters struct { // ../c/lb.c:34
@@ -70,6 +73,7 @@ type StatCounters struct { // ../c/lb.c:34
 	BuggyDestIpZeroTotal            uint64 // ../c/lb.c:85
 	IcmpEchoReplyTotal              uint64 // ../c/lb.c:86
 	IcmpDroppedTotal                uint64 // ../c/lb.c:87
+	PortRouteForwardTotal           uint64 // ../c/lb.c:88
 }
 
 func StatCountersAssertLayout(s *DWARFStruct) error {
@@ -336,6 +340,11 @@ func StatCountersAssertLayout(s *DWARFStruct) error {
 	if goff != uintptr(doff) {
 		return fmt.Errorf("offset mismatch: go IcmpDroppedTotal: %d, dwarf icmp_dropped_total: %d", goff, doff)
 	}
+	goff = unsafe.Offsetof(StatCounters{}.PortRouteForwardTotal)
+	doff = fs["port_route_forward_total"].Offset
+	if goff != uintptr(doff) {
+		return fmt.Errorf("offset mismatch: go PortRouteForwardTotal: %d, dwarf port_route_forward_total: %d", goff, doff)
+	}
 
 	return nil
 }
@@ -391,6 +400,7 @@ func (c *StatCounters) Add(other *StatCounters) {
 	c.BuggyDestIpZeroTotal += other.BuggyDestIpZeroTotal
 	c.IcmpEchoReplyTotal += other.IcmpEchoReplyTotal
 	c.IcmpDroppedTotal += other.IcmpDroppedTotal
+	c.PortRouteForwardTotal += other.PortRouteForwardTotal
 }
 
 func (c *StatCounters) String() string {
@@ -546,6 +556,9 @@ func (c *StatCounters) String() string {
 	if c.IcmpDroppedTotal != 0 {
 		buf.WriteString(fmt.Sprintf("IcmpDroppedTotal=%d, ", c.IcmpDroppedTotal))
 	}
+	if c.PortRouteForwardTotal != 0 {
+		buf.WriteString(fmt.Sprintf("PortRouteForwardTotal=%d, ", c.PortRouteForwardTotal))
+	}
 	if strings.HasSuffix(buf.String(), ", ") {
 		buf.Truncate(buf.Len() - 2)
 	}
@@ -553,15 +566,15 @@ func (c *StatCounters) String() string {
 	return buf.String()
 }
 
-type LbConfig struct { // ../c/lb.c:100
+type LbConfig struct { // ../c/lb.c:101
 	_               structs.HostLayout
-	VipAddress      uint32    // ../c/lb.c:101
-	NumDests        uint32    // ../c/lb.c:102
-	Mtu             uint16    // ../c/lb.c:103
-	QuicDestPort    uint16    // ../c/lb.c:104
-	Flags           uint32    // ../c/lb.c:105
-	ServerIdHashKey uint32    // ../c/lb.c:106
-	Vipv6Address    [16]uint8 // ../c/lb.c:107
+	VipAddress      uint32    // ../c/lb.c:102
+	NumDests        uint32    // ../c/lb.c:103
+	Mtu             uint16    // ../c/lb.c:104
+	QuicDestPort    uint16    // ../c/lb.c:105
+	Flags           uint32    // ../c/lb.c:106
+	ServerIdHashKey uint32    // ../c/lb.c:107
+	Vipv6Address    [16]uint8 // ../c/lb.c:108
 }
 
 func LbConfigAssertLayout(s *DWARFStruct) error {
@@ -617,11 +630,57 @@ func LbConfigAssertLayout(s *DWARFStruct) error {
 	return nil
 }
 
-type TestDecrypt struct { // ../c/lb.c:602
+type PortRouteKey struct { // ../c/lb.c:156
+	_     structs.HostLayout
+	Vip   [16]uint8 // ../c/lb.c:157
+	Port  uint16    // ../c/lb.c:158
+	Proto uint8     // ../c/lb.c:159
+	Pad   uint8     // ../c/lb.c:160
+}
+
+func PortRouteKeyAssertLayout(s *DWARFStruct) error {
+	if s == nil {
+		return fmt.Errorf("DWARFStruct is nil")
+	}
+
+	gosize := unsafe.Sizeof(PortRouteKey{})
+	if gosize != uintptr(s.Size) {
+		return fmt.Errorf("size mismatch: go: %d, dwarf: %d", gosize, s.Size)
+	}
+
+	fs := s.Fields
+
+	var goff uintptr
+	var doff int64
+	goff = unsafe.Offsetof(PortRouteKey{}.Vip)
+	doff = fs["vip"].Offset
+	if goff != uintptr(doff) {
+		return fmt.Errorf("offset mismatch: go Vip: %d, dwarf vip: %d", goff, doff)
+	}
+	goff = unsafe.Offsetof(PortRouteKey{}.Port)
+	doff = fs["port"].Offset
+	if goff != uintptr(doff) {
+		return fmt.Errorf("offset mismatch: go Port: %d, dwarf port: %d", goff, doff)
+	}
+	goff = unsafe.Offsetof(PortRouteKey{}.Proto)
+	doff = fs["proto"].Offset
+	if goff != uintptr(doff) {
+		return fmt.Errorf("offset mismatch: go Proto: %d, dwarf proto: %d", goff, doff)
+	}
+	goff = unsafe.Offsetof(PortRouteKey{}.Pad)
+	doff = fs["pad"].Offset
+	if goff != uintptr(doff) {
+		return fmt.Errorf("offset mismatch: go Pad: %d, dwarf pad: %d", goff, doff)
+	}
+
+	return nil
+}
+
+type TestDecrypt struct { // ../c/lb.c:659
 	_               structs.HostLayout
-	ConnectionId    [20]uint8 // ../c/lb.c:603
-	Len             uint8     // ../c/lb.c:604
-	IsShortServerId uint8     // ../c/lb.c:605
+	ConnectionId    [20]uint8 // ../c/lb.c:660
+	Len             uint8     // ../c/lb.c:661
+	IsShortServerId uint8     // ../c/lb.c:662
 }
 
 func TestDecryptAssertLayout(s *DWARFStruct) error {
@@ -657,13 +716,13 @@ func TestDecryptAssertLayout(s *DWARFStruct) error {
 	return nil
 }
 
-type IpKeyT struct { // ../c/lb.c:767
+type IpKeyT struct { // ../c/lb.c:824
 	_          structs.HostLayout
-	Family     uint8    // ../c/lb.c:768
-	Protocol   uint8    // ../c/lb.c:769
-	DestPort   uint16   // ../c/lb.c:770
-	Pad        uint32   // ../c/lb.c:771
-	AddrPrefix [8]uint8 // ../c/lb.c:772
+	Family     uint8    // ../c/lb.c:825
+	Protocol   uint8    // ../c/lb.c:826
+	DestPort   uint16   // ../c/lb.c:827
+	Pad        uint32   // ../c/lb.c:828
+	AddrPrefix [8]uint8 // ../c/lb.c:829
 }
 
 func IpKeyTAssertLayout(s *DWARFStruct) error {
@@ -715,6 +774,9 @@ func LbAssertLayout(m map[string]*DWARFStruct) error {
 	}
 	if err := LbConfigAssertLayout(m["lb_config"]); err != nil {
 		return fmt.Errorf("lb_config: %v", err)
+	}
+	if err := PortRouteKeyAssertLayout(m["port_route_key"]); err != nil {
+		return fmt.Errorf("port_route_key: %v", err)
 	}
 	if err := TestDecryptAssertLayout(m["test_decrypt"]); err != nil {
 		return fmt.Errorf("test_decrypt: %v", err)

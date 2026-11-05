@@ -65,6 +65,7 @@ type PromMetrics struct {
 	L4lbEbpfBuggyDestIpZeroTotal            uint64
 	L4lbEbpfIcmpEchoReplyTotal              uint64
 	L4lbEbpfIcmpDroppedTotal                uint64
+	L4lbEbpfPortRouteForwardTotal           uint64
 	PacketSizeDistribution                  l4lbdrv.PacketSizeDist
 	ISNLeastSignificantByteDistribution     l4lbdrv.ISNLeastSignificantByteMap
 	SourceIPPacketCount                     l4lbdrv.SrcIPCounts
@@ -173,6 +174,7 @@ func (s *PromMetrics) UpdateL4lbStat(stat *L4lbStat) {
 	s.L4lbEbpfBuggyDestIpZeroTotal = stat.EbpfStats.BuggyDestIpZeroTotal
 	s.L4lbEbpfIcmpEchoReplyTotal = stat.EbpfStats.IcmpEchoReplyTotal
 	s.L4lbEbpfIcmpDroppedTotal = stat.EbpfStats.IcmpDroppedTotal
+	s.L4lbEbpfPortRouteForwardTotal = stat.EbpfStats.PortRouteForwardTotal
 	s.PacketSizeDistribution = stat.PacketSizeDistribution
 	s.ISNLeastSignificantByteDistribution = stat.ISNLeastSignificantByteDistribution
 	s.SourceIPPacketCount = stat.SourceIPPacketCount
@@ -420,6 +422,9 @@ func (s *PromMetrics) Collect(ch chan<- prometheus.Metric) {
 	}
 	if s.L4lbEbpfEnabled {
 		ch <- prometheus.MustNewConstMetric(prometheus.NewDesc("ksdk_l4lb_ebpf_icmp_dropped_total", "Number of VIP-destined ICMPv4 packets dropped (echo requests when reply mode is off, plus every non-echo ICMP to the VIP).", []string{"instance"}, nil), prometheus.CounterValue, float64(s.L4lbEbpfIcmpDroppedTotal), s.CommonName)
+	}
+	if s.L4lbEbpfEnabled {
+		ch <- prometheus.MustNewConstMetric(prometheus.NewDesc("ksdk_l4lb_ebpf_port_route_forward_total", "Number of VIP-destined packets forwarded by a port route (port_route_map) instead of the consistent hash / QUIC-LB.", []string{"instance"}, nil), prometheus.CounterValue, float64(s.L4lbEbpfPortRouteForwardTotal), s.CommonName)
 	}
 	if s.L4lbEbpfEnabled {
 		ch <- prometheus.MustNewConstHistogram(prometheus.NewDesc("ksdk_l4lb_ebpf_packet_size_histogram", "L4LB eBPF Packet Size Histogram", []string{"instance"}, nil), uint64(s.PacketSizeDistribution.Count), float64(s.PacketSizeDistribution.Sum), s.PacketSizeDistribution.Histogram, s.CommonName)

@@ -21,8 +21,10 @@ import (
 	"os"
 	"sort"
 	"sync"
+	"syscall"
 
 	"github.com/on-keyday/kscale/consts"
+	"github.com/on-keyday/kscale/dataplane"
 
 	"github.com/on-keyday/kscale/l4lb/l4lbdrv"
 	pbstat "github.com/on-keyday/kscale/protobuf/proto/stat"
@@ -35,6 +37,7 @@ type Driver interface {
 	UpdateVIP(vip netip.Addr, icmpEcho bool) error
 	UpdateDestinations(dests l4lbdrv.DestinationEntries) error
 	SyncSecret(secret []byte, logger *slog.Logger) error
+	UpdatePortRoutes(routes []l4lbdrv.PortRoute) error
 	Sync() error
 	Close() error
 }
@@ -192,6 +195,37 @@ func (c *Controller) UpdateDestinations(dests []stat.DestEntry) error {
 		return nil
 	}
 	return c.drv.UpdateDestinations(entries)
+}
+
+// SetPortRoutes stages (before start) or applies (after) the port routes: the
+// (proto, port)s pinned to one node instead of the popcache backends (the
+// l4_route resource). The staged set is part of the dynamic config, so a driver
+// rebuilt by Start or SetBalancerObject programs it too.
+func (c *Controller) SetPortRoutes(routes []dataplane.PortRoute) error {
+	out := make([]l4lbdrv.PortRoute, 0, len(routes))
+	for _, r := range routes {
+		var proto uint8
+		switch r.Proto {
+		case "tcp":
+			proto = syscall.IPPROTO_TCP
+		case "udp":
+			proto = syscall.IPPROTO_UDP
+		default:
+			return fmt.Errorf("l4lb: port route %s:%d: protocol must be tcp or udp", r.Proto, r.Port)
+		}
+		out = append(out, l4lbdrv.PortRoute{Proto: proto, Port: r.Port,
+			Dest: l4lbdrv.DestinationEntry{IPAddr: r.Dest.IPAddr, HardwareAddr: r.Dest.HardwareAddr}})
+	}
+	if err := l4lbdrv.ValidatePortRoutes(out); err != nil {
+		return fmt.Errorf("l4lb: %w", err)
+	}
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	c.dyn.PortRoutes = out
+	if c.drv == nil {
+		return nil
+	}
+	return c.drv.UpdatePortRoutes(out)
 }
 
 // New returns a Controller staged with the original's defaults (MTU 1500, fixed
@@ -445,6 +479,10 @@ func (s *StubDriver) UpdateDestinations(dests l4lbdrv.DestinationEntries) error 
 }
 func (s *StubDriver) SyncSecret(secret []byte, _ *slog.Logger) error {
 	s.logger.Info("l4lb stub: SyncSecret", "bytes", len(secret))
+	return nil
+}
+func (s *StubDriver) UpdatePortRoutes(routes []l4lbdrv.PortRoute) error {
+	s.logger.Info("l4lb stub: UpdatePortRoutes", "routes", routes)
 	return nil
 }
 func (s *StubDriver) Sync() error { return nil }

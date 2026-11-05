@@ -34,6 +34,8 @@ func DispatchResource(ctx context.Context, src *wire.StreamSource, resource, act
 		return DispatchNodeFile(ctx, pb.NewNodeFileServiceClient(src), action, args)
 	case "container":
 		return DispatchContainer(ctx, pb.NewContainerServiceClient(src), action, args)
+	case "l4-route":
+		return DispatchL4Route(ctx, pb.NewL4RouteServiceClient(src), action, args)
 	case "l4lb-object":
 		return DispatchL4LbObject(ctx, pb.NewL4LbObjectServiceClient(src), action, args)
 	case "workload-netdp-object":

@@ -85,6 +85,7 @@ struct stat_counters { /* go:Add,String */
   uint64_t buggy_dest_ip_zero_total; // HELP Number of times a destination entry with IP address 0 is encountered (indicating a bug).
   uint64_t icmp_echo_reply_total; // HELP Number of ICMPv4 echo replies sent for VIP-destined echo requests.
   uint64_t icmp_dropped_total; // HELP Number of VIP-destined ICMPv4 packets dropped (echo requests when reply mode is off, plus every non-echo ICMP to the VIP).
+  uint64_t port_route_forward_total; // HELP Number of VIP-destined packets forwarded by a port route (port_route_map) instead of the consistent hash / QUIC-LB.
 } ALIGN8;
 // clang-format on
 
@@ -141,6 +142,62 @@ struct {
   __type(key, uint32_t);
   __type(value, struct destination_entry);
 } destinations_map SEC(".maps");
+
+// port_route_map pins VIP-destined traffic for one (VIP, proto, port) to one
+// node, bypassing the consistent hash (TCP) and QUIC-LB (UDP). Programmed from
+// the l4_route resource (B6: a service that lives on one node, not on every
+// popcache backend). The key carries the VIP so the same table serves several
+// VIPs later (B8); an IPv4 VIP is stored v4-mapped (::ffff:a.b.c.d). The value
+// is an action plus the encap destination; its first fields are laid out exactly
+// like destination_entry, so a hit is used as the encap destination as is.
+#define PORT_ROUTE_ACTION_FORWARD 1 /* go: */
+#define PORT_ROUTE_MAP_SIZE 256 /* go: */
+
+struct port_route_key { /* go: */
+  uint8_t vip[16];
+  uint16_t port; // network byte order
+  uint8_t proto; // IPPROTO_TCP / IPPROTO_UDP
+  uint8_t pad; // always 0 (part of the hash key)
+} PACKED;
+
+// Packed (to start like destination_entry), so it is not a go: struct: Go's
+// layout would pad mac_address. l4lbdrv marshals it by hand (portRouteValue),
+// against PORT_ROUTE_VALUE_SIZE.
+#define PORT_ROUTE_VALUE_SIZE 18 /* go: */
+struct port_route_value {
+  uint32_t ip_address;
+  uint8_t mac_address[6];
+  uint32_t hash_key;
+  uint32_t action;
+} PACKED;
+
+_Static_assert(sizeof(struct port_route_value) == PORT_ROUTE_VALUE_SIZE, "port_route_value size is mirrored in l4lbdrv");
+_Static_assert(__builtin_offsetof(struct port_route_value, ip_address) == __builtin_offsetof(struct destination_entry, ip_address), "port_route_value must start like destination_entry");
+_Static_assert(__builtin_offsetof(struct port_route_value, mac_address) == __builtin_offsetof(struct destination_entry, mac_address), "port_route_value must start like destination_entry");
+_Static_assert(__builtin_offsetof(struct port_route_value, hash_key) == __builtin_offsetof(struct destination_entry, hash_key), "port_route_value must start like destination_entry");
+
+struct {
+  __uint(type, BPF_MAP_TYPE_HASH);
+  __uint(max_entries, PORT_ROUTE_MAP_SIZE);
+  __type(key, struct port_route_key);
+  __type(value, struct port_route_value);
+} port_route_map SEC(".maps");
+
+// lookup_port_route returns the pinned destination for (vip16, proto, port_be),
+// or NULL when no route forwards it (the caller falls back to its normal
+// balancing).
+__always_inline struct destination_entry* lookup_port_route(const uint8_t* vip16, uint16_t port_be, uint8_t proto, struct stat_counters* c) {
+  struct port_route_key key = {};
+  __builtin_memcpy(key.vip, vip16, sizeof(key.vip));
+  key.port = port_be;
+  key.proto = proto;
+  struct port_route_value* v = bpf_map_lookup_elem(&port_route_map, &key);
+  if (!v || v->action != PORT_ROUTE_ACTION_FORWARD) {
+    return NULL;
+  }
+  ++c->port_route_forward_total;
+  return (struct destination_entry*)v;
+}
 
 #if DEBUG_LB_MAIN
 #define debugk(fmt, ...) bpf_printk(fmt, ##__VA_ARGS__)
@@ -929,7 +986,7 @@ __always_inline void detect_quic_packet_type(struct quic_long_packet* pkt,struct
   }
 }
 
-__always_inline int handle_transport(struct xdp_md* ctx,uint16_t ether_type,struct destination_entry** dest,void* next_ptr,uint8_t* src_addr,size_t sizeofLinkNetwork,uint8_t protocol, struct lb_config* config,struct stat_counters* c) {
+__always_inline int handle_transport(struct xdp_md* ctx,uint16_t ether_type,struct destination_entry** dest,void* next_ptr,uint8_t* src_addr,const uint8_t* vip16,size_t sizeofLinkNetwork,uint8_t protocol, struct lb_config* config,struct stat_counters* c) {
   const void* data = (void*)(uint64_t)ctx->data;
   const void* data_end = (void*)(uint64_t)ctx->data_end;
   if (protocol == IPPROTO_TCP) {
@@ -1005,7 +1062,12 @@ __always_inline int handle_transport(struct xdp_md* ctx,uint16_t ether_type,stru
         EXIT(XDP_PASS);
       }
 
-      *dest = search_consistent_hash_based_destination(config, hash_server_id(config, src_addr, ntohs(tcp->source), 0x55));
+      // A port route pins this (VIP, tcp, port) to one node; otherwise spread by
+      // the consistent hash over the popcache backends.
+      *dest = lookup_port_route(vip16, tcp->dest, IPPROTO_TCP, c);
+      if (!*dest) {
+        *dest = search_consistent_hash_based_destination(config, hash_server_id(config, src_addr, ntohs(tcp->source), 0x55));
+      }
       if (!*dest) {
         ++c->tcp_no_dest_entry_total;
         EXIT(XDP_DROP);
@@ -1018,6 +1080,19 @@ __always_inline int handle_transport(struct xdp_md* ctx,uint16_t ether_type,stru
       ++c->udp_packet_total;
       c->rx_total_size += data_end - data;
 
+      if(data + sizeofLinkNetwork + sizeof(struct udphdr) > data_end) {
+        ++c->too_short_packet_total;
+        EXIT(XDP_PASS);
+      }
+      struct udphdr* udp = (struct udphdr*)(next_ptr);
+
+      // A port route pins this (VIP, udp, port) to one node and skips QUIC-LB
+      // entirely: the payload need not be QUIC (it may even be empty).
+      *dest = lookup_port_route(vip16, udp->dest, IPPROTO_UDP, c);
+      if (*dest) {
+        return XDP_TX;
+      }
+
       if(data + sizeofLinkNetwork +
             sizeof(struct udphdr) + 1 /*for QUIC first byte*/ > data_end) {
         ++c->too_short_packet_total;
@@ -1026,7 +1101,6 @@ __always_inline int handle_transport(struct xdp_md* ctx,uint16_t ether_type,stru
 
       // QUIC fixed bitとして0x40というのがあるがあれはgrease拡張等で自由に反転できてしまうため
       // 判定として信用しちゃだめだと思われる see https://datatracker.ietf.org/doc/html/rfc9287
-      struct udphdr* udp = (struct udphdr*)(next_ptr);
       if(config->quic_dest_port != 0) {
         if(udp->dest != config->quic_dest_port) {
           EXIT(XDP_PASS);
@@ -1228,7 +1302,10 @@ int lb_main(struct xdp_md* ctx) {
         EXIT(XDP_DROP);
       }
 
-      int err = handle_transport(ctx, htons(ETH_P_IP), &dest,ip + 1,(uint8_t*)&ip->saddr, sizeof(struct ethhdr) + sizeof(struct iphdr), ip->protocol, config, c);
+      // The VIP in port_route_map's key form: v4-mapped (::ffff:a.b.c.d).
+      uint8_t vip16[16] = {0,0,0,0,0,0,0,0,0,0,0xff,0xff};
+      __builtin_memcpy(&vip16[12], &ip->daddr, 4);
+      int err = handle_transport(ctx, htons(ETH_P_IP), &dest,ip + 1,(uint8_t*)&ip->saddr, vip16, sizeof(struct ethhdr) + sizeof(struct iphdr), ip->protocol, config, c);
       if(err != XDP_TX) {
         return err; // if not XDP_TX, we should not continue
       }
@@ -1260,7 +1337,7 @@ int lb_main(struct xdp_md* ctx) {
         EXIT(XDP_PASS);
       }
 
-      int err = handle_transport(ctx, htons(ETH_P_IPV6), &dest, ipv6 + 1, (uint8_t*)&ipv6->ip6_src, sizeof(struct ethhdr) + sizeof(struct ip6_hdr), ipv6->ip6_nxt, config, c);
+      int err = handle_transport(ctx, htons(ETH_P_IPV6), &dest, ipv6 + 1, (uint8_t*)&ipv6->ip6_src, config->vipv6_address, sizeof(struct ethhdr) + sizeof(struct ip6_hdr), ipv6->ip6_nxt, config, c);
       if(err != XDP_TX) {
         return err; // if not XDP_TX, we should not continue
       }
@@ -1345,8 +1422,13 @@ int lb_main(struct xdp_md* ctx) {
   // Calculate the checksum of the IPIP header.
   compute_ip_checksum(ip2);
 
-  // Drop padding of the original packet if needed
-  ssize_t padding = ETH_ZLEN - (sizeof(struct ethhdr) + total_len);
+  // Drop the Ethernet padding the original frame carried, if any: exactly the
+  // bytes past the encapsulated IP packet. A NIC pads a short frame to ETH_ZLEN,
+  // but a veth does not, so assuming ETH_ZLEN (as this used to) cut an unpadded
+  // short packet — an option-less TCP ACK, a small UDP datagram — below its own
+  // IP length, and the receiver dropped it as invalid.
+  ssize_t padding = (ssize_t)(ctx->data_end - ctx->data) -
+                    (ssize_t)(sizeof(struct ethhdr) + sizeof(struct iphdr) + total_len);
   if (padding > 0) {
     if (bpf_xdp_adjust_tail(ctx, -padding)) {
       ++c->failed_adjust_tail_total;

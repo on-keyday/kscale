@@ -275,6 +275,26 @@ message ResourceL4LbObjectActionGetArgsDTO {
 message ResourceL4LbObjectActionListArgsDTO {
 }
 
+message ResourceL4RouteActionApplyArgsDTO {
+    string name = 1;
+    string port = 2;
+    string node = 3;
+}
+
+message ResourceL4RouteActionDeleteArgsDTO {
+    string name = 1;
+}
+
+message ResourceL4RouteActionDiffArgsDTO {
+}
+
+message ResourceL4RouteActionGetArgsDTO {
+    string name = 1;
+}
+
+message ResourceL4RouteActionListArgsDTO {
+}
+
 message ResourceLogsActionGetLevelArgsDTO {
     string node = 1;
 }
@@ -809,6 +829,30 @@ message ResourceL4LbObjectActionGetResponseDTO {
 
 message ResourceL4LbObjectActionListResponseDTO {
     repeated ResourceL4LbObjectActionGetResponseDTO items = 1;
+}
+
+message ResourceL4RouteActionApplyResponseDTO {
+    string name = 1;
+    string port = 2;
+    string node = 3;
+}
+
+message ResourceL4RouteActionDeleteResponseDTO {
+    string name = 1;
+}
+
+message ResourceL4RouteActionDiffResponseDTO {
+    repeated string entries = 1;
+}
+
+message ResourceL4RouteActionGetResponseDTO {
+    string name = 1;
+    string port = 2;
+    string node = 3;
+}
+
+message ResourceL4RouteActionListResponseDTO {
+    repeated ResourceL4RouteActionGetResponseDTO items = 1;
 }
 
 message ResourceLogsActionGetLevelResponseDTO {

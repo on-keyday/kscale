@@ -62,6 +62,7 @@ import (
 	"github.com/on-keyday/kscale/service/expectednode"
 	"github.com/on-keyday/kscale/service/iface"
 	"github.com/on-keyday/kscale/service/l4lbobject"
+	"github.com/on-keyday/kscale/service/l4route"
 	"github.com/on-keyday/kscale/service/logs"
 	"github.com/on-keyday/kscale/service/monitorchat"
 	"github.com/on-keyday/kscale/service/mtu"
@@ -520,6 +521,14 @@ func run(ctx context.Context, logger *slog.Logger, args []string) error {
 	service.RegisterContainer(mgr, gd, &container.Service{Handlers: containerStore, Broker: broker, Logger: logger})
 	l4lbObjectStore := l4lbobject.New()
 	service.RegisterL4LbObject(mgr, gd, l4lbObjectStore)
+	// l4_route: VIP proto:port pinned to one node (B6). The Service wrapper adds
+	// apply-time validation and Diff (route resolution + open_port coverage); the
+	// inner store feeds the reconcile loop, persistence and ConfirmPush.
+	l4RouteStore := l4route.New()
+	service.RegisterL4Route(mgr, gd, &l4route.Service{
+		Handlers: l4RouteStore, Broker: broker, Cache: statCache, OpenPorts: openPortStore,
+		PushError: func() error { return reconcileStatus.ResourceError("l4_route") }, Logger: logger,
+	})
 	netdpObjectStore := workloadnetdpobject.New()
 	service.RegisterWorkloadNetdpObject(mgr, gd, netdpObjectStore)
 	dpObjectStore := dpobject.New()
@@ -680,6 +689,7 @@ func run(ctx context.Context, logger *slog.Logger, args []string) error {
 	desiredMgr.Register("node_file", nodeFileStore)
 	desiredMgr.Register("container", containerStore)
 	desiredMgr.Register("l4lb_object", l4lbObjectStore)
+	desiredMgr.Register("l4_route", l4RouteStore)
 	desiredMgr.Register("workload_netdp_object", netdpObjectStore)
 	desiredMgr.Register("dp_object", dpObjectStore)
 	if err := desiredMgr.Load(); err != nil {
@@ -728,6 +738,8 @@ func run(ctx context.Context, logger *slog.Logger, args []string) error {
 	reconcile.Container(ctx, containerStore, broker, reconcileStatus, logger)
 	// Reconcile which eBPF objects each l4lb node loads (DataplaneService.SetBalancerObject).
 	reconcile.L4LbObject(ctx, l4lbObjectStore, broker, reconcileStatus, logger)
+	// Push every l4lb its full port-route set (DataplaneService.SetPortRoutes).
+	reconcile.L4Route(ctx, l4RouteStore, statCache, broker, reconcileStatus, logger)
 	reconcile.WorkloadNetdpObject(ctx, netdpObjectStore, broker, reconcileStatus, logger)
 	// Reconcile dp_object: each node's full set of slot load units, file contents read
 	// from the CP store and pushed inline (DataplaneService.SyncObjects).
@@ -753,6 +765,7 @@ func run(ctx context.Context, logger *slog.Logger, args []string) error {
 	nodeFileStore.ConfirmPush = func() error { return reconcileStatus.ResourceError("node_file") }
 	containerStore.ConfirmPush = func() error { return reconcileStatus.ResourceError("container") }
 	l4lbObjectStore.ConfirmPush = func() error { return reconcileStatus.ResourceError("l4lb_object") }
+	l4RouteStore.ConfirmPush = func() error { return reconcileStatus.ResourceError("l4_route") }
 	netdpObjectStore.ConfirmPush = func() error { return reconcileStatus.ResourceError("workload_netdp_object") }
 	dpObjectStore.ConfirmPush = func() error { return reconcileStatus.ResourceError("dp_object") }
 

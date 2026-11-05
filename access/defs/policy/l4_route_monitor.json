@@ -1,0 +1,26 @@
+{
+    "name": "L4RouteMonitor",
+    "policy": "Allow",
+    "description": "Read-only monitoring access for the nodewatch agent's `monitor` role: declared L4 port routes (list/get) and their resolution / open_port coverage (diff, a read-only query); apply/delete stay admin-only in L4RouteManager.",
+    "resource": "l4_route",
+    "action": [
+        "list",
+        "get",
+        "diff"
+    ],
+    "or": [
+        {
+            "name": "CanL4RouteMonitor",
+            "and": [
+                {
+                    "name": "UserAuthorityIsManager",
+                    "condition": "$user.authority.full_name suffix $env.authority.admin.ca.manager."
+                },
+                {
+                    "name": "UserHasMonitorRole",
+                    "condition": "$user.roles list_contains `monitor`"
+                }
+            ]
+        }
+    ]
+}

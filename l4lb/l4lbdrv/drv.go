@@ -61,10 +61,11 @@ type DynamicConfig struct {
 	VIP           netip.Addr
 	VIPv6         netip.Addr // IPv6 VIP, if applicable
 	Dests         DestinationEntries
-	SharedKey     []byte  // Shared key for QUIC connection ID generation
-	MTU           uint16  // Maximum Transmission Unit
-	RoutingRandom [4]byte // Random bytes for load balancing
-	IcmpEcho      bool    // answer VIP-destined ICMPv4 echo requests in XDP
+	SharedKey     []byte      // Shared key for QUIC connection ID generation
+	MTU           uint16      // Maximum Transmission Unit
+	RoutingRandom [4]byte     // Random bytes for load balancing
+	IcmpEcho      bool        // answer VIP-destined ICMPv4 echo requests in XDP
+	PortRoutes    []PortRoute // (proto, port) pinned to one node, on every VIP (portroute.go)
 }
 
 type L4LB struct {
@@ -204,6 +205,10 @@ func (lb *L4LB) Sync() error {
 		return fmt.Errorf("Failed to update DestinationArray: %w", err)
 	}
 
+	// Port routes are keyed by VIP, so a VIP change re-keys them here too.
+	if err := lb.syncPortRoutes(); err != nil {
+		return fmt.Errorf("Failed to sync port routes: %w", err)
+	}
 	return nil
 }
 

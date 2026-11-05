@@ -699,6 +699,20 @@
 		],
 		"optional": true,
 		"optional_condtition": "$self.L4lbEbpfEnabled"
+	},
+	{
+		"metric_name": "ksdk_l4lb_ebpf_port_route_forward_total",
+		"help": "Number of VIP-destined packets forwarded by a port route (port_route_map) instead of the consistent hash / QUIC-LB.",
+		"long_name": "L4lbEbpfPortRouteForwardTotal",
+		"value_type": "counter",
+		"source_metric": "ebpf_stats",
+		"hold_type": "uint64",
+		"to_prometheus": "$dst = $src.PortRouteForwardTotal",
+		"labels": [
+			{"name": "instance"}
+		],
+		"optional": true,
+		"optional_condtition": "$self.L4lbEbpfEnabled"
 	}
  ] 
 }
