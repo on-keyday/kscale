@@ -17,7 +17,7 @@ import (
 // (destination_entry, then the action).
 func TestPortRouteValueLayout(t *testing.T) {
 	v := portRouteValue{
-		dest:   DestinationEntry{IPAddr: netip.MustParseAddr("10.3.10.9"), HardwareAddr: net.HardwareAddr{1, 2, 3, 4, 5, 6}},
+		dest:   DestinationEntry{IPAddr: netip.MustParseAddr("198.51.100.9"), HardwareAddr: net.HardwareAddr{1, 2, 3, 4, 5, 6}},
 		action: PORT_ROUTE_ACTION_FORWARD,
 	}
 	b, err := v.MarshalBinary()

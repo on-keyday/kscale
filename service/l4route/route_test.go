@@ -67,22 +67,22 @@ func bound(iface string) *pbstat.Stats {
 // whichever entries carry them, and needs no ServerID (unlike an l4lb backend).
 func TestNodeAddr(t *testing.T) {
 	d, err := NodeAddr(&pbstat.StatBatch{Stats: []*pbstat.Stats{
-		spec("eth0", "02:00:00:00:00:09", "10.3.10.9/24"),
+		spec("eth0", "02:00:00:00:00:09", "198.51.100.9/24"),
 		{CdnAppRealtime: &pbstat.CdnAppRealtimeStat{}}, // e.g. a lifecycle entry without ifaces
 		bound("eth0"),
 	}})
 	if err != nil {
 		t.Fatal(err)
 	}
-	if d.IPAddr.String() != "10.3.10.9" || d.HardwareAddr.String() != "02:00:00:00:00:09" {
+	if d.IPAddr.String() != "198.51.100.9" || d.HardwareAddr.String() != "02:00:00:00:00:09" {
 		t.Fatalf("dest = %v / %v", d.IPAddr, d.HardwareAddr)
 	}
 	for name, b := range map[string]*pbstat.StatBatch{
 		"nothing reported": nil,
-		"no bound iface":   {Stats: []*pbstat.Stats{spec("eth0", "02:00:00:00:00:09", "10.3.10.9/24")}},
+		"no bound iface":   {Stats: []*pbstat.Stats{spec("eth0", "02:00:00:00:00:09", "198.51.100.9/24")}},
 		"no network spec":  {Stats: []*pbstat.Stats{bound("eth0")}},
 		"bound iface unknown": {Stats: []*pbstat.Stats{
-			spec("eth0", "02:00:00:00:00:09", "10.3.10.9/24"), bound("eth1")}},
+			spec("eth0", "02:00:00:00:00:09", "198.51.100.9/24"), bound("eth1")}},
 		"ipv6 only": {Stats: []*pbstat.Stats{
 			spec("eth0", "02:00:00:00:00:09", "2001:db8::9/64"), bound("eth0")}},
 	} {

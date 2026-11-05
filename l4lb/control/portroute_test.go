@@ -34,7 +34,7 @@ func TestSetPortRoutesStagedThenApplied(t *testing.T) {
 		builtWith = dyn.PortRoutes
 		return d, nil
 	}, nil)
-	dest := stat.DestEntry{IPAddr: netip.MustParseAddr("10.3.10.9"), HardwareAddr: net.HardwareAddr{2, 0, 0, 0, 0, 9}}
+	dest := stat.DestEntry{IPAddr: netip.MustParseAddr("198.51.100.9"), HardwareAddr: net.HardwareAddr{2, 0, 0, 0, 0, 9}}
 	routes := []dataplane.PortRoute{{Proto: "tcp", Port: 8443, Dest: dest}, {Proto: "udp", Port: 9443, Dest: dest}}
 
 	if err := c.SetPortRoutes(routes); err != nil {
