@@ -94,6 +94,15 @@ func NewTable(max_size uint64) *Table {
 	}
 }
 
+// slot converts between a dynamic-table position (0 = the first dynamic index,
+// 62) and a slice index into entries. entries is kept in insertion order
+// (append new, evict from the front), while RFC 7541 §2.3.3 numbers the dynamic
+// table newest-first: index 62 is the most recently inserted entry. The mapping
+// is its own inverse. Numbering oldest-first only goes unnoticed while both
+// peers share the mistake or the table holds a single entry; against grpc-go
+// (containerd) it decoded CRI error trailers as other entries' values.
+func (t *Table) slot(i int) int { return len(t.entries) - 1 - i }
+
 func (t *Table) removeUntilLimit(additionalCapacity uint64) {
 	for t.size+additionalCapacity > t.max_size {
 		if len(t.entries) == 0 {
@@ -142,7 +151,7 @@ func (table *Table) Lookup(index uint64) (*KeyValEntry, error) {
 		if i < 0 || i >= len(table.entries) {
 			return nil, errors.New("index out of range")
 		}
-		return &KeyValEntry{keyvalue: table.entries[i], index: index}, nil
+		return &KeyValEntry{keyvalue: table.entries[table.slot(i)], index: index}, nil
 	}
 	return nil, errors.New("index out of range")
 }
@@ -275,7 +284,7 @@ func (table *Table) ReverseLookup(key string, value string, only_hdr_equal bool)
 	}
 	if table != nil {
 		for i, x := range table.entries {
-			dynTableIndex := uint64(i) + uint64(len(predefinedHeaders))
+			dynTableIndex := uint64(table.slot(i)) + uint64(len(predefinedHeaders))
 			if !only_hdr_equal {
 				if key == x.Key && value == x.Value {
 					return &KeyValEntry{keyvalue: x, index: dynTableIndex}
