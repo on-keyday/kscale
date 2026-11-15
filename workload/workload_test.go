@@ -36,12 +36,13 @@ type fakeRuntime struct {
 	mounts   map[string][]*criapi.Mount      // container id -> requested mounts
 	cdi      map[string][]*criapi.CDIDevice  // container id -> requested CDI devices
 	podIPs   map[string]string               // sandbox id -> IP PodSandboxStatus reports
+	cgroups  map[string]string               // sandbox or container id -> CgroupParent its request carried
 }
 
 func newFake() *fakeRuntime {
 	return &fakeRuntime{pods: map[string]*criapi.PodSandbox{}, ctrs: map[string]*criapi.Container{},
 		images: map[string]bool{}, modes: map[string]criapi.NamespaceMode{}, podIPs: map[string]string{},
-		mounts: map[string][]*criapi.Mount{}, cdi: map[string][]*criapi.CDIDevice{}}
+		mounts: map[string][]*criapi.Mount{}, cdi: map[string][]*criapi.CDIDevice{}, cgroups: map[string]string{}}
 }
 
 func (f *fakeRuntime) id(prefix string) string {
@@ -117,6 +118,7 @@ func (f *fakeRuntime) RunPodSandbox(_ context.Context, r *criapi.RunPodSandboxRe
 	id := f.id("pod")
 	f.pods[id] = &criapi.PodSandbox{Id: id, Metadata: &criapi.PodSandboxMetadata{Name: r.Config.Metadata.Name}, Labels: r.Config.Labels, State: criapi.PodSandboxState_SANDBOX_READY}
 	f.modes[id] = r.Config.Linux.SecurityContext.NamespaceOptions.Network
+	f.cgroups[id] = r.Config.Linux.CgroupParent
 	if f.modes[id] == criapi.NamespaceMode_POD {
 		f.podIPs[id] = fmt.Sprintf("10.200.0.%d", f.nextID)
 	}
@@ -166,6 +168,7 @@ func (f *fakeRuntime) CreateContainer(_ context.Context, r *criapi.CreateContain
 	id := f.id("ctr")
 	f.mounts[id] = r.Config.Mounts
 	f.cdi[id] = r.Config.CDIDevices
+	f.cgroups[id] = r.SandboxConfig.Linux.CgroupParent
 	f.ctrs[id] = &criapi.Container{
 		Id:           id,
 		PodSandboxId: r.PodSandboxId,
@@ -414,6 +417,37 @@ func TestNetworkModeSelectsNamespace(t *testing.T) {
 	}
 	if m := f.modes[f.podOf("host")]; m != criapi.NamespaceMode_NODE {
 		t.Fatalf("network \"\" -> %v, want NODE", m)
+	}
+}
+
+// The cgroup parent reaches the runtime on both the sandbox and the container's
+// SandboxConfig (containerd derives each one's cgroup path from it), and is unset
+// unless asked for, so a cgroupfs-driven runtime keeps working.
+func TestCgroupParent(t *testing.T) {
+	for _, tc := range []struct {
+		opts []Option
+		want string
+	}{
+		{nil, ""},
+		{[]Option{WithCgroupParent("kscale.slice")}, "kscale.slice"},
+	} {
+		f := newFake()
+		e := NewEngine(f, nil, tc.opts...)
+		if err := applySettled(context.Background(), e, []Spec{{Name: "a", Image: "a:1"}}); err != nil {
+			t.Fatal(err)
+		}
+		if got := f.cgroups[f.podOf("a")]; got != tc.want {
+			t.Fatalf("sandbox CgroupParent = %q, want %q", got, tc.want)
+		}
+		var ctrID string
+		for id, c := range f.ctrs {
+			if c.Metadata.Name == "a" {
+				ctrID = id
+			}
+		}
+		if got := f.cgroups[ctrID]; got != tc.want {
+			t.Fatalf("container SandboxConfig CgroupParent = %q, want %q", got, tc.want)
+		}
 	}
 }
 

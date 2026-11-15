@@ -172,7 +172,17 @@ type Engine struct {
 	pulls      map[string]*pullState
 	now        func() time.Time
 	volumeRoot string
+	// cgroupParent is the pod sandbox's CRI CgroupParent ("" = the runtime's
+	// default). With a systemd cgroup driver it must be a slice ("kscale.slice"):
+	// containerd then asks for "<slice>:cri-containerd:<id>". Left empty, containerd
+	// passes a bare cgroupfs path, which runc's systemd driver rejects.
+	cgroupParent string
 }
+
+// WithCgroupParent sets the cgroup parent of every pod sandbox (and so of its
+// container). It must match the runtime's cgroup driver: a ".slice" name for
+// SystemdCgroup = true, a cgroupfs path otherwise.
+func WithCgroupParent(parent string) Option { return func(e *Engine) { e.cgroupParent = parent } }
 
 // NewEngine builds an Engine over rt. Pulls go through rt unless WithPuller says
 // otherwise; Close stops them.
@@ -362,6 +372,7 @@ func (e *Engine) sandboxConfig(spec Spec) *criapi.PodSandboxConfig {
 		Metadata: &criapi.PodSandboxMetadata{Name: spec.Name, Uid: spec.Name, Namespace: sandboxNS},
 		Labels:   map[string]string{labelManaged: "true", labelNetwork: network},
 		Linux: &criapi.LinuxPodSandboxConfig{
+			CgroupParent: e.cgroupParent,
 			SecurityContext: &criapi.LinuxSandboxSecurityContext{
 				NamespaceOptions: &criapi.NamespaceOption{Network: mode},
 			},

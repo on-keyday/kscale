@@ -52,6 +52,7 @@ func main() {
 	criSocket := fs.String("cri-socket", "/run/containerd/containerd.sock", "CRI (containerd) unix socket")
 	convergeEvery := fs.Duration("converge-interval", 30*time.Second, "periodic reconcile interval (restart policy + crash healing)")
 	volumeRoot := fs.String("volume-root", "", "directory container volumes are created under (default: volumes/ beside --data). Never mount it into a container")
+	cgroupParent := fs.String("cgroup-parent", "", "cgroup parent of every container's pod sandbox (CRI CgroupParent). Must match the runtime's cgroup driver: a systemd slice such as kscale.slice when the runtime uses SystemdCgroup, a cgroupfs path otherwise. Empty = the runtime's default (a bare cgroupfs path, which runc's systemd driver rejects)")
 	pullTimeout := fs.Duration("pull-timeout", 30*time.Minute, "upper bound on one image pull (pulls run in the background on their own CRI connection; a stalled download is also cut by containerd's own progress timeout)")
 	fileDir := fs.String("file-dir", "", "node-local file store (default <data>/dp_files)")
 	domainFlag := fs.String("ca-domain", domain, "CA domain — must match the control plane's --ca-domain")
@@ -73,7 +74,7 @@ func main() {
 	if *volumeRoot == "" {
 		*volumeRoot = filepath.Join(filepath.Dir(filepath.Clean(*dataDir)), "volumes")
 	}
-	engine := workload.NewEngine(criClient, logger, workload.WithPuller(pullClient), workload.WithVolumeRoot(*volumeRoot))
+	engine := workload.NewEngine(criClient, logger, workload.WithPuller(pullClient), workload.WithVolumeRoot(*volumeRoot), workload.WithCgroupParent(*cgroupParent))
 	defer engine.Close()
 
 	// The datapath records state from boot; its object arrives from the CP (or
