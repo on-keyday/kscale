@@ -17,6 +17,7 @@ import (
 type openaiServer struct {
 	replies []func(w http.ResponseWriter)
 	got     []oaRequest
+	auth    []string // Authorization header of each request
 }
 
 func (s *openaiServer) start(t *testing.T) *httptest.Server {
@@ -33,6 +34,7 @@ func (s *openaiServer) start(t *testing.T) *httptest.Server {
 			return
 		}
 		s.got = append(s.got, req)
+		s.auth = append(s.auth, r.Header.Get("Authorization"))
 		if len(s.got) > len(s.replies) {
 			http.Error(w, "no more replies", http.StatusInternalServerError)
 			return
@@ -119,7 +121,7 @@ func TestOpenAIStream(t *testing.T) {
 		`{"choices":[],"usage":{"total_tokens":3}}`,
 	)}}
 	srv := s.start(t)
-	c := newOpenAIClient(srv.URL, "m", time.Minute)
+	c := newOpenAIClient(srv.URL, "m", "", time.Minute)
 	var deltas []string
 	got, err := c.chat(context.Background(), []chatMessage{{Role: "user", Content: "hi"}}, nil, func(kind, text string) error {
 		deltas = append(deltas, kind+":"+text)
@@ -178,5 +180,25 @@ func TestToOpenAIMessagesIDs(t *testing.T) {
 func TestNewLLMAgentRejectsUnknownAPI(t *testing.T) {
 	if _, err := NewLLMAgent(Config{API: "grpc"}, NewRegistry(), testLogger()); err == nil {
 		t.Fatal("unknown API accepted")
+	}
+}
+
+// An API key goes out as a bearer token (Strata refuses requests without one); with
+// none configured, no Authorization header is sent at all.
+func TestOpenAIAPIKey(t *testing.T) {
+	for _, key := range []string{"", "k3y"} {
+		s := &openaiServer{replies: []func(http.ResponseWriter){jsonReply(`{"choices":[{"message":{"role":"assistant","content":"ok"}}]}`)}}
+		srv := s.start(t)
+		c := newOpenAIClient(srv.URL, "m", key, time.Minute)
+		if _, err := c.chat(context.Background(), []chatMessage{{Role: "user", Content: "hi"}}, nil, nil); err != nil {
+			t.Fatal(err)
+		}
+		want := ""
+		if key != "" {
+			want = "Bearer " + key
+		}
+		if s.auth[0] != want {
+			t.Fatalf("key %q: Authorization = %q, want %q", key, s.auth[0], want)
+		}
 	}
 }

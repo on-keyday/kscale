@@ -4,7 +4,12 @@
 // observe node state and notify on anomalies. See notes/ai/2026_06_28_nodewatch_design.md.
 package nodewatch
 
-import "time"
+import (
+	"fmt"
+	"os"
+	"strings"
+	"time"
+)
 
 // Config.API values.
 const (
@@ -17,10 +22,13 @@ type Config struct {
 	// LLM server (config-driven; the agent runs where the server is reachable, not
 	// where it is built). API selects the wire protocol: APIOllama (Ollama's native
 	// /api/chat) or APIOpenAI (/v1/chat/completions — llama-server, vLLM, Ollama /v1).
-	API      string
-	LLMHost  string // base URL, e.g. http://localhost:11434
-	Model    string // tool-calling capable model, e.g. qwen2.5
-	MaxSteps int    // loop step cap per run
+	API     string
+	LLMHost string // base URL, e.g. http://localhost:11434
+	// LLMAPIKey is sent as a bearer token on the OpenAI API ("" = none). Some servers
+	// require one and cannot turn it off (Strata). Ignored by APIOllama.
+	LLMAPIKey string
+	Model     string // tool-calling capable model, e.g. qwen2.5
+	MaxSteps  int    // loop step cap per run
 	// Think asks a thinking-capable model (qwen3, gemma4, …) to reason before each
 	// answer; the reasoning arrives separately (message.thinking) and is surfaced as
 	// "thinking" chat events. Ollama rejects think=true on non-thinking models, so
@@ -87,4 +95,20 @@ func (c *Config) WithDefaults() {
 	if c.MaxToolResult == 0 {
 		c.MaxToolResult = DefaultMaxToolResult
 	}
+}
+
+// ReadAPIKeyFile returns the trimmed contents of path, or "" when path is "".
+func ReadAPIKeyFile(path string) (string, error) {
+	if path == "" {
+		return "", nil
+	}
+	b, err := os.ReadFile(path)
+	if err != nil {
+		return "", fmt.Errorf("nodewatch: read LLM API key: %w", err)
+	}
+	key := strings.TrimSpace(string(b))
+	if key == "" {
+		return "", fmt.Errorf("nodewatch: LLM API key file %s is empty", path)
+	}
+	return key, nil
 }

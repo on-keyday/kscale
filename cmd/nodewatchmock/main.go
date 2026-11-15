@@ -38,6 +38,7 @@ func run(ctx context.Context, args []string) error {
 	var llmHost string
 	fs.StringVar(&llmHost, "llm-host", "http://localhost:11434", "LLM server base URL")
 	fs.StringVar(&llmHost, "ollama-host", "http://localhost:11434", "deprecated alias of --llm-host")
+	apiKeyFile := fs.String("llm-api-key-file", "", "file holding the LLM server's API key, sent as a bearer token (--llm-api openai; Strata requires one). A file, not a flag value, so the key stays out of the process list and the unit file")
 	modelName := fs.String("model", "qwen2.5", "model name (tool-calling capable)")
 	maxSteps := fs.Int("max-steps", 8, "max tool-calling steps per turn / monitoring pass")
 	think := fs.Bool("think", false, "enable reasoning on thinking-capable models; Ollama rejects it on others. --llm-api ollama only")
@@ -67,8 +68,12 @@ func run(ctx context.Context, args []string) error {
 		return err
 	}
 
+	apiKey, err := nodewatch.ReadAPIKeyFile(*apiKeyFile)
+	if err != nil {
+		return err
+	}
 	cfg := nodewatch.Config{
-		API: *llmAPI, LLMHost: llmHost, Model: *modelName, MaxSteps: *maxSteps,
+		API: *llmAPI, LLMHost: llmHost, LLMAPIKey: apiKey, Model: *modelName, MaxSteps: *maxSteps,
 		Think: *think, RequestTimeout: *reqTimeout, NumCtx: *numCtx, MaxToolResult: *maxToolResult,
 	}
 	cfg.WithDefaults()

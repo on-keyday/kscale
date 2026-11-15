@@ -29,21 +29,22 @@ import (
 //     --chat-template-kwargs / -c) — there is no portable request field for either, so
 //     the request carries neither.
 type openaiClient struct {
-	host  string
-	model string
-	temp  float64
+	host   string
+	model  string
+	apiKey string // sent as "Authorization: Bearer"; "" = no header
+	temp   float64
 	// idleTimeout bounds the time with NO progress, not the total call duration —
 	// same contract as ollamaClient.idleTimeout.
 	idleTimeout time.Duration
 	hc          *http.Client
 }
 
-func newOpenAIClient(host, model string, timeout time.Duration) *openaiClient {
+func newOpenAIClient(host, model, apiKey string, timeout time.Duration) *openaiClient {
 	if timeout <= 0 {
 		timeout = 5 * time.Minute
 	}
 	// hc has NO Timeout on purpose — the per-call idle timer in chat() is the deadline.
-	return &openaiClient{host: strings.TrimRight(host, "/"), model: model, temp: 0.1, idleTimeout: timeout, hc: &http.Client{}}
+	return &openaiClient{host: strings.TrimRight(host, "/"), model: model, apiKey: apiKey, temp: 0.1, idleTimeout: timeout, hc: &http.Client{}}
 }
 
 type oaMessage struct {
@@ -172,6 +173,9 @@ func (o *openaiClient) chat(ctx context.Context, msgs []chatMessage, tools []too
 		return chatMessage{}, err
 	}
 	req.Header.Set("Content-Type", "application/json")
+	if o.apiKey != "" {
+		req.Header.Set("Authorization", "Bearer "+o.apiKey)
+	}
 	resp, err := o.hc.Do(req)
 	if err != nil {
 		return chatMessage{}, fmt.Errorf("openai chat: %w", err)

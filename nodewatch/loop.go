@@ -85,7 +85,7 @@ func NewLLMAgent(cfg Config, registry *Registry, logger *slog.Logger) (*Agent, e
 			logger.Warn("nodewatch: think is ignored with the openai API — enable reasoning on the server instead")
 			think = false
 		}
-		model = newOpenAIClient(cfg.LLMHost, cfg.Model, cfg.RequestTimeout)
+		model = newOpenAIClient(cfg.LLMHost, cfg.Model, cfg.LLMAPIKey, cfg.RequestTimeout)
 		servedVia = "an OpenAI-compatible server"
 	default:
 		return nil, fmt.Errorf("nodewatch: unknown LLM API %q (want %q or %q)", cfg.API, APIOllama, APIOpenAI)
