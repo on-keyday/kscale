@@ -673,8 +673,9 @@ resources:
     # spreading it over every popcache backend (B6, notes/ai/2026_11_06_l4_route.md).
     # port is "tcp:8443" / "udp:9443" (the open_port syntax); node is a node selector
     # resolving to exactly one connected node (CN, "<dp_type>/<node>" or "<node>")
-    # whose bound interface address becomes the IPIP destination — a workload node
-    # with --host-ingress, or a popcache node. Every l4lb gets the FULL route set
+    # whose bound interface address becomes the IPIP destination — the node's net
+    # agent ("net/<node>", which owns the decap and the VIP on lo) for host
+    # processes, or a popcache node. Every l4lb gets the FULL route set
     # (DataplaneService.SetPortRoutes -> XDP port_route_map, keyed by (VIP, proto,
     # port) for every VIP it serves). The router ACL is still open_port's job; diff
     # shows a route whose port open_port does not open, and routes that do not
@@ -1388,9 +1389,11 @@ peering:
       method: UpdateDestinations
       request_field: dests
       prepend_self: true
-    # reverse (decap): push the l4lb fronts to each popcache for IPIP decap tunnels.
+    # reverse (decap): push the l4lb fronts to each node's net agent, which owns the
+    # IPIP decap tunnels (and the VIP on lo) so popcache holds no CAP_NET_ADMIN
+    # (notes/ai/2026_11_18_netagent_design.md).
     - source: l4lb
-      target: popcache
+      target: net
       service: DataplaneService
       method: UpdateRemote
       request_field: remotes

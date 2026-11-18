@@ -15,7 +15,6 @@ import (
 
 	"github.com/on-keyday/kscale/consts"
 	"github.com/on-keyday/kscale/popcache/server"
-	"github.com/on-keyday/kscale/popcache/vip"
 	pbstat "github.com/on-keyday/kscale/protobuf/proto/stat"
 	"github.com/on-keyday/kscale/stat"
 )
@@ -32,17 +31,6 @@ type Controller struct {
 	serverID   uint32
 	boundIface string
 	started    bool
-
-	// vipMgr sets up the IPIP decap tunnels to the l4lb fronts (reverse peering).
-	// Netlink ops need CAP_NET_ADMIN, so they are best-effort: failures are logged
-	// and the HTTP cache keeps serving (vipBoundDev empty => UpdateRemote skips).
-	vipMgr      *vip.VIPManager
-	vipBoundDev string
-	// vipAddr is the VIP this node has actually assigned to its VIP device (lo) via
-	// UpdateVip, so IPIP-decapped packets destined to the VIP are accepted locally.
-	// Reported in CdnAppRealtime.Vip so the CP's vip.applied_on shows this node.
-	// Zero (invalid) until UpdateVip succeeds.
-	vipAddr netip.Addr
 
 	// lc tracks the authoritative app lifecycle, reported as the first Stats entry.
 	lc *stat.AppLifecycle
@@ -71,8 +59,7 @@ func New(logger *slog.Logger, fileDir string) (*Controller, error) {
 	if err != nil {
 		return nil, err
 	}
-	vipMgr, _ := vip.NewVIPManager() // never errors (no netlink until BindToDevice)
-	return &Controller{srv: srv, logger: logger, vipMgr: vipMgr, lc: stat.NewAppLifecycle()}, nil
+	return &Controller{srv: srv, logger: logger, lc: stat.NewAppLifecycle()}, nil
 }
 
 // Server exposes the underlying HTTP cache Server (e.g. for the agent to register
@@ -118,28 +105,10 @@ func (c *Controller) Stop() error {
 	return nil
 }
 
-// UpdateVip assigns the VIP to this node's VIP device (lo) so that IPIP-decapped
-// packets destined to the VIP are accepted locally and delivered to the cache —
-// popcache is an origin l4lb encaps TO, so it DOES need the VIP (the resource fans
-// UpdateVip to every dp_type). Netlink ops need CAP_NET_ADMIN, so this is
-// best-effort: on failure the cache keeps serving (any residual host routing state
-// may still deliver) and we log; vipAddr stays unset so we don't claim it applied.
-// (ksdk wired this in popcache/server/control.go; the kscale recompose left it a
-// no-op — see notes/ai on the popcache VIP regression.)
-func (c *Controller) UpdateVip(v netip.Addr, _ bool) error { // icmpEcho: l4lb-only
-	if !v.IsValid() {
-		return nil
-	}
-	prefix := netip.PrefixFrom(v, v.BitLen())
-	if err := c.vipMgr.UpdateVIP(prefix, c.logger); err != nil {
-		c.logger.Warn("popcache: VIPManager UpdateVIP failed (VIP not bound on device)", "vip", prefix, "error", err)
-		return nil
-	}
-	c.mu.Lock()
-	c.vipAddr = v
-	c.mu.Unlock()
-	return nil
-}
+// UpdateVip is a no-op: the node's VIP on lo (and the IPIP decap tunnels) belong
+// to netagent (dp_type net), so the internet-facing cache holds no CAP_NET_ADMIN.
+// See notes/ai/2026_11_18_netagent_design.md.
+func (c *Controller) UpdateVip(netip.Addr, bool) error { return nil }
 
 // UpdateMtu is l4lb-specific (XDP MTU re-sync) and has no meaning for popcache; it
 // is a no-op so the shared DataplaneService surface is uniform.
@@ -148,45 +117,18 @@ func (c *Controller) UpdateDestinations(_ []stat.DestEntry) error { return nil }
 
 // BindInterface records popcache's serving interface — l4lb encapsulates to this
 // interface's MAC/IP (reported via NetworkSpec), so the CP needs to know which
-// interface this node is bound to. (For l4lb the same interface drives XDP.)
+// interface this node is bound to. (For l4lb the same interface drives XDP.) The
+// decap side of that interface is netagent's.
 func (c *Controller) BindInterface(iface string) error {
 	c.mu.Lock()
 	c.boundIface = iface
-	needBind := iface != "" && c.vipBoundDev != iface
 	c.mu.Unlock()
-	if needBind {
-		// Best-effort: arm the IPIP decap device. Needs CAP_NET_ADMIN; on failure
-		// the cache keeps serving and UpdateRemote stays a no-op.
-		if err := c.vipMgr.BindToDevice(iface, c.logger); err != nil {
-			c.logger.Warn("popcache: VIPManager BindToDevice failed (IPIP decap disabled)", "dev", iface, "error", err)
-		} else {
-			c.mu.Lock()
-			c.vipBoundDev = iface
-			c.mu.Unlock()
-		}
-	}
 	return nil
 }
 
-// UpdateRemote sets up IPIP decap tunnels to the l4lb fronts (reverse peering) —
-// the CP pushes the l4lb front {IP,MAC} set, popcache decaps the IPIP traffic
-// l4lb encapsulates. No-op until the VIP device is armed (BindInterface).
-func (c *Controller) UpdateRemote(remotes []stat.DestEntry) error {
-	c.mu.Lock()
-	bound := c.vipBoundDev
-	c.mu.Unlock()
-	if bound == "" {
-		return nil
-	}
-	infos := make([]vip.RemoteInfo, 0, len(remotes))
-	for _, r := range remotes {
-		if !r.IPAddr.IsValid() || len(r.HardwareAddr) != 6 {
-			continue
-		}
-		infos = append(infos, vip.RemoteInfo{Address: r.IPAddr, MacAddress: [6]byte(r.HardwareAddr)})
-	}
-	return c.vipMgr.UpdateRemote(infos, c.logger)
-}
+// UpdateRemote is a no-op: the l4lb fronts are peered to netagent, which owns
+// the IPIP decap tunnels on this node.
+func (c *Controller) UpdateRemote([]stat.DestEntry) error { return nil }
 
 // Stats returns the per-dp extra Stats entries reported via StreamStats: the
 // HTTP cache server's own metrics (hits/misses, origin) plus — when running and
@@ -199,27 +141,16 @@ func (c *Controller) Stats() []*pbstat.Stats {
 		entries = append(entries, &pbstat.Stats{Popcache: popStat, PopcacheSpec: popSpec})
 	}
 	c.mu.Lock()
-	var vips []string
-	if c.vipAddr.IsValid() {
-		vips = []string{c.vipAddr.String()}
-	}
-	running := c.started && c.boundIface != "" && c.serverID != 0
-	// Emit a CdnAppRealtime entry when EITHER the VIP is applied (so vip.applied_on
-	// shows this node) OR the peering identity is ready (BoundIfaces/LbId for the
-	// CP's dest reconcile) — the two are independent gates, mirroring l4lb.
-	if len(vips) > 0 || running {
-		app := &pbstat.CdnAppRealtimeStat{}
-		if len(vips) > 0 {
-			app.Vip = &pbstat.StringList{Items: vips}
-		}
-		if running {
-			id := c.serverID
-			appstat := uint32(consts.AppStatusRunning)
-			app.BoundIfaces = &pbstat.StringList{Items: []string{c.boundIface}}
-			app.LbId = &id
-			app.Appstat = &appstat
-		}
-		entries = append(entries, &pbstat.Stats{CdnAppRealtime: app})
+	// The peering identity (BoundIfaces/LbId for the CP's dest reconcile), once
+	// ready. No Vip: the VIP is netagent's, so vip.applied_on lists the net node.
+	if c.started && c.boundIface != "" && c.serverID != 0 {
+		id := c.serverID
+		appstat := uint32(consts.AppStatusRunning)
+		entries = append(entries, &pbstat.Stats{CdnAppRealtime: &pbstat.CdnAppRealtimeStat{
+			BoundIfaces: &pbstat.StringList{Items: []string{c.boundIface}},
+			LbId:        &id,
+			Appstat:     &appstat,
+		}})
 	}
 	c.mu.Unlock()
 	return append([]*pbstat.Stats{c.lc.Stat()}, entries...)

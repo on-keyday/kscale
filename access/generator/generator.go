@@ -224,7 +224,7 @@ type ReconcileFieldMap struct {
 // ServerID) as DestEntries from the live stat cache, and pushes that set to every
 // TARGET dataplane node via Service.Method (a repeated Destination field).
 // PrependSelf puts the target node's OWN entry at index 0 — the l4lb eBPF dest
-// table's special source-fill slot; reverse peering (popcache IPIP remotes) leaves
+// table's special source-fill slot; reverse peering (net IPIP remotes) leaves
 // it off. Generates one reconcile.Peering<Source><Target> controller each.
 type PeeringSpec struct {
 	Source       string `json:"source"`        // dp_type providing the set (e.g. popcache)
@@ -688,12 +688,19 @@ func GenerateDefinition(w *Writer, d *Input) {
 	})
 	w.Printf("}\n")
 
-	// DataplaneTypes: the distinct concrete reconcile dp_type values declared by
-	// resources (excluding "*"). Generated so the set of dataplane kinds derives
-	// from resource.yaml (kscale charter) rather than a hand-maintained switch —
-	// a new dp_type is picked up automatically the moment a resource declares
-	// reconcile.dp_type: X.
+	// DataplaneTypes: the distinct concrete dp_type values resource.yaml names —
+	// reconcile dp_types (excluding "*") and both ends of every peering binding.
+	// Generated so the set of dataplane kinds derives from resource.yaml (kscale
+	// charter) rather than a hand-maintained switch. Peering counts too: a kind
+	// driven only by "*" fan-outs and peering (net) declares no reconcile of its own.
 	dpTypeSet := map[string]struct{}{}
+	for _, p := range d.Definition.Peering {
+		for _, t := range []string{p.Source, p.Target} {
+			if t != "" && t != "*" {
+				dpTypeSet[t] = struct{}{}
+			}
+		}
+	}
 	for _, r := range d.Definition.Resources {
 		if r.Schema != nil && r.Schema.Reconcile != nil {
 			if t := r.Schema.Reconcile.DpType; t != "" && t != "*" {
@@ -711,9 +718,9 @@ func GenerateDefinition(w *Writer, d *Input) {
 		quoted[i] = fmt.Sprintf("%q", t)
 	}
 	list := strings.Join(quoted, ", ")
-	w.Printf("\n// DataplaneTypes are the distinct reconcile dp_type values declared in\n")
-	w.Printf("// resource.yaml (excluding \"*\"). A new dp_type appears here automatically\n")
-	w.Printf("// when a resource declares reconcile.dp_type.\n")
+	w.Printf("\n// DataplaneTypes are the distinct dp_type values resource.yaml names: reconcile\n")
+	w.Printf("// dp_types (excluding \"*\") and both ends of every peering binding. A new\n")
+	w.Printf("// dp_type appears here automatically when either declares it.\n")
 	w.Printf("func DataplaneTypes() []string {\n")
 	w.Indented(func(w *Writer) { w.Printf("return []string{%s}\n", list) })
 	w.Printf("}\n")

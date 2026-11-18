@@ -17,7 +17,6 @@ package main
 
 import (
 	"context"
-	"errors"
 	"flag"
 	"fmt"
 	"log/slog"
@@ -56,7 +55,6 @@ func main() {
 	pullTimeout := fs.Duration("pull-timeout", 30*time.Minute, "upper bound on one image pull (pulls run in the background on their own CRI connection; a stalled download is also cut by containerd's own progress timeout)")
 	fileDir := fs.String("file-dir", "", "node-local file store (default <data>/dp_files)")
 	domainFlag := fs.String("ca-domain", domain, "CA domain — must match the control plane's --ca-domain")
-	hostIngressFlag := fs.Bool("host-ingress", false, "receive l4_route traffic for HOST processes: IPIP tunnels to the l4lb fronts + the VIP on lo (as popcache does). Only on a node without a popcache agent, which owns those otherwise. Needs CAP_NET_ADMIN")
 	netdpObj := fs.String("netdp-obj", "", "load this eBPF datapath object at boot (dev/test). Normally the object comes from the control plane (workload_netdp_object). Loading needs CAP_BPF + CAP_NET_ADMIN")
 	_ = fs.Parse(os.Args[1:])
 	domain = *domainFlag
@@ -118,9 +116,6 @@ func main() {
 	lc := stat.NewAppLifecycle()
 	lc.SetRunning() // operational from boot — the converge loop runs immediately (no start gate)
 	hooks := &workloadHooks{logger: logger, promMetrics: &stat.PromMetrics{}, lc: lc, dp: dp, objects: objects}
-	if *hostIngressFlag {
-		hooks.ingress = newHostIngress(logger)
-	}
 	if err := dataplane.Run(ctx, dataplane.Config{
 		Addr:    *addr,
 		DataDir: *dataDir,
@@ -311,9 +306,6 @@ type workloadHooks struct {
 	// boot (the converge loop runs immediately). We therefore set it Running at
 	// construction; without this Stats() reports nothing and the CP shows "Unknown".
 	lc *stat.AppLifecycle
-	// ingress delivers l4_route traffic to host processes (--host-ingress); nil
-	// when off.
-	ingress *hostIngress
 }
 
 func (h *workloadHooks) DpType() string                            { return "workload" }
@@ -328,19 +320,11 @@ func (h *workloadHooks) UpdateVip(vip netip.Addr, _ bool) error {
 	if !vip.IsValid() {
 		return nil
 	}
-	err := h.dp.SetVIP(vip)
-	if h.ingress != nil {
-		err = errors.Join(err, h.ingress.setVIP(vip))
-	}
-	return err
+	return h.dp.SetVIP(vip)
 }
 
 func (h *workloadHooks) BindInterface(iface string) error {
-	err := h.dp.BindInterface(iface)
-	if h.ingress != nil {
-		err = errors.Join(err, h.ingress.bind(iface))
-	}
-	return err
+	return h.dp.BindInterface(iface)
 }
 
 // OnFileReceived lets a selected datapath object load once node_file delivers it.
@@ -353,11 +337,7 @@ func (h *workloadHooks) UpdateRemote(remotes []stat.DestEntry) error {
 	for _, r := range remotes {
 		srcs = append(srcs, r.IPAddr)
 	}
-	err := h.dp.SetLBSources(srcs)
-	if h.ingress != nil {
-		err = errors.Join(err, h.ingress.setRemotes(remotes))
-	}
-	return err
+	return h.dp.SetLBSources(srcs)
 }
 func (h *workloadHooks) PromMetrics() *stat.PromMetrics { return h.promMetrics }
 
@@ -372,9 +352,6 @@ func (h *workloadHooks) Stats() []*pbstat.Stats {
 	// app status: readers that take the first CdnAppRealtime must still see it).
 	life := h.lc.Stat()
 	nic := h.dp.BoundInterface() // set once a netdp object is attached
-	if nic == "" && h.ingress != nil {
-		nic = h.ingress.boundIface() // host ingress binds without a netdp object
-	}
 	if nic != "" {
 		life.CdnAppRealtime.BoundIfaces = &pbstat.StringList{Items: []string{nic}}
 	}

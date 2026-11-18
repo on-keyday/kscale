@@ -108,10 +108,10 @@ func PeeringPopcacheL4Lb(ctx context.Context, cache DestStatSource, broker *dpbr
 	}()
 }
 
-// PeeringL4LbPopcache reconciles the "l4lb"->"popcache" peering: derive the l4lb nodes that pass the
+// PeeringL4LbNet reconciles the "l4lb"->"net" peering: derive the l4lb nodes that pass the
 // membership gate (running + bound + ServerID) from the stat cache and push
-// them to every popcache node via DataplaneService.UpdateRemote on a tick and on node connect.
-func PeeringL4LbPopcache(ctx context.Context, cache DestStatSource, broker *dpbroker.Broker, logger *slog.Logger) {
+// them to every net node via DataplaneService.UpdateRemote on a tick and on node connect.
+func PeeringL4LbNet(ctx context.Context, cache DestStatSource, broker *dpbroker.Broker, logger *slog.Logger) {
 	var mu sync.Mutex
 	mgrs := map[string]*stat.DestManager{}
 	// seen: when each target (re)appeared, the start of its startup grace.
@@ -134,7 +134,7 @@ func PeeringL4LbPopcache(ctx context.Context, cache DestStatSource, broker *dpbr
 		sort.Slice(sources, func(i, j int) bool { return sources[i].ServerID < sources[j].ServerID })
 
 		live := map[string]struct{}{}
-		for _, p := range broker.List("popcache") {
+		for _, p := range broker.List("net") {
 			cn := p.CommonName()
 			live[cn] = struct{}{}
 			if _, ok := seen[cn]; !ok {
@@ -169,7 +169,7 @@ func PeeringL4LbPopcache(ctx context.Context, cache DestStatSource, broker *dpbr
 	}
 
 	broker.OnConnect(func(dpType string, p *peer.Peer) {
-		if dpbroker.Matches("popcache", dpType) {
+		if dpbroker.Matches("net", dpType) {
 			mu.Lock()
 			delete(mgrs, p.CommonName())
 			delete(seen, p.CommonName())
@@ -281,7 +281,7 @@ func PeeringL4LbWorkload(ctx context.Context, cache DestStatSource, broker *dpbr
 // StartPeerings starts every peering controller declared in resource.yaml.
 func StartPeerings(ctx context.Context, cache DestStatSource, broker *dpbroker.Broker, logger *slog.Logger) {
 	PeeringPopcacheL4Lb(ctx, cache, broker, logger)
-	PeeringL4LbPopcache(ctx, cache, broker, logger)
+	PeeringL4LbNet(ctx, cache, broker, logger)
 	PeeringL4LbWorkload(ctx, cache, broker, logger)
 }
 

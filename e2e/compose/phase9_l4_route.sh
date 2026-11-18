@@ -1,8 +1,8 @@
 #!/bin/sh
 # Phase 9: l4_route (B6) — pin VIP proto:port to ONE node that is not a popcache
 # backend. client -> VIP:8443 -> l4lb XDP (port_route_map hit, not the consistent
-# hash) -> IPIP -> gpunode (own netns; workloadagent --host-ingress: kernel IPIP
-# tunnel + VIP on lo) -> a HOST process listening on :8443 -> DSR reply.
+# hash) -> IPIP -> gpunode (own netns; netagent: kernel IPIP tunnel + VIP on lo)
+# -> a HOST process listening on :8443 -> DSR reply.
 #
 # Checks:
 #   - before the route, VIP:8443 goes to popcache (nothing listens there: refused);
@@ -19,7 +19,7 @@ cd "$(dirname "$0")"
 export DOCKER_HOST=unix:///var/run/docker.sock
 DC="docker compose -p kscale"
 VIP=192.0.2.10
-GPU=gpu1.workload.dp.system.kscale.local
+GPU=gpu1.net.dp.system.kscale.local
 cli() { $DC run --rm cli cli --addr 10.5.0.2:9443 --data /data --role admin "$@" 2>&1 | grep -vE "level=INFO|Container kscale"; }
 must() { out=$(cli "$@"); echo "$out" | grep -q '^ALLOWED' || { echo "setup op failed: $*" >&2; echo "$out" >&2; exit 1; }; }
 ex() { $DC exec -T "$1" sh -c "$2"; }
@@ -30,10 +30,17 @@ get() { ex client "curl -s -m 3 http://$VIP:$1/; echo \" exit=\$?\"" || true; }
 
 sh ./phase3_dummy.sh
 
-echo "=== start gpunode (workload, own netns, --host-ingress) ==="
+echo "=== start gpunode (netagent, own netns) ==="
 # The demo seeds authorities for node1 only: a node with another name needs its
 # authority before it can authenticate (as the Ansible deploy does).
-must --resource authority --op apply --authority_name gpu1.workload.dp.system
+must --resource authority --op apply --authority_name gpu1.net.dp.system
+# node1's net agent holds the one per-app cert in /data and the demo token is
+# single-use, so gpu1 gets its own data dir and a minted token (as Ansible does).
+tok=$(cli --resource bootstrap-token --op issue --duration 5m --appName net \
+	--domain net.dp.system.kscale.local --expires_period 1h |
+	python3 -c 'import sys,json; t=sys.stdin.read(); print(json.loads(t[t.index("{"):])["token"])')
+[ -n "$tok" ] || fail "could not mint gpu1's net token"
+$DC run --rm cli sh -c "mkdir -p /data/gpu1 && echo $tok | base64 -d > /data/gpu1/bootstrap.net.token" 2>&1 | grep -vE "Container kscale" || true
 $DC --profile routed up -d gpunode
 i=0
 until cli --resource node --op list | grep -q "\"$GPU\""; do
@@ -51,7 +58,7 @@ $DC exec -d gpunode sh -c "exec nc -lk -p 8443 -e /r.sh"
 $DC exec -d gpunode sh -c "exec nc -lu -p 7443 > /tmp/udp.txt"
 i=0
 until ex gpunode "ip -4 addr show dev lo | grep -q $VIP"; do
-	i=$((i+1)); [ $i -gt 20 ] && fail "host ingress never put the VIP on gpunode's lo"
+	i=$((i+1)); [ $i -gt 20 ] && fail "netagent never put the VIP on gpunode's lo"
 	sleep 1
 done
 echo "gpunode: VIP on lo, tunnels: $(ex gpunode "ip -o link show type ipip | awk -F': ' '{print \$2}' | tr '\n' ' '")"
@@ -60,15 +67,15 @@ echo "=== before the route: VIP:8443 goes to popcache (no listener there) ==="
 before=$(get 8443); echo "$before"
 echo "$before" | grep -q 'exit=7' || fail "VIP:8443 before the route: expected refused by popcache, got: $before"
 
-echo "=== l4-route apply: tcp:8443 and udp:7443 -> workload/gpu1 ==="
+echo "=== l4-route apply: tcp:8443 and udp:7443 -> net/gpu1 ==="
 # gpunode's address reaches the CP with its next stats after the interface bind;
 # until then apply stores the route but reports it as not programmed yet.
 i=0
-until cli --resource l4-route --op apply --name gpu-tcp --port tcp:8443 --node workload/gpu1 | grep -q '^ALLOWED'; do
+until cli --resource l4-route --op apply --name gpu-tcp --port tcp:8443 --node net/gpu1 | grep -q '^ALLOWED'; do
 	i=$((i+1)); [ $i -gt 10 ] && fail "l4-route gpu-tcp never resolved: $(cli --resource l4-route --op diff)"
 	sleep 2
 done
-must --resource l4-route --op apply --name gpu-udp --port udp:7443 --node workload/gpu1
+must --resource l4-route --op apply --name gpu-udp --port udp:7443 --node net/gpu1
 sleep 2
 
 echo "=== client -> VIP:8443 (expect routed-ok from gpunode's host listener) ==="

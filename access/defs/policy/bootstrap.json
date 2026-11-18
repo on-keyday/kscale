@@ -11,7 +11,7 @@
             "and": [
                 {
                     "name": "ArgumentsHaveDesiredValues",
-                    "condition": "$env.args.duration duration_lte `5m` and $env.args.appName in [`admin`,`monitor`,`popcache`, `l4lb`, `metrics`, `dns`, `router`, `workload`]"
+                    "condition": "$env.args.duration duration_lte `5m` and $env.args.appName in [`admin`,`monitor`,`popcache`, `l4lb`, `metrics`, `dns`, `router`, `workload`, `net`]"
                 },
                 {
                     "name": "CertificateExpiresPeriodIsValid",
@@ -64,6 +64,10 @@
                         {
                             "name": "DomainIsWorkload",
                             "condition": "$env.args.domain == $env.authority.system.dp.workload"
+                        },
+                        {
+                            "name": "DomainIsNet",
+                            "condition": "$env.args.domain == $env.authority.system.dp.net"
                         }
                     ]
                 },

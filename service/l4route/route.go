@@ -79,7 +79,8 @@ type Target struct {
 
 // Resolve resolves one declaration: the node selector must name exactly one
 // connected node, and that node must report a bound interface with an address
-// (the interface resource, plus --host-ingress on a workload node). Unlike an
+// (the interface resource; for host processes, name the node's net agent, e.g.
+// "net/<node>", which owns the decap). Unlike an
 // l4lb backend it needs no ServerID: the route bypasses the consistent hash.
 func Resolve(it *pbaccess.ResourceL4RouteActionGetResponseDTO, broker *dpbroker.Broker, cache StatSource) (Target, error) {
 	proto, port, err := ParsePort(it.Port)
@@ -114,7 +115,7 @@ func NodeAddr(batch *pbstat.StatBatch) (stat.DestEntry, error) {
 		}
 	}
 	if iface == "" {
-		return stat.DestEntry{}, fmt.Errorf("no bound interface (apply the interface resource; a workload node also needs --host-ingress)")
+		return stat.DestEntry{}, fmt.Errorf("no bound interface (apply the interface resource; to reach host processes, route to the node's net agent: net/<node>)")
 	}
 	if spec == nil {
 		return stat.DestEntry{}, fmt.Errorf("no network spec reported yet")

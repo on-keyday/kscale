@@ -1,6 +1,6 @@
 //go:build linux
 
-package vip
+package netmgr
 
 import (
 	"io"
@@ -19,7 +19,7 @@ import (
 // Needs CAP_NET_ADMIN over a writable network namespace and the ipip module
 // loaded; guarded so plain `go test ./...` skips it. Run with:
 //
-//	unshare -rn env KSCALE_NETNS_TEST=1 go test -run TestUpdateRemote ./popcache/vip/
+//	unshare -rn env KSCALE_NETNS_TEST=1 go test -run TestUpdateRemote ./netmgr/
 func TestUpdateRemoteCreatesIptun(t *testing.T) {
 	if os.Getenv("KSCALE_NETNS_TEST") != "1" {
 		t.Skip("set KSCALE_NETNS_TEST=1 under `unshare -rn` (needs CAP_NET_ADMIN + ipip)")

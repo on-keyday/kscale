@@ -63,10 +63,21 @@ services:
         ipv4_address: 10.5.0.4
     depends_on: [cp]
 
+  # The popcache node's net agent: owns the VIP on lo and the IPIP decap tunnels to
+  # the l4lb fronts (peering l4lb -> net), in popcache's netns — popcache itself
+  # holds no CAP_NET_ADMIN in production (notes/ai/2026_11_18_netagent_design.md).
+  net:
+    image: kscale-e2e
+    privileged: true
+    network_mode: "service:popcache"
+    command: ["netagent", "--addr", "10.5.0.2:9443", "--data", "/data", "--node", "node1"]
+    volumes: ["shared:/data"]
+    depends_on: [popcache]
+
   # Stand-in for a host-network workload container on the popcache node (Phase 4):
   # shares popcache's netns exactly like a CRI sandbox with NamespaceMode_NODE shares
   # the node's, so VIP:8080 traffic that l4lb IPIP-forwards (every TCP port) and
-  # popcache decaps onto the VIP-on-lo lands here. A tiny HTTP/1.0 responder on :8080.
+  # the net agent decaps onto the VIP-on-lo lands here. A tiny HTTP/1.0 responder on :8080.
   workload:
     image: kscale-e2e
     network_mode: "service:popcache"
@@ -103,15 +114,16 @@ services:
     depends_on: [popcache]
     profiles: ["workload-cri"]
 
-  # A workload node WITHOUT popcache, in its own netns (phase 9): the stand-in for
-  # the GPU node. --host-ingress makes it decap the l4lb's IPIP for the ports an
-  # l4_route pins to it and deliver them to host processes (VIP on lo). No
-  # containerd: phase 9 only exercises the L4 path (CRI calls just fail softly).
+  # A node WITHOUT popcache, in its own netns (phase 9): the stand-in for the GPU
+  # node. Its net agent decaps the l4lb's IPIP for the ports an l4_route pins to it
+  # and delivers them to host processes (VIP on lo). Only the L4 path is exercised,
+  # so no workload agent runs here. Its own data dir: the substrate saves one cert
+  # per app (client.net.boot), which node1's net agent already holds in /data —
+  # phase 9 mints gpu1's token into /data/gpu1 first.
   gpunode:
     image: kscale-e2e
     privileged: true
-    command: ["workloadagent", "--addr", "10.5.0.2:9443", "--data", "/data", "--node", "gpu1",
-              "--host-ingress", "--cri-socket", "/run/none.sock", "--converge-interval", "1h"]
+    command: ["netagent", "--addr", "10.5.0.2:9443", "--data", "/data/gpu1", "--node", "gpu1"]
     volumes: ["shared:/data"]
     networks:
       pop:

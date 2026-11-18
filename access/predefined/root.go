@@ -194,17 +194,17 @@ func Resources() []access.ResourceTemplate {
 	}
 }
 
-// DataplaneTypes are the distinct reconcile dp_type values declared in
-// resource.yaml (excluding "*"). A new dp_type appears here automatically
-// when a resource declares reconcile.dp_type.
+// DataplaneTypes are the distinct dp_type values resource.yaml names: reconcile
+// dp_types (excluding "*") and both ends of every peering binding. A new
+// dp_type appears here automatically when either declares it.
 func DataplaneTypes() []string {
-	return []string{"dns", "l4lb", "popcache", "router", "workload"}
+	return []string{"dns", "l4lb", "net", "popcache", "router", "workload"}
 }
 
 // IsDataplaneType reports whether app is one of the generated dataplane dp_types.
 func IsDataplaneType(app string) bool {
 	switch app {
-	case "dns", "l4lb", "popcache", "router", "workload":
+	case "dns", "l4lb", "net", "popcache", "router", "workload":
 		return true
 	}
 	return false
@@ -792,7 +792,7 @@ var PolicyAllowIssueBootstrapToken = policy.NewAndPolicy("AllowIssueBootstrapTok
 	policy.MustParsePolicy("ActionIsIssue", "$action.name == `issue`"),
 	policy.NewOrPolicy("AllowIssueBootstrapToken",
 		policy.NewAndPolicy("CanIssueBootstrapToken",
-			policy.MustParsePolicy("ArgumentsHaveDesiredValues", "$env.args.duration duration_lte `5m` and $env.args.appName in [`admin`,`monitor`,`popcache`, `l4lb`, `metrics`, `dns`, `router`, `workload`]"),
+			policy.MustParsePolicy("ArgumentsHaveDesiredValues", "$env.args.duration duration_lte `5m` and $env.args.appName in [`admin`,`monitor`,`popcache`, `l4lb`, `metrics`, `dns`, `router`, `workload`, `net`]"),
 			policy.NewOrPolicy("CertificateExpiresPeriodIsValid",
 				policy.MustParsePolicy("ExpiresPeriodIsLessThan1WeekForMachine", "$env.args.domain suffix $env.authority.system. and $env.args.expires_period duration_lte `168h`"),
 				policy.MustParsePolicy("ExpiresPeriodIsLessThan1WeekForAdmin", "$env.args.domain suffix $env.authority.admin. and $env.args.expires_period duration_lte `168h`"),
@@ -807,6 +807,7 @@ var PolicyAllowIssueBootstrapToken = policy.NewAndPolicy("AllowIssueBootstrapTok
 				policy.MustParsePolicy("DomainIsDNS", "$env.args.domain == $env.authority.system.dp.dns"),
 				policy.MustParsePolicy("DomainIsRouter", "$env.args.domain == $env.authority.system.dp.router"),
 				policy.MustParsePolicy("DomainIsWorkload", "$env.args.domain == $env.authority.system.dp.workload"),
+				policy.MustParsePolicy("DomainIsNet", "$env.args.domain == $env.authority.system.dp.net"),
 			),
 			policy.NewOrPolicy("UserHasRequiredRole",
 				policy.MustParsePolicy("HumanUserHasManagementRole", "$user.roles list_contains `admin`"),

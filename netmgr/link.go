@@ -1,4 +1,4 @@
-package vip
+package netmgr
 
 import (
 	"encoding/hex"

@@ -14,6 +14,7 @@ DC="docker compose -p kscale"
 VIP=192.0.2.10
 L4LB=node1.l4lb.dp.system.kscale.local
 POP=node1.popcache.dp.system.kscale.local
+NET=node1.net.dp.system.kscale.local
 cli() { $DC run --rm cli cli --addr 10.5.0.2:9443 --data /data --role admin "$@" 2>&1 | grep -vE "level=INFO|Container kscale"; }
 # must: run a setup op and abort if the CLI did not ALLOW it (a silently rejected op —
 # e.g. a stale flag — otherwise surfaces much later as an opaque "curl timeout").
@@ -28,6 +29,8 @@ echo "=== wait connect ==="; sleep 12
 # interface is per-node and must be bound BEFORE start (no post-start rebind).
 must --resource interface --op apply --node $L4LB --interface eth0
 must --resource interface --op apply --node $POP --interface eth0
+# the popcache node's net agent owns the decap (VIP on lo + IPIP tunnels)
+must --resource interface --op apply --node $NET --interface eth0
 must --resource vip --op apply --vip $VIP
 # QUIC-LB shared secret: the CP generates the value (default 16 bytes); l4lb start
 # fails without one.
@@ -35,7 +38,17 @@ must --resource secret --op apply --name quiclb
 must --resource node --op start --common_name $POP
 must --resource node --op start --common_name $L4LB
 echo "=== wait peering ==="; sleep 9
-ex popcache "ip addr add $VIP/32 dev lo 2>/dev/null; sysctl -wq net.ipv4.conf.all.rp_filter=0 net.ipv4.conf.lo.rp_filter=0 net.ipv4.conf.eth0.rp_filter=0; true"
+# The net agent puts the VIP on lo (popcache no longer does); wait for it rather
+# than adding it by hand, so this phase proves the net agent's decap.
+i=0
+until ex popcache "ip -4 addr show dev lo | grep -q $VIP"; do
+	i=$((i+1)); [ $i -gt 20 ] && { echo "net agent never put the VIP on lo" >&2; $DC logs --tail 30 net >&2; exit 1; }
+	sleep 1
+done
+echo "net: VIP on lo, tunnels: $(ex popcache "ip -o link show type ipip | awk -F': ' '{print \$2}' | tr '\n' ' '")"
+# The effective rp_filter is max(all, device): the agent zeroes the devices, the
+# container's `all` must be off too.
+ex popcache "sysctl -wq net.ipv4.conf.all.rp_filter=0; true"
 
 # Attach dummy.o (XDP_PASS) on the HOST-SIDE veth peer of each container's eth0 so
 # veth ndo_xdp_xmit is enabled (l4lb's XDP_TX can then traverse). The host-side
