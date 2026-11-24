@@ -1,0 +1,200 @@
+config.go.package = "wire"
+
+# BGP-4 message wire format: the subset kscale needs to announce and withdraw
+# its own prefixes to one upstream router.
+#
+#   RFC 4271 (BGP-4), RFC 5492 (capabilities), RFC 4760 (multiprotocol).
+#
+# Cut from the large brgen example (example/bgp.bgn in the brgen repo) with
+# two fixes against the RFCs:
+#   - a withdrawn route's length is 1 octet (bits), the same shape as an NLRI
+#     prefix. The example had u16.
+#   - MP_UNREACH_NLRI has no next hop; the example decoded it as MP_REACH_NLRI.
+#
+# AS numbers are 2 octets. kscale does not advertise the 4-octet AS capability
+# (RFC 6793), so a peer sends 2-octet AS_PATH segments to it and kscale uses a
+# private 2-octet AS.
+
+enum BGPType:
+    :u8
+    open = 1
+    update = 2
+    notification = 3
+    keepalive = 4
+
+format BGPHeader:
+    marker :"\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF"
+    length :u16
+    type   :BGPType
+
+format BGPPacket:
+    header :BGPHeader
+    header.length >= 19
+    header.length <= 4096
+    match header.type:
+        BGPType.open => open :Open(input=input.subrange(header.length-19))
+        BGPType.update => update :Update(input=input.subrange(header.length-19))
+        BGPType.notification => notification :Notification(input=input.subrange(header.length-19))
+        BGPType.keepalive => header.length == 19
+
+format Open:
+    version :u8
+    as      :u16
+    hold    :u16
+    id      :u32
+    optlen  :u8
+    options :[..]BGPOption(input=input.subrange(optlen))
+
+enum BGPOptionType:
+    :u8
+    capability = 2
+
+enum CapabilityCode:
+    :u8
+    multiprotocol = 1
+    route_refresh = 2
+    four_octet_as = 65
+
+format MultiProtocolCapability:
+    afi      :u16
+    reserved :u8
+    safi     :u8
+
+format Capability:
+    code :CapabilityCode
+    len  :u8
+    match code:
+        CapabilityCode.multiprotocol => multi_protocol :MultiProtocolCapability(input=input.subrange(len))
+        .. => data :[len]u8
+
+format BGPOption:
+    type :BGPOptionType
+    len  :u8
+    match type:
+        BGPOptionType.capability => capabilities :[..]Capability(input=input.subrange(len))
+        .. => data :[len]u8
+
+# An IP prefix as carried in withdrawn routes, NLRI and MP_(UN)REACH_NLRI:
+# the length in bits, then just enough octets to hold it.
+format Prefix:
+    prefix_len :u8
+    prefix_len_in_bytes ::= (prefix_len + 7) / 8
+    prefix :[prefix_len_in_bytes]u8
+
+format WithdrawnRoutes:
+    len  :u16
+    data :[..]Prefix(input=input.subrange(len))
+
+format PathAttributes:
+    len  :u16
+    data :[..]PathAttribute(input=input.subrange(len))
+
+format Update:
+    withdrawn_routes :WithdrawnRoutes
+    path_attr        :PathAttributes
+    nlri             :[..]Prefix
+
+enum AttributeCode:
+    :u8
+    ORIGIN = 1
+    AS_PATH = 2
+    NEXT_HOP = 3
+    MULTI_EXIT_DISC = 4
+    LOCAL_PREF = 5
+    ATOMIC_AGGREGATE = 6
+    AGGREGATOR = 7
+    COMMUNITIES = 8
+    MP_REACH_NLRI = 14
+    MP_UNREACH_NLRI = 15
+
+format AttributeType:
+    optional   :u1
+    transitive :u1
+    partial    :u1
+    extended   :u1
+    unused     :u4
+    code       :AttributeCode
+
+format PathAttribute:
+    type :AttributeType
+    if type.extended == 1:
+        len :u16
+    else:
+        len :u8
+    len_tmp ::= u16(len)
+    match type.code:
+        AttributeCode.ORIGIN => origin :OriginValue(input=input.subrange(len_tmp))
+        AttributeCode.AS_PATH => as_path :AsPath(input=input.subrange(len_tmp))
+        AttributeCode.NEXT_HOP => next_hop :[4]u8(input=input.subrange(len_tmp))
+        AttributeCode.MULTI_EXIT_DISC => multi_exit_disc :U32Value(input=input.subrange(len_tmp))
+        AttributeCode.LOCAL_PREF => local_pref :U32Value(input=input.subrange(len_tmp))
+        AttributeCode.ATOMIC_AGGREGATE => len_tmp == 0
+        AttributeCode.AGGREGATOR => aggregator :Aggregator(input=input.subrange(len_tmp))
+        AttributeCode.COMMUNITIES => communities :[..]u32(input=input.subrange(len_tmp))
+        AttributeCode.MP_REACH_NLRI => mp_reach_nlri :MPReachNLRI(input=input.subrange(len_tmp))
+        AttributeCode.MP_UNREACH_NLRI => mp_unreach_nlri :MPUnreachNLRI(input=input.subrange(len_tmp))
+        .. => data :[len_tmp]u8
+
+enum Origin:
+    :u8
+    IGP = 0
+    EGP = 1
+    INCOMPLETE = 2
+
+# ORIGIN, MULTI_EXIT_DISC and LOCAL_PREF are wrapped in a one-field format:
+# brgen's go3 writer does not declare its byte writer when a bare enum or
+# integer sits directly under input.subrange (generated code fails to build).
+format OriginValue:
+    value :Origin
+
+format U32Value:
+    value :u32
+
+enum AsPathSegmentType:
+    :u8
+    AS_SET = 1
+    AS_SEQUENCE = 2
+    AS_CONFED_SEQUENCE = 3
+    AS_CONFED_SET = 4
+
+format AsPath:
+    segments :[..]AsPathSegment
+
+# 2-octet AS numbers (see the header comment).
+format AsPathSegment:
+    type :AsPathSegmentType
+    len  :u8
+    data :[len]u16
+
+format Aggregator:
+    as   :u16
+    addr :[4]u8
+
+enum AFI:
+    :u16
+    IPv4 = 1
+    IPv6 = 2
+
+enum SAFI:
+    :u8
+    Unicast = 1
+
+# afi/safi are plain integers so that a family kscale does not know still
+# decodes; compare them against AFI and SAFI.
+format MPReachNLRI:
+    afi          :u16
+    safi         :u8
+    next_hop_len :u8
+    next_hop     :[next_hop_len]u8
+    reserved     :u8
+    nlri         :[..]Prefix
+
+format MPUnreachNLRI:
+    afi       :u16
+    safi      :u8
+    withdrawn :[..]Prefix
+
+format Notification:
+    code    :u8
+    subcode :u8
+    data    :[..]u8
