@@ -40,18 +40,35 @@ type BGPHeader struct {
 	Type   BGPType
 }
 
-func (b *BGPHeader) Write(tmp164 io.Writer) error {
-	if _, err := tmp164.Write(b.Marker[:16]); err != nil {
+func (b *BGPHeader) Write(tmp166 io.Writer) error {
+	tmp1638 := [16]uint8{}
+	tmp1638[0] = 255
+	tmp1638[1] = 255
+	tmp1638[2] = 255
+	tmp1638[3] = 255
+	tmp1638[4] = 255
+	tmp1638[5] = 255
+	tmp1638[6] = 255
+	tmp1638[7] = 255
+	tmp1638[8] = 255
+	tmp1638[9] = 255
+	tmp1638[10] = 255
+	tmp1638[11] = 255
+	tmp1638[12] = 255
+	tmp1638[13] = 255
+	tmp1638[14] = 255
+	tmp1638[15] = 255
+	if _, err := tmp166.Write(tmp1638[:16]); err != nil {
 		return err
 	}
-	tmp108 := [2]uint8{}
-	binary.BigEndian.PutUint16(tmp108[:], uint16(b.Length))
-	if _, err := tmp164.Write(tmp108[:2]); err != nil {
+	tmp113 := [2]uint8{}
+	binary.BigEndian.PutUint16(tmp113[:], uint16(b.Length))
+	if _, err := tmp166.Write(tmp113[:2]); err != nil {
 		return err
 	}
-	tmp41 := [1]uint8{}
-	tmp41[0] = uint8(b.Type)
-	if _, err := tmp164.Write(tmp41[:1]); err != nil {
+	tmp40 := [1]uint8{}
+	tmp40[0] = uint8(b.Type)
+	if _, err := tmp166.Write(tmp40[:1]); err != nil {
 		return err
 	}
 	return nil
@@ -71,26 +88,43 @@ func (s *BGPHeader) MustEncodeCopy(reserved []byte) []byte {
 	}
 	return buf
 }
-func (b *BGPHeader) EncodeSlice(tmp164 []byte, tmp164Offset *int) error {
-	if len(tmp164)-*tmp164Offset < int(16) {
-		return errors.New("not enough space to write for field \"BGPHeader::Marker\"")
+func (b *BGPHeader) EncodeSlice(tmp166 []byte, tmp166Offset *int) error {
+	tmp1638 := []uint8{}
+	if len(tmp166)-*tmp166Offset < int(16) {
+		return errors.New("not enough space to reserve data for field \"BGPHeader::Marker\"")
 	}
-	copy(tmp164[*tmp164Offset:*tmp164Offset+int(16)], b.Marker[:])
-	*tmp164Offset += int(16)
-	tmp108 := []uint8{}
-	if len(tmp164)-*tmp164Offset < int(2) {
+	tmp1638 = tmp166[*tmp166Offset : *tmp166Offset+int(16)]
+	tmp1638[0] = 255
+	tmp1638[1] = 255
+	tmp1638[2] = 255
+	tmp1638[3] = 255
+	tmp1638[4] = 255
+	tmp1638[5] = 255
+	tmp1638[6] = 255
+	tmp1638[7] = 255
+	tmp1638[8] = 255
+	tmp1638[9] = 255
+	tmp1638[10] = 255
+	tmp1638[11] = 255
+	tmp1638[12] = 255
+	tmp1638[13] = 255
+	tmp1638[14] = 255
+	tmp1638[15] = 255
+	*tmp166Offset += int(16)
+	tmp113 := []uint8{}
+	if len(tmp166)-*tmp166Offset < int(2) {
 		return errors.New("not enough space to reserve data for field \"BGPHeader::Length\"")
 	}
-	tmp108 = tmp164[*tmp164Offset : *tmp164Offset+int(2)]
-	binary.BigEndian.PutUint16(tmp108[:], uint16(b.Length))
-	*tmp164Offset += int(2)
-	tmp41 := []uint8{}
-	if len(tmp164)-*tmp164Offset < int(1) {
+	tmp113 = tmp166[*tmp166Offset : *tmp166Offset+int(2)]
+	binary.BigEndian.PutUint16(tmp113[:], uint16(b.Length))
+	*tmp166Offset += int(2)
+	tmp40 := []uint8{}
+	if len(tmp166)-*tmp166Offset < int(1) {
 		return errors.New("not enough space to reserve data for field \"BGPHeader::Type\"")
 	}
-	tmp41 = tmp164[*tmp164Offset : *tmp164Offset+int(1)]
-	tmp41[0] = uint8(b.Type)
-	*tmp164Offset += int(1)
+	tmp40 = tmp166[*tmp166Offset : *tmp166Offset+int(1)]
+	tmp40[0] = uint8(b.Type)
+	*tmp166Offset += int(1)
 	return nil
 }
 func (s *BGPHeader) Encode(buf []byte) ([]byte, error) {
@@ -108,15 +142,32 @@ func (s *BGPHeader) MustEncode(reserved []byte) []byte {
 	}
 	return buf
 }
-func (b *BGPHeader) Append(tmp164 []byte) ([]byte, error) {
-	tmp164 = append(tmp164, b.Marker[:16]...)
-	tmp108 := [2]uint8{}
-	binary.BigEndian.PutUint16(tmp108[:], uint16(b.Length))
-	tmp164 = append(tmp164, tmp108[:2]...)
-	tmp41 := [1]uint8{}
-	tmp41[0] = uint8(b.Type)
-	tmp164 = append(tmp164, tmp41[:1]...)
-	return tmp164, nil
+func (b *BGPHeader) Append(tmp166 []byte) ([]byte, error) {
+	tmp1638 := [16]uint8{}
+	tmp1638[0] = 255
+	tmp1638[1] = 255
+	tmp1638[2] = 255
+	tmp1638[3] = 255
+	tmp1638[4] = 255
+	tmp1638[5] = 255
+	tmp1638[6] = 255
+	tmp1638[7] = 255
+	tmp1638[8] = 255
+	tmp1638[9] = 255
+	tmp1638[10] = 255
+	tmp1638[11] = 255
+	tmp1638[12] = 255
+	tmp1638[13] = 255
+	tmp1638[14] = 255
+	tmp1638[15] = 255
+	tmp166 = append(tmp166, tmp1638[:16]...)
+	tmp113 := [2]uint8{}
+	binary.BigEndian.PutUint16(tmp113[:], uint16(b.Length))
+	tmp166 = append(tmp166, tmp113[:2]...)
+	tmp40 := [1]uint8{}
+	tmp40[0] = uint8(b.Type)
+	tmp166 = append(tmp166, tmp40[:1]...)
+	return tmp166, nil
 }
 func (s *BGPHeader) MustAppend(buf []byte) []byte {
 	var err error
@@ -126,23 +177,104 @@ func (s *BGPHeader) MustAppend(buf []byte) []byte {
 	}
 	return buf
 }
+func (b *BGPHeader) encodedSize(tmp166 int) (int, error) {
+	tmp1638 := [16]uint8{}
+	tmp1638[0] = 255
+	tmp1638[1] = 255
+	tmp1638[2] = 255
+	tmp1638[3] = 255
+	tmp1638[4] = 255
+	tmp1638[5] = 255
+	tmp1638[6] = 255
+	tmp1638[7] = 255
+	tmp1638[8] = 255
+	tmp1638[9] = 255
+	tmp1638[10] = 255
+	tmp1638[11] = 255
+	tmp1638[12] = 255
+	tmp1638[13] = 255
+	tmp1638[14] = 255
+	tmp1638[15] = 255
+	tmp166 += int(16)
+	tmp113 := [2]uint8{}
+	binary.BigEndian.PutUint16(tmp113[:], uint16(b.Length))
+	tmp166 += int(2)
+	tmp40 := [1]uint8{}
+	tmp40[0] = uint8(b.Type)
+	tmp166 += int(1)
+	return tmp166, nil
+}
 
-func (b *BGPHeader) Read(tmp166 io.Reader) error {
-	if _, err := io.ReadFull(tmp166, b.Marker[0:0+16]); err != nil {
+// EncodedSize returns how many bytes encoding this value produces, without
+// encoding it (so a buffer can be allocated once). It fails where encoding would.
+func (s *BGPHeader) EncodedSize() (int, error) {
+	return s.encodedSize(0)
+}
+
+func (b *BGPHeader) Read(tmp167 io.Reader) error {
+	if _, err := io.ReadFull(tmp167, b.Marker[0:0+16]); err != nil {
 		return err
 	}
-	tmp111 := [2]uint8{}
-	if _, err := io.ReadFull(tmp166, tmp111[0:0+2]); err != nil {
+	if !(b.Marker[0] == 255) {
+		return errors.New("Assertion failed")
+	}
+	if !(b.Marker[1] == 255) {
+		return errors.New("Assertion failed")
+	}
+	if !(b.Marker[2] == 255) {
+		return errors.New("Assertion failed")
+	}
+	if !(b.Marker[3] == 255) {
+		return errors.New("Assertion failed")
+	}
+	if !(b.Marker[4] == 255) {
+		return errors.New("Assertion failed")
+	}
+	if !(b.Marker[5] == 255) {
+		return errors.New("Assertion failed")
+	}
+	if !(b.Marker[6] == 255) {
+		return errors.New("Assertion failed")
+	}
+	if !(b.Marker[7] == 255) {
+		return errors.New("Assertion failed")
+	}
+	if !(b.Marker[8] == 255) {
+		return errors.New("Assertion failed")
+	}
+	if !(b.Marker[9] == 255) {
+		return errors.New("Assertion failed")
+	}
+	if !(b.Marker[10] == 255) {
+		return errors.New("Assertion failed")
+	}
+	if !(b.Marker[11] == 255) {
+		return errors.New("Assertion failed")
+	}
+	if !(b.Marker[12] == 255) {
+		return errors.New("Assertion failed")
+	}
+	if !(b.Marker[13] == 255) {
+		return errors.New("Assertion failed")
+	}
+	if !(b.Marker[14] == 255) {
+		return errors.New("Assertion failed")
+	}
+	if !(b.Marker[15] == 255) {
+		return errors.New("Assertion failed")
+	}
+	tmp114 := [2]uint8{}
+	if _, err := io.ReadFull(tmp167, tmp114[0:0+2]); err != nil {
 		return err
 	}
-	b.Length = binary.BigEndian.Uint16(tmp111[:])
-	tmp298 := uint8(0)
-	tmp35 := [1]uint8{}
-	if _, err := io.ReadFull(tmp166, tmp35[0:0+1]); err != nil {
+	b.Length = binary.BigEndian.Uint16(tmp114[:])
+	tmp295 := uint8(0)
+	tmp33 := [1]uint8{}
+	if _, err := io.ReadFull(tmp167, tmp33[0:0+1]); err != nil {
 		return err
 	}
-	tmp298 = tmp35[0]
-	b.Type = BGPType(tmp298)
+	tmp295 = tmp33[0]
+	b.Type = BGPType(tmp295)
 	return nil
 }
 func (s *BGPHeader) DecodeCopy(buf []byte) ([]byte, error) {
@@ -163,28 +295,76 @@ func (s *BGPHeader) DecodeExactCopy(buf []byte) error {
 	}
 	return nil
 }
-func (b *BGPHeader) DecodeSlice(tmp166 []byte, tmp166Offset *int) error {
-	if len(tmp166)-*tmp166Offset < 16 {
+func (b *BGPHeader) DecodeSlice(tmp167 []byte, tmp167Offset *int) error {
+	if len(tmp167)-*tmp167Offset < 16 {
 		return errors.New("not enough data to read for field \"BGPHeader::Marker\"")
 	}
-	copy(b.Marker[:], tmp166[*tmp166Offset:*tmp166Offset+16])
-	*tmp166Offset += int(16)
-	tmp111 := []uint8{}
-	if len(tmp166)-*tmp166Offset < 2 {
+	copy(b.Marker[:], tmp167[*tmp167Offset:*tmp167Offset+16])
+	*tmp167Offset += int(16)
+	if !(b.Marker[0] == 255) {
+		return errors.New("Assertion failed")
+	}
+	if !(b.Marker[1] == 255) {
+		return errors.New("Assertion failed")
+	}
+	if !(b.Marker[2] == 255) {
+		return errors.New("Assertion failed")
+	}
+	if !(b.Marker[3] == 255) {
+		return errors.New("Assertion failed")
+	}
+	if !(b.Marker[4] == 255) {
+		return errors.New("Assertion failed")
+	}
+	if !(b.Marker[5] == 255) {
+		return errors.New("Assertion failed")
+	}
+	if !(b.Marker[6] == 255) {
+		return errors.New("Assertion failed")
+	}
+	if !(b.Marker[7] == 255) {
+		return errors.New("Assertion failed")
+	}
+	if !(b.Marker[8] == 255) {
+		return errors.New("Assertion failed")
+	}
+	if !(b.Marker[9] == 255) {
+		return errors.New("Assertion failed")
+	}
+	if !(b.Marker[10] == 255) {
+		return errors.New("Assertion failed")
+	}
+	if !(b.Marker[11] == 255) {
+		return errors.New("Assertion failed")
+	}
+	if !(b.Marker[12] == 255) {
+		return errors.New("Assertion failed")
+	}
+	if !(b.Marker[13] == 255) {
+		return errors.New("Assertion failed")
+	}
+	if !(b.Marker[14] == 255) {
+		return errors.New("Assertion failed")
+	}
+	if !(b.Marker[15] == 255) {
+		return errors.New("Assertion failed")
+	}
+	tmp114 := []uint8{}
+	if len(tmp167)-*tmp167Offset < 2 {
 		return errors.New("not enough data to read for field \"BGPHeader::Length\"")
 	}
-	tmp111 = tmp166[*tmp166Offset : *tmp166Offset+2]
-	*tmp166Offset += int(2)
-	b.Length = binary.BigEndian.Uint16(tmp111[:])
-	tmp298 := uint8(0)
-	tmp35 := []uint8{}
-	if len(tmp166)-*tmp166Offset < 1 {
+	tmp114 = tmp167[*tmp167Offset : *tmp167Offset+2]
+	*tmp167Offset += int(2)
+	b.Length = binary.BigEndian.Uint16(tmp114[:])
+	tmp295 := uint8(0)
+	tmp33 := []uint8{}
+	if len(tmp167)-*tmp167Offset < 1 {
 		return errors.New("not enough data to read for field \"BGPHeader::Type\"")
 	}
-	tmp35 = tmp166[*tmp166Offset : *tmp166Offset+1]
-	*tmp166Offset += int(1)
-	tmp298 = tmp35[0]
-	b.Type = BGPType(tmp298)
+	tmp33 = tmp167[*tmp167Offset : *tmp167Offset+1]
+	*tmp167Offset += int(1)
+	tmp295 = tmp33[0]
+	b.Type = BGPType(tmp295)
 	return nil
 }
 func (s *BGPHeader) Decode(buf []byte) ([]byte, error) {
@@ -206,62 +386,67 @@ func (s *BGPHeader) DecodeExact(buf []byte) error {
 	return nil
 }
 
-type tmp1484 struct {
+type tmp1446 struct {
 	Open Open
 }
 
-func (v *tmp1484) isVariant279() {}
+func (v *tmp1446) isVariant226() {}
 
-type tmp961 struct {
+type tmp946 struct {
 	Update Update
 }
 
-func (v *tmp961) isVariant279() {}
+func (v *tmp946) isVariant226() {}
 
-type tmp939 struct {
+type tmp924 struct {
 	Notification Notification
 }
 
-func (v *tmp939) isVariant279() {}
+func (v *tmp924) isVariant226() {}
 
-type tmp1943 struct {
+type tmp916 struct {
 }
 
-func (v *tmp1943) isVariant279() {}
+func (v *tmp916) isVariant226() {}
 
-type Variant279 interface {
-	isVariant279()
+type tmp1916 struct {
+}
+
+func (v *tmp1916) isVariant226() {}
+
+type Variant226 interface {
+	isVariant226()
 }
 
 type BGPPacket struct {
 	Header BGPHeader
-	tmp808 Variant279
+	tmp786 Variant226
 }
 
 func (b *BGPPacket) Notification() *Notification {
 	if (BGPType_Open == b.Header.Type) || (BGPType_Update == b.Header.Type) {
 		return nil
 	} else if b.Header.Type == BGPType_Notification {
-		tmp934, ok := b.tmp808.(*tmp939)
+		tmp919, ok := b.tmp786.(*tmp924)
 		if !ok {
 			return nil
 		}
-		_ = tmp934 // to prevent unused warnings
-		return &tmp934.Notification
+		_ = tmp919 // to prevent unused warnings
+		return &tmp919.Notification
 	}
 	return nil
 }
-func (b *BGPPacket) SetNotification(tmp887 Notification) bool {
+func (b *BGPPacket) SetNotification(tmp865 Notification) bool {
 	if (BGPType_Open == b.Header.Type) || (BGPType_Update == b.Header.Type) {
 		return false
 	} else if b.Header.Type == BGPType_Notification {
-		tmp934, ok := b.tmp808.(*tmp939)
+		tmp919, ok := b.tmp786.(*tmp924)
 		if !ok {
-			tmp934 = &tmp939{}
-			b.tmp808 = tmp934
+			tmp919 = &tmp924{}
+			b.tmp786 = tmp919
 		}
-		_ = tmp934 // to prevent unused warnings
-		tmp934.Notification = tmp887
+		_ = tmp919 // to prevent unused warnings
+		tmp919.Notification = tmp865
 		return true
 	}
 	return false
@@ -269,24 +454,24 @@ func (b *BGPPacket) SetNotification(tmp887 Notification) bool {
 
 func (b *BGPPacket) Open() *Open {
 	if b.Header.Type == BGPType_Open {
-		tmp1480, ok := b.tmp808.(*tmp1484)
+		tmp1443, ok := b.tmp786.(*tmp1446)
 		if !ok {
 			return nil
 		}
-		_ = tmp1480 // to prevent unused warnings
-		return &tmp1480.Open
+		_ = tmp1443 // to prevent unused warnings
+		return &tmp1443.Open
 	}
 	return nil
 }
-func (b *BGPPacket) SetOpen(tmp884 Open) bool {
+func (b *BGPPacket) SetOpen(tmp862 Open) bool {
 	if b.Header.Type == BGPType_Open {
-		tmp1480, ok := b.tmp808.(*tmp1484)
+		tmp1443, ok := b.tmp786.(*tmp1446)
 		if !ok {
-			tmp1480 = &tmp1484{}
-			b.tmp808 = tmp1480
+			tmp1443 = &tmp1446{}
+			b.tmp786 = tmp1443
 		}
-		_ = tmp1480 // to prevent unused warnings
-		tmp1480.Open = tmp884
+		_ = tmp1443 // to prevent unused warnings
+		tmp1443.Open = tmp862
 		return true
 	}
 	return false
@@ -296,35 +481,35 @@ func (b *BGPPacket) Update() *Update {
 	if b.Header.Type == BGPType_Open {
 		return nil
 	} else if b.Header.Type == BGPType_Update {
-		tmp956, ok := b.tmp808.(*tmp961)
+		tmp941, ok := b.tmp786.(*tmp946)
 		if !ok {
 			return nil
 		}
-		_ = tmp956 // to prevent unused warnings
-		return &tmp956.Update
+		_ = tmp941 // to prevent unused warnings
+		return &tmp941.Update
 	}
 	return nil
 }
-func (b *BGPPacket) SetUpdate(tmp881 Update) bool {
+func (b *BGPPacket) SetUpdate(tmp859 Update) bool {
 	if b.Header.Type == BGPType_Open {
 		return false
 	} else if b.Header.Type == BGPType_Update {
-		tmp956, ok := b.tmp808.(*tmp961)
+		tmp941, ok := b.tmp786.(*tmp946)
 		if !ok {
-			tmp956 = &tmp961{}
-			b.tmp808 = tmp956
+			tmp941 = &tmp946{}
+			b.tmp786 = tmp941
 		}
-		_ = tmp956 // to prevent unused warnings
-		tmp956.Update = tmp881
+		_ = tmp941 // to prevent unused warnings
+		tmp941.Update = tmp859
 		return true
 	}
 	return false
 }
 
-func (b *BGPPacket) Write(tmp346 io.Writer) error {
-	tmp1691 := b.Header.Write(tmp346)
-	if tmp1691 != nil {
-		return tmp1691
+func (b *BGPPacket) Write(tmp345 io.Writer) error {
+	tmp1614 := b.Header.Write(tmp345)
+	if tmp1614 != nil {
+		return tmp1614
 	}
 	if !(b.Header.Length >= 19) {
 		return errors.New("Assertion failed")
@@ -333,65 +518,74 @@ func (b *BGPPacket) Write(tmp346 io.Writer) error {
 		return errors.New("Assertion failed")
 	}
 	if b.Header.Type == BGPType_Open {
-		tmp1480, ok := b.tmp808.(*tmp1484)
+		tmp1443, ok := b.tmp786.(*tmp1446)
 		if !ok {
 			return errors.New("invalid union type for encoding")
 		}
-		_ = tmp1480 // to prevent unused warnings
-		tmp872 := &bytes.Buffer{}
-		tmp925 := tmp1480.Open.Write(tmp872)
-		if tmp925 != nil {
-			return tmp925
+		_ = tmp1443 // to prevent unused warnings
+		tmp827 := &bytes.Buffer{}
+		tmp904 := tmp1443.Open.Write(tmp827)
+		if tmp904 != nil {
+			return tmp904
 		}
-		if tmp872.Len() != int((b.Header.Length - 19)) {
-			return fmt.Errorf("subrange length mismatch: expected %d, got %d", int((b.Header.Length - 19)), tmp872.Len())
+		if tmp827.Len() != int((b.Header.Length - 19)) {
+			return fmt.Errorf("subrange length mismatch: expected %d, got %d", int((b.Header.Length - 19)), tmp827.Len())
 		}
-		if _, err := tmp346.Write(tmp872.Bytes()); err != nil {
+		if _, err := tmp345.Write(tmp827.Bytes()); err != nil {
 			return err
 		}
 	} else if b.Header.Type == BGPType_Update {
-		tmp956, ok := b.tmp808.(*tmp961)
+		tmp941, ok := b.tmp786.(*tmp946)
 		if !ok {
 			return errors.New("invalid union type for encoding")
 		}
-		_ = tmp956 // to prevent unused warnings
-		tmp675 := &bytes.Buffer{}
-		tmp958 := tmp956.Update.Write(tmp675)
-		if tmp958 != nil {
-			return tmp958
+		_ = tmp941 // to prevent unused warnings
+		tmp659 := &bytes.Buffer{}
+		tmp943 := tmp941.Update.Write(tmp659)
+		if tmp943 != nil {
+			return tmp943
 		}
-		if tmp675.Len() != int((b.Header.Length - 19)) {
-			return fmt.Errorf("subrange length mismatch: expected %d, got %d", int((b.Header.Length - 19)), tmp675.Len())
+		if tmp659.Len() != int((b.Header.Length - 19)) {
+			return fmt.Errorf("subrange length mismatch: expected %d, got %d", int((b.Header.Length - 19)), tmp659.Len())
 		}
-		if _, err := tmp346.Write(tmp675.Bytes()); err != nil {
+		if _, err := tmp345.Write(tmp659.Bytes()); err != nil {
 			return err
 		}
 	} else if b.Header.Type == BGPType_Notification {
-		tmp934, ok := b.tmp808.(*tmp939)
+		tmp919, ok := b.tmp786.(*tmp924)
 		if !ok {
 			return errors.New("invalid union type for encoding")
 		}
-		_ = tmp934 // to prevent unused warnings
-		tmp671 := &bytes.Buffer{}
-		tmp936 := tmp934.Notification.Write(tmp671)
-		if tmp936 != nil {
-			return tmp936
+		_ = tmp919 // to prevent unused warnings
+		tmp655 := &bytes.Buffer{}
+		tmp921 := tmp919.Notification.Write(tmp655)
+		if tmp921 != nil {
+			return tmp921
 		}
-		if tmp671.Len() != int((b.Header.Length - 19)) {
-			return fmt.Errorf("subrange length mismatch: expected %d, got %d", int((b.Header.Length - 19)), tmp671.Len())
+		if tmp655.Len() != int((b.Header.Length - 19)) {
+			return fmt.Errorf("subrange length mismatch: expected %d, got %d", int((b.Header.Length - 19)), tmp655.Len())
 		}
-		if _, err := tmp346.Write(tmp671.Bytes()); err != nil {
+		if _, err := tmp345.Write(tmp655.Bytes()); err != nil {
 			return err
 		}
 	} else if b.Header.Type == BGPType_Keepalive {
-		tmp931, ok := b.tmp808.(*tmp1943)
+		tmp915, ok := b.tmp786.(*tmp916)
 		if !ok {
-			return errors.New("invalid union type for encoding")
+			tmp915 = &tmp916{}
+			b.tmp786 = tmp915
 		}
-		_ = tmp931 // to prevent unused warnings
+		_ = tmp915 // to prevent unused warnings
 		if !(b.Header.Length == 19) {
 			return errors.New("Assertion failed")
 		}
+	} else {
+		tmp911, ok := b.tmp786.(*tmp1916)
+		if !ok {
+			tmp911 = &tmp1916{}
+			b.tmp786 = tmp911
+		}
+		_ = tmp911 // to prevent unused warnings
+		return errors.New("unknown BGP message type")
 	}
 	return nil
 }
@@ -410,10 +604,10 @@ func (s *BGPPacket) MustEncodeCopy(reserved []byte) []byte {
 	}
 	return buf
 }
-func (b *BGPPacket) EncodeSlice(tmp346 []byte, tmp346Offset *int) error {
-	tmp1691 := b.Header.EncodeSlice(tmp346, tmp346Offset)
-	if tmp1691 != nil {
-		return tmp1691
+func (b *BGPPacket) EncodeSlice(tmp345 []byte, tmp345Offset *int) error {
+	tmp1614 := b.Header.EncodeSlice(tmp345, tmp345Offset)
+	if tmp1614 != nil {
+		return tmp1614
 	}
 	if !(b.Header.Length >= 19) {
 		return errors.New("Assertion failed")
@@ -422,74 +616,83 @@ func (b *BGPPacket) EncodeSlice(tmp346 []byte, tmp346Offset *int) error {
 		return errors.New("Assertion failed")
 	}
 	if b.Header.Type == BGPType_Open {
-		tmp1480, ok := b.tmp808.(*tmp1484)
+		tmp1443, ok := b.tmp786.(*tmp1446)
 		if !ok {
 			return errors.New("invalid union type for encoding")
 		}
-		_ = tmp1480 // to prevent unused warnings
-		if len(tmp346)-*tmp346Offset < int((b.Header.Length - 19)) {
+		_ = tmp1443 // to prevent unused warnings
+		if len(tmp345)-*tmp345Offset < int((b.Header.Length - 19)) {
 			return errors.New("not enough space for subrange")
 		}
-		tmp872 := tmp346[*tmp346Offset : *tmp346Offset+int((b.Header.Length-19))]
-		tmp872OffsetBase := 0
-		tmp872Offset := &tmp872OffsetBase
-		tmp925 := tmp1480.Open.EncodeSlice(tmp872, tmp872Offset)
-		if tmp925 != nil {
-			return tmp925
+		tmp827 := tmp345[*tmp345Offset : *tmp345Offset+int((b.Header.Length-19))]
+		tmp827OffsetBase := 0
+		tmp827Offset := &tmp827OffsetBase
+		tmp904 := tmp1443.Open.EncodeSlice(tmp827, tmp827Offset)
+		if tmp904 != nil {
+			return tmp904
 		}
-		if *tmp872Offset != int((b.Header.Length - 19)) {
-			return fmt.Errorf("subrange length mismatch: expected %d, got %d", int((b.Header.Length - 19)), *tmp872Offset)
+		if *tmp827Offset != int((b.Header.Length - 19)) {
+			return fmt.Errorf("subrange length mismatch: expected %d, got %d", int((b.Header.Length - 19)), *tmp827Offset)
 		}
-		*tmp346Offset += int((b.Header.Length - 19))
+		*tmp345Offset += int((b.Header.Length - 19))
 	} else if b.Header.Type == BGPType_Update {
-		tmp956, ok := b.tmp808.(*tmp961)
+		tmp941, ok := b.tmp786.(*tmp946)
 		if !ok {
 			return errors.New("invalid union type for encoding")
 		}
-		_ = tmp956 // to prevent unused warnings
-		if len(tmp346)-*tmp346Offset < int((b.Header.Length - 19)) {
+		_ = tmp941 // to prevent unused warnings
+		if len(tmp345)-*tmp345Offset < int((b.Header.Length - 19)) {
 			return errors.New("not enough space for subrange")
 		}
-		tmp675 := tmp346[*tmp346Offset : *tmp346Offset+int((b.Header.Length-19))]
-		tmp675OffsetBase := 0
-		tmp675Offset := &tmp675OffsetBase
-		tmp958 := tmp956.Update.EncodeSlice(tmp675, tmp675Offset)
-		if tmp958 != nil {
-			return tmp958
+		tmp659 := tmp345[*tmp345Offset : *tmp345Offset+int((b.Header.Length-19))]
+		tmp659OffsetBase := 0
+		tmp659Offset := &tmp659OffsetBase
+		tmp943 := tmp941.Update.EncodeSlice(tmp659, tmp659Offset)
+		if tmp943 != nil {
+			return tmp943
 		}
-		if *tmp675Offset != int((b.Header.Length - 19)) {
-			return fmt.Errorf("subrange length mismatch: expected %d, got %d", int((b.Header.Length - 19)), *tmp675Offset)
+		if *tmp659Offset != int((b.Header.Length - 19)) {
+			return fmt.Errorf("subrange length mismatch: expected %d, got %d", int((b.Header.Length - 19)), *tmp659Offset)
 		}
-		*tmp346Offset += int((b.Header.Length - 19))
+		*tmp345Offset += int((b.Header.Length - 19))
 	} else if b.Header.Type == BGPType_Notification {
-		tmp934, ok := b.tmp808.(*tmp939)
+		tmp919, ok := b.tmp786.(*tmp924)
 		if !ok {
 			return errors.New("invalid union type for encoding")
 		}
-		_ = tmp934 // to prevent unused warnings
-		if len(tmp346)-*tmp346Offset < int((b.Header.Length - 19)) {
+		_ = tmp919 // to prevent unused warnings
+		if len(tmp345)-*tmp345Offset < int((b.Header.Length - 19)) {
 			return errors.New("not enough space for subrange")
 		}
-		tmp671 := tmp346[*tmp346Offset : *tmp346Offset+int((b.Header.Length-19))]
-		tmp671OffsetBase := 0
-		tmp671Offset := &tmp671OffsetBase
-		tmp936 := tmp934.Notification.EncodeSlice(tmp671, tmp671Offset)
-		if tmp936 != nil {
-			return tmp936
+		tmp655 := tmp345[*tmp345Offset : *tmp345Offset+int((b.Header.Length-19))]
+		tmp655OffsetBase := 0
+		tmp655Offset := &tmp655OffsetBase
+		tmp921 := tmp919.Notification.EncodeSlice(tmp655, tmp655Offset)
+		if tmp921 != nil {
+			return tmp921
 		}
-		if *tmp671Offset != int((b.Header.Length - 19)) {
-			return fmt.Errorf("subrange length mismatch: expected %d, got %d", int((b.Header.Length - 19)), *tmp671Offset)
+		if *tmp655Offset != int((b.Header.Length - 19)) {
+			return fmt.Errorf("subrange length mismatch: expected %d, got %d", int((b.Header.Length - 19)), *tmp655Offset)
 		}
-		*tmp346Offset += int((b.Header.Length - 19))
+		*tmp345Offset += int((b.Header.Length - 19))
 	} else if b.Header.Type == BGPType_Keepalive {
-		tmp931, ok := b.tmp808.(*tmp1943)
+		tmp915, ok := b.tmp786.(*tmp916)
 		if !ok {
-			return errors.New("invalid union type for encoding")
+			tmp915 = &tmp916{}
+			b.tmp786 = tmp915
 		}
-		_ = tmp931 // to prevent unused warnings
+		_ = tmp915 // to prevent unused warnings
 		if !(b.Header.Length == 19) {
 			return errors.New("Assertion failed")
 		}
+	} else {
+		tmp911, ok := b.tmp786.(*tmp1916)
+		if !ok {
+			tmp911 = &tmp1916{}
+			b.tmp786 = tmp911
+		}
+		_ = tmp911 // to prevent unused warnings
+		return errors.New("unknown BGP message type")
 	}
 	return nil
 }
@@ -508,12 +711,12 @@ func (s *BGPPacket) MustEncode(reserved []byte) []byte {
 	}
 	return buf
 }
-func (b *BGPPacket) Append(tmp346 []byte) ([]byte, error) {
-	var tmp1691 error
-	tmp346, tmp1691 = b.Header.Append(tmp346)
+func (b *BGPPacket) Append(tmp345 []byte) ([]byte, error) {
+	var tmp1614 error
+	tmp345, tmp1614 = b.Header.Append(tmp345)
 
-	if tmp1691 != nil {
-		return nil, tmp1691
+	if tmp1614 != nil {
+		return nil, tmp1614
 	}
 	if !(b.Header.Length >= 19) {
 		return nil, errors.New("Assertion failed")
@@ -522,67 +725,76 @@ func (b *BGPPacket) Append(tmp346 []byte) ([]byte, error) {
 		return nil, errors.New("Assertion failed")
 	}
 	if b.Header.Type == BGPType_Open {
-		tmp1480, ok := b.tmp808.(*tmp1484)
+		tmp1443, ok := b.tmp786.(*tmp1446)
 		if !ok {
 			return nil, errors.New("invalid union type for encoding")
 		}
-		_ = tmp1480 // to prevent unused warnings
-		tmp872 := tmp346
-		var tmp925 error
-		tmp872, tmp925 = tmp1480.Open.Append(tmp872)
+		_ = tmp1443 // to prevent unused warnings
+		tmp827 := tmp345
+		var tmp904 error
+		tmp827, tmp904 = tmp1443.Open.Append(tmp827)
 
-		if tmp925 != nil {
-			return nil, tmp925
+		if tmp904 != nil {
+			return nil, tmp904
 		}
-		if len(tmp872)-len(tmp346) != int((b.Header.Length - 19)) {
-			return nil, fmt.Errorf("subrange length mismatch: expected %d, got %d", int((b.Header.Length - 19)), len(tmp872)-len(tmp346))
+		if len(tmp827)-len(tmp345) != int((b.Header.Length - 19)) {
+			return nil, fmt.Errorf("subrange length mismatch: expected %d, got %d", int((b.Header.Length - 19)), len(tmp827)-len(tmp345))
 		}
-		tmp346 = tmp872
+		tmp345 = tmp827
 	} else if b.Header.Type == BGPType_Update {
-		tmp956, ok := b.tmp808.(*tmp961)
+		tmp941, ok := b.tmp786.(*tmp946)
 		if !ok {
 			return nil, errors.New("invalid union type for encoding")
 		}
-		_ = tmp956 // to prevent unused warnings
-		tmp675 := tmp346
-		var tmp958 error
-		tmp675, tmp958 = tmp956.Update.Append(tmp675)
+		_ = tmp941 // to prevent unused warnings
+		tmp659 := tmp345
+		var tmp943 error
+		tmp659, tmp943 = tmp941.Update.Append(tmp659)
 
-		if tmp958 != nil {
-			return nil, tmp958
+		if tmp943 != nil {
+			return nil, tmp943
 		}
-		if len(tmp675)-len(tmp346) != int((b.Header.Length - 19)) {
-			return nil, fmt.Errorf("subrange length mismatch: expected %d, got %d", int((b.Header.Length - 19)), len(tmp675)-len(tmp346))
+		if len(tmp659)-len(tmp345) != int((b.Header.Length - 19)) {
+			return nil, fmt.Errorf("subrange length mismatch: expected %d, got %d", int((b.Header.Length - 19)), len(tmp659)-len(tmp345))
 		}
-		tmp346 = tmp675
+		tmp345 = tmp659
 	} else if b.Header.Type == BGPType_Notification {
-		tmp934, ok := b.tmp808.(*tmp939)
+		tmp919, ok := b.tmp786.(*tmp924)
 		if !ok {
 			return nil, errors.New("invalid union type for encoding")
 		}
-		_ = tmp934 // to prevent unused warnings
-		tmp671 := tmp346
-		var tmp936 error
-		tmp671, tmp936 = tmp934.Notification.Append(tmp671)
+		_ = tmp919 // to prevent unused warnings
+		tmp655 := tmp345
+		var tmp921 error
+		tmp655, tmp921 = tmp919.Notification.Append(tmp655)
 
-		if tmp936 != nil {
-			return nil, tmp936
+		if tmp921 != nil {
+			return nil, tmp921
 		}
-		if len(tmp671)-len(tmp346) != int((b.Header.Length - 19)) {
-			return nil, fmt.Errorf("subrange length mismatch: expected %d, got %d", int((b.Header.Length - 19)), len(tmp671)-len(tmp346))
+		if len(tmp655)-len(tmp345) != int((b.Header.Length - 19)) {
+			return nil, fmt.Errorf("subrange length mismatch: expected %d, got %d", int((b.Header.Length - 19)), len(tmp655)-len(tmp345))
 		}
-		tmp346 = tmp671
+		tmp345 = tmp655
 	} else if b.Header.Type == BGPType_Keepalive {
-		tmp931, ok := b.tmp808.(*tmp1943)
+		tmp915, ok := b.tmp786.(*tmp916)
 		if !ok {
-			return nil, errors.New("invalid union type for encoding")
+			tmp915 = &tmp916{}
+			b.tmp786 = tmp915
 		}
-		_ = tmp931 // to prevent unused warnings
+		_ = tmp915 // to prevent unused warnings
 		if !(b.Header.Length == 19) {
 			return nil, errors.New("Assertion failed")
 		}
+	} else {
+		tmp911, ok := b.tmp786.(*tmp1916)
+		if !ok {
+			tmp911 = &tmp1916{}
+			b.tmp786 = tmp911
+		}
+		_ = tmp911 // to prevent unused warnings
+		return nil, errors.New("unknown BGP message type")
 	}
-	return tmp346, nil
+	return tmp345, nil
 }
 func (s *BGPPacket) MustAppend(buf []byte) []byte {
 	var err error
@@ -592,11 +804,102 @@ func (s *BGPPacket) MustAppend(buf []byte) []byte {
 	}
 	return buf
 }
+func (b *BGPPacket) encodedSize(tmp345 int) (int, error) {
+	var tmp1614 error
+	tmp345, tmp1614 = b.Header.encodedSize(tmp345)
 
-func (b *BGPPacket) Read(tmp305 io.Reader) error {
-	tmp918 := b.Header.Read(tmp305)
-	if tmp918 != nil {
-		return tmp918
+	if tmp1614 != nil {
+		return 0, tmp1614
+	}
+	if !(b.Header.Length >= 19) {
+		return 0, errors.New("Assertion failed")
+	}
+	if !(b.Header.Length <= 4096) {
+		return 0, errors.New("Assertion failed")
+	}
+	if b.Header.Type == BGPType_Open {
+		tmp1443, ok := b.tmp786.(*tmp1446)
+		if !ok {
+			return 0, errors.New("invalid union type for encoding")
+		}
+		_ = tmp1443 // to prevent unused warnings
+		tmp827 := tmp345
+		var tmp904 error
+		tmp827, tmp904 = tmp1443.Open.encodedSize(tmp827)
+
+		if tmp904 != nil {
+			return 0, tmp904
+		}
+		if tmp827-tmp345 != int((b.Header.Length - 19)) {
+			return 0, fmt.Errorf("subrange length mismatch: expected %d, got %d", int((b.Header.Length - 19)), tmp827-tmp345)
+		}
+		tmp345 = tmp827
+	} else if b.Header.Type == BGPType_Update {
+		tmp941, ok := b.tmp786.(*tmp946)
+		if !ok {
+			return 0, errors.New("invalid union type for encoding")
+		}
+		_ = tmp941 // to prevent unused warnings
+		tmp659 := tmp345
+		var tmp943 error
+		tmp659, tmp943 = tmp941.Update.encodedSize(tmp659)
+
+		if tmp943 != nil {
+			return 0, tmp943
+		}
+		if tmp659-tmp345 != int((b.Header.Length - 19)) {
+			return 0, fmt.Errorf("subrange length mismatch: expected %d, got %d", int((b.Header.Length - 19)), tmp659-tmp345)
+		}
+		tmp345 = tmp659
+	} else if b.Header.Type == BGPType_Notification {
+		tmp919, ok := b.tmp786.(*tmp924)
+		if !ok {
+			return 0, errors.New("invalid union type for encoding")
+		}
+		_ = tmp919 // to prevent unused warnings
+		tmp655 := tmp345
+		var tmp921 error
+		tmp655, tmp921 = tmp919.Notification.encodedSize(tmp655)
+
+		if tmp921 != nil {
+			return 0, tmp921
+		}
+		if tmp655-tmp345 != int((b.Header.Length - 19)) {
+			return 0, fmt.Errorf("subrange length mismatch: expected %d, got %d", int((b.Header.Length - 19)), tmp655-tmp345)
+		}
+		tmp345 = tmp655
+	} else if b.Header.Type == BGPType_Keepalive {
+		tmp915, ok := b.tmp786.(*tmp916)
+		if !ok {
+			tmp915 = &tmp916{}
+			b.tmp786 = tmp915
+		}
+		_ = tmp915 // to prevent unused warnings
+		if !(b.Header.Length == 19) {
+			return 0, errors.New("Assertion failed")
+		}
+	} else {
+		tmp911, ok := b.tmp786.(*tmp1916)
+		if !ok {
+			tmp911 = &tmp1916{}
+			b.tmp786 = tmp911
+		}
+		_ = tmp911 // to prevent unused warnings
+		return 0, errors.New("unknown BGP message type")
+	}
+	return tmp345, nil
+}
+
+// EncodedSize returns how many bytes encoding this value produces, without
+// encoding it (so a buffer can be allocated once). It fails where encoding would.
+func (s *BGPPacket) EncodedSize() (int, error) {
+	return s.encodedSize(0)
+}
+
+func (b *BGPPacket) Read(tmp304 io.Reader) error {
+	tmp897 := b.Header.Read(tmp304)
+	if tmp897 != nil {
+		return tmp897
 	}
 	if !(b.Header.Length >= 19) {
 		return errors.New("Assertion failed")
@@ -605,60 +908,68 @@ func (b *BGPPacket) Read(tmp305 io.Reader) error {
 		return errors.New("Assertion failed")
 	}
 	if b.Header.Type == BGPType_Open {
-		tmp1480, ok := b.tmp808.(*tmp1484)
+		tmp1443, ok := b.tmp786.(*tmp1446)
 		if !ok {
-			tmp1480 = &tmp1484{}
-			b.tmp808 = tmp1480
+			tmp1443 = &tmp1446{}
+			b.tmp786 = tmp1443
 		}
-		_ = tmp1480 // to prevent unused warnings
-		tmp668 := io.LimitReader(tmp305, int64((b.Header.Length - 19)))
-		tmp911 := tmp1480.Open.Read(tmp668)
-		if tmp911 != nil {
-			return tmp911
+		_ = tmp1443 // to prevent unused warnings
+		tmp651 := io.LimitReader(tmp304, int64((b.Header.Length - 19)))
+		tmp890 := tmp1443.Open.Read(tmp651)
+		if tmp890 != nil {
+			return tmp890
 		}
-		if tmp668.(*io.LimitedReader).N != 0 {
-			return fmt.Errorf("subrange length mismatch: expected %d, but remains %d", int((b.Header.Length - 19)), tmp668.(*io.LimitedReader).N)
+		if tmp651.(*io.LimitedReader).N != 0 {
+			return fmt.Errorf("subrange length mismatch: expected %d, but remains %d", int((b.Header.Length - 19)), tmp651.(*io.LimitedReader).N)
 		}
 	} else if b.Header.Type == BGPType_Update {
-		tmp956, ok := b.tmp808.(*tmp961)
+		tmp941, ok := b.tmp786.(*tmp946)
 		if !ok {
-			tmp956 = &tmp961{}
-			b.tmp808 = tmp956
+			tmp941 = &tmp946{}
+			b.tmp786 = tmp941
 		}
-		_ = tmp956 // to prevent unused warnings
-		tmp667 := io.LimitReader(tmp305, int64((b.Header.Length - 19)))
-		tmp905 := tmp956.Update.Read(tmp667)
-		if tmp905 != nil {
-			return tmp905
+		_ = tmp941 // to prevent unused warnings
+		tmp650 := io.LimitReader(tmp304, int64((b.Header.Length - 19)))
+		tmp884 := tmp941.Update.Read(tmp650)
+		if tmp884 != nil {
+			return tmp884
 		}
-		if tmp667.(*io.LimitedReader).N != 0 {
-			return fmt.Errorf("subrange length mismatch: expected %d, but remains %d", int((b.Header.Length - 19)), tmp667.(*io.LimitedReader).N)
+		if tmp650.(*io.LimitedReader).N != 0 {
+			return fmt.Errorf("subrange length mismatch: expected %d, but remains %d", int((b.Header.Length - 19)), tmp650.(*io.LimitedReader).N)
 		}
 	} else if b.Header.Type == BGPType_Notification {
-		tmp934, ok := b.tmp808.(*tmp939)
+		tmp919, ok := b.tmp786.(*tmp924)
 		if !ok {
-			tmp934 = &tmp939{}
-			b.tmp808 = tmp934
+			tmp919 = &tmp924{}
+			b.tmp786 = tmp919
 		}
-		_ = tmp934 // to prevent unused warnings
-		tmp666 := io.LimitReader(tmp305, int64((b.Header.Length - 19)))
-		tmp899 := tmp934.Notification.Read(tmp666)
-		if tmp899 != nil {
-			return tmp899
+		_ = tmp919 // to prevent unused warnings
+		tmp649 := io.LimitReader(tmp304, int64((b.Header.Length - 19)))
+		tmp878 := tmp919.Notification.Read(tmp649)
+		if tmp878 != nil {
+			return tmp878
 		}
-		if tmp666.(*io.LimitedReader).N != 0 {
-			return fmt.Errorf("subrange length mismatch: expected %d, but remains %d", int((b.Header.Length - 19)), tmp666.(*io.LimitedReader).N)
+		if tmp649.(*io.LimitedReader).N != 0 {
+			return fmt.Errorf("subrange length mismatch: expected %d, but remains %d", int((b.Header.Length - 19)), tmp649.(*io.LimitedReader).N)
 		}
 	} else if b.Header.Type == BGPType_Keepalive {
-		tmp931, ok := b.tmp808.(*tmp1943)
+		tmp915, ok := b.tmp786.(*tmp916)
 		if !ok {
-			tmp931 = &tmp1943{}
-			b.tmp808 = tmp931
+			tmp915 = &tmp916{}
+			b.tmp786 = tmp915
 		}
-		_ = tmp931 // to prevent unused warnings
+		_ = tmp915 // to prevent unused warnings
 		if !(b.Header.Length == 19) {
 			return errors.New("Assertion failed")
 		}
+	} else {
+		tmp911, ok := b.tmp786.(*tmp1916)
+		if !ok {
+			tmp911 = &tmp1916{}
+			b.tmp786 = tmp911
+		}
+		_ = tmp911 // to prevent unused warnings
+		return errors.New("unknown BGP message type")
 	}
 	return nil
 }
@@ -680,10 +991,10 @@ func (s *BGPPacket) DecodeExactCopy(buf []byte) error {
 	}
 	return nil
 }
-func (b *BGPPacket) DecodeSlice(tmp305 []byte, tmp305Offset *int) error {
-	tmp918 := b.Header.DecodeSlice(tmp305, tmp305Offset)
-	if tmp918 != nil {
-		return tmp918
+func (b *BGPPacket) DecodeSlice(tmp304 []byte, tmp304Offset *int) error {
+	tmp897 := b.Header.DecodeSlice(tmp304, tmp304Offset)
+	if tmp897 != nil {
+		return tmp897
 	}
 	if !(b.Header.Length >= 19) {
 		return errors.New("Assertion failed")
@@ -692,69 +1003,77 @@ func (b *BGPPacket) DecodeSlice(tmp305 []byte, tmp305Offset *int) error {
 		return errors.New("Assertion failed")
 	}
 	if b.Header.Type == BGPType_Open {
-		tmp1480, ok := b.tmp808.(*tmp1484)
+		tmp1443, ok := b.tmp786.(*tmp1446)
 		if !ok {
-			tmp1480 = &tmp1484{}
-			b.tmp808 = tmp1480
+			tmp1443 = &tmp1446{}
+			b.tmp786 = tmp1443
 		}
-		_ = tmp1480 // to prevent unused warnings
-		if len(tmp305)-*tmp305Offset < int((b.Header.Length - 19)) {
+		_ = tmp1443 // to prevent unused warnings
+		if len(tmp304)-*tmp304Offset < int((b.Header.Length - 19)) {
 			return errors.New("not enough data for subrange")
 		}
-		tmp668 := tmp305[*tmp305Offset : *tmp305Offset+int((b.Header.Length-19))]
-		tmp668OffsetBase := 0
-		tmp668Offset := &tmp668OffsetBase
-		*tmp305Offset += int((b.Header.Length - 19))
-		tmp911 := tmp1480.Open.DecodeSlice(tmp668, tmp668Offset)
-		if tmp911 != nil {
-			return tmp911
+		tmp651 := tmp304[*tmp304Offset : *tmp304Offset+int((b.Header.Length-19))]
+		tmp651OffsetBase := 0
+		tmp651Offset := &tmp651OffsetBase
+		*tmp304Offset += int((b.Header.Length - 19))
+		tmp890 := tmp1443.Open.DecodeSlice(tmp651, tmp651Offset)
+		if tmp890 != nil {
+			return tmp890
 		}
 	} else if b.Header.Type == BGPType_Update {
-		tmp956, ok := b.tmp808.(*tmp961)
+		tmp941, ok := b.tmp786.(*tmp946)
 		if !ok {
-			tmp956 = &tmp961{}
-			b.tmp808 = tmp956
+			tmp941 = &tmp946{}
+			b.tmp786 = tmp941
 		}
-		_ = tmp956 // to prevent unused warnings
-		if len(tmp305)-*tmp305Offset < int((b.Header.Length - 19)) {
+		_ = tmp941 // to prevent unused warnings
+		if len(tmp304)-*tmp304Offset < int((b.Header.Length - 19)) {
 			return errors.New("not enough data for subrange")
 		}
-		tmp667 := tmp305[*tmp305Offset : *tmp305Offset+int((b.Header.Length-19))]
-		tmp667OffsetBase := 0
-		tmp667Offset := &tmp667OffsetBase
-		*tmp305Offset += int((b.Header.Length - 19))
-		tmp905 := tmp956.Update.DecodeSlice(tmp667, tmp667Offset)
-		if tmp905 != nil {
-			return tmp905
+		tmp650 := tmp304[*tmp304Offset : *tmp304Offset+int((b.Header.Length-19))]
+		tmp650OffsetBase := 0
+		tmp650Offset := &tmp650OffsetBase
+		*tmp304Offset += int((b.Header.Length - 19))
+		tmp884 := tmp941.Update.DecodeSlice(tmp650, tmp650Offset)
+		if tmp884 != nil {
+			return tmp884
 		}
 	} else if b.Header.Type == BGPType_Notification {
-		tmp934, ok := b.tmp808.(*tmp939)
+		tmp919, ok := b.tmp786.(*tmp924)
 		if !ok {
-			tmp934 = &tmp939{}
-			b.tmp808 = tmp934
+			tmp919 = &tmp924{}
+			b.tmp786 = tmp919
 		}
-		_ = tmp934 // to prevent unused warnings
-		if len(tmp305)-*tmp305Offset < int((b.Header.Length - 19)) {
+		_ = tmp919 // to prevent unused warnings
+		if len(tmp304)-*tmp304Offset < int((b.Header.Length - 19)) {
 			return errors.New("not enough data for subrange")
 		}
-		tmp666 := tmp305[*tmp305Offset : *tmp305Offset+int((b.Header.Length-19))]
-		tmp666OffsetBase := 0
-		tmp666Offset := &tmp666OffsetBase
-		*tmp305Offset += int((b.Header.Length - 19))
-		tmp899 := tmp934.Notification.DecodeSlice(tmp666, tmp666Offset)
-		if tmp899 != nil {
-			return tmp899
+		tmp649 := tmp304[*tmp304Offset : *tmp304Offset+int((b.Header.Length-19))]
+		tmp649OffsetBase := 0
+		tmp649Offset := &tmp649OffsetBase
+		*tmp304Offset += int((b.Header.Length - 19))
+		tmp878 := tmp919.Notification.DecodeSlice(tmp649, tmp649Offset)
+		if tmp878 != nil {
+			return tmp878
 		}
 	} else if b.Header.Type == BGPType_Keepalive {
-		tmp931, ok := b.tmp808.(*tmp1943)
+		tmp915, ok := b.tmp786.(*tmp916)
 		if !ok {
-			tmp931 = &tmp1943{}
-			b.tmp808 = tmp931
+			tmp915 = &tmp916{}
+			b.tmp786 = tmp915
 		}
-		_ = tmp931 // to prevent unused warnings
+		_ = tmp915 // to prevent unused warnings
 		if !(b.Header.Length == 19) {
 			return errors.New("Assertion failed")
 		}
+	} else {
+		tmp911, ok := b.tmp786.(*tmp1916)
+		if !ok {
+			tmp911 = &tmp1916{}
+			b.tmp786 = tmp911
+		}
+		_ = tmp911 // to prevent unused warnings
+		return errors.New("unknown BGP message type")
 	}
 	return nil
 }
@@ -786,45 +1105,45 @@ type Open struct {
 	Options []BGPOption
 }
 
-func (o *Open) Write(tmp85 io.Writer) error {
-	tmp1503 := [1]uint8{}
-	tmp1503[0] = o.Version
-	if _, err := tmp85.Write(tmp1503[:1]); err != nil {
+func (o *Open) Write(tmp87 io.Writer) error {
+	tmp1480 := [1]uint8{}
+	tmp1480[0] = o.Version
+	if _, err := tmp87.Write(tmp1480[:1]); err != nil {
 		return err
 	}
-	tmp1499 := [2]uint8{}
-	binary.BigEndian.PutUint16(tmp1499[:], uint16(o.As))
-	if _, err := tmp85.Write(tmp1499[:2]); err != nil {
+	tmp1477 := [2]uint8{}
+	binary.BigEndian.PutUint16(tmp1477[:], uint16(o.As))
+	if _, err := tmp87.Write(tmp1477[:2]); err != nil {
 		return err
 	}
-	tmp1496 := [2]uint8{}
-	binary.BigEndian.PutUint16(tmp1496[:], uint16(o.Hold))
-	if _, err := tmp85.Write(tmp1496[:2]); err != nil {
+	tmp1476 := [2]uint8{}
+	binary.BigEndian.PutUint16(tmp1476[:], uint16(o.Hold))
+	if _, err := tmp87.Write(tmp1476[:2]); err != nil {
 		return err
 	}
-	tmp598 := [4]uint8{}
-	binary.BigEndian.PutUint32(tmp598[:], uint32(o.Id))
-	if _, err := tmp85.Write(tmp598[:4]); err != nil {
+	tmp455 := [4]uint8{}
+	binary.BigEndian.PutUint32(tmp455[:], uint32(o.Id))
+	if _, err := tmp87.Write(tmp455[:4]); err != nil {
 		return err
 	}
-	tmp1492 := [1]uint8{}
-	tmp1492[0] = o.Optlen
-	if _, err := tmp85.Write(tmp1492[:1]); err != nil {
+	tmp1621 := [1]uint8{}
+	tmp1621[0] = o.Optlen
+	if _, err := tmp87.Write(tmp1621[:1]); err != nil {
 		return err
 	}
-	tmp601 := &bytes.Buffer{}
-	tmp811 := int(0)
-	for tmp811 < len(o.Options) {
-		tmp1681 := o.Options[tmp811].Write(tmp601)
-		if tmp1681 != nil {
-			return tmp1681
+	tmp592 := &bytes.Buffer{}
+	tmp801 := int(0)
+	for tmp801 < len(o.Options) {
+		tmp1494 := o.Options[tmp801].Write(tmp592)
+		if tmp1494 != nil {
+			return tmp1494
 		}
-		tmp811 = tmp811 + int(1)
+		tmp801 = tmp801 + int(1)
 	}
-	if tmp601.Len() != int(o.Optlen) {
-		return fmt.Errorf("subrange length mismatch: expected %d, got %d", int(o.Optlen), tmp601.Len())
+	if tmp592.Len() != int(o.Optlen) {
+		return fmt.Errorf("subrange length mismatch: expected %d, got %d", int(o.Optlen), tmp592.Len())
 	}
-	if _, err := tmp85.Write(tmp601.Bytes()); err != nil {
+	if _, err := tmp87.Write(tmp592.Bytes()); err != nil {
 		return err
 	}
 	return nil
@@ -844,60 +1163,60 @@ func (s *Open) MustEncodeCopy(reserved []byte) []byte {
 	}
 	return buf
 }
-func (o *Open) EncodeSlice(tmp85 []byte, tmp85Offset *int) error {
-	tmp1503 := []uint8{}
-	if len(tmp85)-*tmp85Offset < int(1) {
+func (o *Open) EncodeSlice(tmp87 []byte, tmp87Offset *int) error {
+	tmp1480 := []uint8{}
+	if len(tmp87)-*tmp87Offset < int(1) {
 		return errors.New("not enough space to reserve data for field \"Open::Version\"")
 	}
-	tmp1503 = tmp85[*tmp85Offset : *tmp85Offset+int(1)]
-	tmp1503[0] = o.Version
-	*tmp85Offset += int(1)
-	tmp1499 := []uint8{}
-	if len(tmp85)-*tmp85Offset < int(2) {
+	tmp1480 = tmp87[*tmp87Offset : *tmp87Offset+int(1)]
+	tmp1480[0] = o.Version
+	*tmp87Offset += int(1)
+	tmp1477 := []uint8{}
+	if len(tmp87)-*tmp87Offset < int(2) {
 		return errors.New("not enough space to reserve data for field \"Open::As\"")
 	}
-	tmp1499 = tmp85[*tmp85Offset : *tmp85Offset+int(2)]
-	binary.BigEndian.PutUint16(tmp1499[:], uint16(o.As))
-	*tmp85Offset += int(2)
-	tmp1496 := []uint8{}
-	if len(tmp85)-*tmp85Offset < int(2) {
+	tmp1477 = tmp87[*tmp87Offset : *tmp87Offset+int(2)]
+	binary.BigEndian.PutUint16(tmp1477[:], uint16(o.As))
+	*tmp87Offset += int(2)
+	tmp1476 := []uint8{}
+	if len(tmp87)-*tmp87Offset < int(2) {
 		return errors.New("not enough space to reserve data for field \"Open::Hold\"")
 	}
-	tmp1496 = tmp85[*tmp85Offset : *tmp85Offset+int(2)]
-	binary.BigEndian.PutUint16(tmp1496[:], uint16(o.Hold))
-	*tmp85Offset += int(2)
-	tmp598 := []uint8{}
-	if len(tmp85)-*tmp85Offset < int(4) {
+	tmp1476 = tmp87[*tmp87Offset : *tmp87Offset+int(2)]
+	binary.BigEndian.PutUint16(tmp1476[:], uint16(o.Hold))
+	*tmp87Offset += int(2)
+	tmp455 := []uint8{}
+	if len(tmp87)-*tmp87Offset < int(4) {
 		return errors.New("not enough space to reserve data for field \"Open::Id\"")
 	}
-	tmp598 = tmp85[*tmp85Offset : *tmp85Offset+int(4)]
-	binary.BigEndian.PutUint32(tmp598[:], uint32(o.Id))
-	*tmp85Offset += int(4)
-	tmp1492 := []uint8{}
-	if len(tmp85)-*tmp85Offset < int(1) {
+	tmp455 = tmp87[*tmp87Offset : *tmp87Offset+int(4)]
+	binary.BigEndian.PutUint32(tmp455[:], uint32(o.Id))
+	*tmp87Offset += int(4)
+	tmp1621 := []uint8{}
+	if len(tmp87)-*tmp87Offset < int(1) {
 		return errors.New("not enough space to reserve data for field \"Open::Optlen\"")
 	}
-	tmp1492 = tmp85[*tmp85Offset : *tmp85Offset+int(1)]
-	tmp1492[0] = o.Optlen
-	*tmp85Offset += int(1)
-	if len(tmp85)-*tmp85Offset < int(o.Optlen) {
+	tmp1621 = tmp87[*tmp87Offset : *tmp87Offset+int(1)]
+	tmp1621[0] = o.Optlen
+	*tmp87Offset += int(1)
+	if len(tmp87)-*tmp87Offset < int(o.Optlen) {
 		return errors.New("not enough space for subrange")
 	}
-	tmp601 := tmp85[*tmp85Offset : *tmp85Offset+int(o.Optlen)]
-	tmp601OffsetBase := 0
-	tmp601Offset := &tmp601OffsetBase
-	tmp811 := int(0)
-	for tmp811 < len(o.Options) {
-		tmp1681 := o.Options[tmp811].EncodeSlice(tmp601, tmp601Offset)
-		if tmp1681 != nil {
-			return tmp1681
+	tmp592 := tmp87[*tmp87Offset : *tmp87Offset+int(o.Optlen)]
+	tmp592OffsetBase := 0
+	tmp592Offset := &tmp592OffsetBase
+	tmp801 := int(0)
+	for tmp801 < len(o.Options) {
+		tmp1494 := o.Options[tmp801].EncodeSlice(tmp592, tmp592Offset)
+		if tmp1494 != nil {
+			return tmp1494
 		}
-		tmp811 = tmp811 + int(1)
+		tmp801 = tmp801 + int(1)
 	}
-	if *tmp601Offset != int(o.Optlen) {
-		return fmt.Errorf("subrange length mismatch: expected %d, got %d", int(o.Optlen), *tmp601Offset)
+	if *tmp592Offset != int(o.Optlen) {
+		return fmt.Errorf("subrange length mismatch: expected %d, got %d", int(o.Optlen), *tmp592Offset)
 	}
-	*tmp85Offset += int(o.Optlen)
+	*tmp87Offset += int(o.Optlen)
 	return nil
 }
 func (s *Open) Encode(buf []byte) ([]byte, error) {
@@ -915,38 +1234,38 @@ func (s *Open) MustEncode(reserved []byte) []byte {
 	}
 	return buf
 }
-func (o *Open) Append(tmp85 []byte) ([]byte, error) {
-	tmp1503 := [1]uint8{}
-	tmp1503[0] = o.Version
-	tmp85 = append(tmp85, tmp1503[:1]...)
-	tmp1499 := [2]uint8{}
-	binary.BigEndian.PutUint16(tmp1499[:], uint16(o.As))
-	tmp85 = append(tmp85, tmp1499[:2]...)
-	tmp1496 := [2]uint8{}
-	binary.BigEndian.PutUint16(tmp1496[:], uint16(o.Hold))
-	tmp85 = append(tmp85, tmp1496[:2]...)
-	tmp598 := [4]uint8{}
-	binary.BigEndian.PutUint32(tmp598[:], uint32(o.Id))
-	tmp85 = append(tmp85, tmp598[:4]...)
-	tmp1492 := [1]uint8{}
-	tmp1492[0] = o.Optlen
-	tmp85 = append(tmp85, tmp1492[:1]...)
-	tmp601 := tmp85
-	tmp811 := int(0)
-	for tmp811 < len(o.Options) {
-		var tmp1681 error
-		tmp601, tmp1681 = o.Options[tmp811].Append(tmp601)
+func (o *Open) Append(tmp87 []byte) ([]byte, error) {
+	tmp1480 := [1]uint8{}
+	tmp1480[0] = o.Version
+	tmp87 = append(tmp87, tmp1480[:1]...)
+	tmp1477 := [2]uint8{}
+	binary.BigEndian.PutUint16(tmp1477[:], uint16(o.As))
+	tmp87 = append(tmp87, tmp1477[:2]...)
+	tmp1476 := [2]uint8{}
+	binary.BigEndian.PutUint16(tmp1476[:], uint16(o.Hold))
+	tmp87 = append(tmp87, tmp1476[:2]...)
+	tmp455 := [4]uint8{}
+	binary.BigEndian.PutUint32(tmp455[:], uint32(o.Id))
+	tmp87 = append(tmp87, tmp455[:4]...)
+	tmp1621 := [1]uint8{}
+	tmp1621[0] = o.Optlen
+	tmp87 = append(tmp87, tmp1621[:1]...)
+	tmp592 := tmp87
+	tmp801 := int(0)
+	for tmp801 < len(o.Options) {
+		var tmp1494 error
+		tmp592, tmp1494 = o.Options[tmp801].Append(tmp592)
 
-		if tmp1681 != nil {
-			return nil, tmp1681
+		if tmp1494 != nil {
+			return nil, tmp1494
 		}
-		tmp811 = tmp811 + int(1)
+		tmp801 = tmp801 + int(1)
 	}
-	if len(tmp601)-len(tmp85) != int(o.Optlen) {
-		return nil, fmt.Errorf("subrange length mismatch: expected %d, got %d", int(o.Optlen), len(tmp601)-len(tmp85))
+	if len(tmp592)-len(tmp87) != int(o.Optlen) {
+		return nil, fmt.Errorf("subrange length mismatch: expected %d, got %d", int(o.Optlen), len(tmp592)-len(tmp87))
 	}
-	tmp85 = tmp601
-	return tmp85, nil
+	tmp87 = tmp592
+	return tmp87, nil
 }
 func (s *Open) MustAppend(buf []byte) []byte {
 	var err error
@@ -956,47 +1275,86 @@ func (s *Open) MustAppend(buf []byte) []byte {
 	}
 	return buf
 }
+func (o *Open) encodedSize(tmp87 int) (int, error) {
+	tmp1480 := [1]uint8{}
+	tmp1480[0] = o.Version
+	tmp87 += int(1)
+	tmp1477 := [2]uint8{}
+	binary.BigEndian.PutUint16(tmp1477[:], uint16(o.As))
+	tmp87 += int(2)
+	tmp1476 := [2]uint8{}
+	binary.BigEndian.PutUint16(tmp1476[:], uint16(o.Hold))
+	tmp87 += int(2)
+	tmp455 := [4]uint8{}
+	binary.BigEndian.PutUint32(tmp455[:], uint32(o.Id))
+	tmp87 += int(4)
+	tmp1621 := [1]uint8{}
+	tmp1621[0] = o.Optlen
+	tmp87 += int(1)
+	tmp592 := tmp87
+	tmp801 := int(0)
+	for tmp801 < len(o.Options) {
+		var tmp1494 error
+		tmp592, tmp1494 = o.Options[tmp801].encodedSize(tmp592)
 
-func (o *Open) Read(tmp84 io.Reader) error {
-	tmp1672 := [1]uint8{}
-	if _, err := io.ReadFull(tmp84, tmp1672[0:0+1]); err != nil {
+		if tmp1494 != nil {
+			return 0, tmp1494
+		}
+		tmp801 = tmp801 + int(1)
+	}
+	if tmp592-tmp87 != int(o.Optlen) {
+		return 0, fmt.Errorf("subrange length mismatch: expected %d, got %d", int(o.Optlen), tmp592-tmp87)
+	}
+	tmp87 = tmp592
+	return tmp87, nil
+}
+
+// EncodedSize returns how many bytes encoding this value produces, without
+// encoding it (so a buffer can be allocated once). It fails where encoding would.
+func (s *Open) EncodedSize() (int, error) {
+	return s.encodedSize(0)
+}
+
+func (o *Open) Read(tmp86 io.Reader) error {
+	tmp1489 := [1]uint8{}
+	if _, err := io.ReadFull(tmp86, tmp1489[0:0+1]); err != nil {
 		return err
 	}
-	o.Version = tmp1672[0]
-	tmp1666 := [2]uint8{}
-	if _, err := io.ReadFull(tmp84, tmp1666[0:0+2]); err != nil {
+	o.Version = tmp1489[0]
+	tmp1484 := [2]uint8{}
+	if _, err := io.ReadFull(tmp86, tmp1484[0:0+2]); err != nil {
 		return err
 	}
-	o.As = binary.BigEndian.Uint16(tmp1666[:])
-	tmp1523 := [2]uint8{}
-	if _, err := io.ReadFull(tmp84, tmp1523[0:0+2]); err != nil {
+	o.As = binary.BigEndian.Uint16(tmp1484[:])
+	tmp1491 := [2]uint8{}
+	if _, err := io.ReadFull(tmp86, tmp1491[0:0+2]); err != nil {
 		return err
 	}
-	o.Hold = binary.BigEndian.Uint16(tmp1523[:])
-	tmp607 := [4]uint8{}
-	if _, err := io.ReadFull(tmp84, tmp607[0:0+4]); err != nil {
+	o.Hold = binary.BigEndian.Uint16(tmp1491[:])
+	tmp430 := [4]uint8{}
+	if _, err := io.ReadFull(tmp86, tmp430[0:0+4]); err != nil {
 		return err
 	}
-	o.Id = binary.BigEndian.Uint32(tmp607[:])
-	tmp1507 := [1]uint8{}
-	if _, err := io.ReadFull(tmp84, tmp1507[0:0+1]); err != nil {
+	o.Id = binary.BigEndian.Uint32(tmp430[:])
+	tmp1460 := [1]uint8{}
+	if _, err := io.ReadFull(tmp86, tmp1460[0:0+1]); err != nil {
 		return err
 	}
-	o.Optlen = tmp1507[0]
-	tmp354 := io.LimitReader(tmp84, int64(o.Optlen))
+	o.Optlen = tmp1460[0]
+	tmp346 := io.LimitReader(tmp86, int64(o.Optlen))
 	for true {
-		tmp1517 := BGPOption{}
-		tmp1515 := tmp1517.Read(tmp354)
-		if tmp1515 != nil {
-			if tmp1515 == io.EOF {
+		tmp1454 := BGPOption{}
+		tmp1450 := tmp1454.Read(tmp346)
+		if tmp1450 != nil {
+			if tmp1450 == io.EOF {
 				break
 			}
-			return tmp1515
+			return tmp1450
 		}
-		o.Options = append(o.Options, tmp1517)
+		o.Options = append(o.Options, tmp1454)
 	}
-	if tmp354.(*io.LimitedReader).N != 0 {
-		return fmt.Errorf("subrange length mismatch: expected %d, but remains %d", int(o.Optlen), tmp354.(*io.LimitedReader).N)
+	if tmp346.(*io.LimitedReader).N != 0 {
+		return fmt.Errorf("subrange length mismatch: expected %d, but remains %d", int(o.Optlen), tmp346.(*io.LimitedReader).N)
 	}
 	return nil
 }
@@ -1018,56 +1376,56 @@ func (s *Open) DecodeExactCopy(buf []byte) error {
 	}
 	return nil
 }
-func (o *Open) DecodeSlice(tmp84 []byte, tmp84Offset *int) error {
-	tmp1672 := []uint8{}
-	if len(tmp84)-*tmp84Offset < 1 {
+func (o *Open) DecodeSlice(tmp86 []byte, tmp86Offset *int) error {
+	tmp1489 := []uint8{}
+	if len(tmp86)-*tmp86Offset < 1 {
 		return errors.New("not enough data to read for field \"Open::Version\"")
 	}
-	tmp1672 = tmp84[*tmp84Offset : *tmp84Offset+1]
-	*tmp84Offset += int(1)
-	o.Version = tmp1672[0]
-	tmp1666 := []uint8{}
-	if len(tmp84)-*tmp84Offset < 2 {
+	tmp1489 = tmp86[*tmp86Offset : *tmp86Offset+1]
+	*tmp86Offset += int(1)
+	o.Version = tmp1489[0]
+	tmp1484 := []uint8{}
+	if len(tmp86)-*tmp86Offset < 2 {
 		return errors.New("not enough data to read for field \"Open::As\"")
 	}
-	tmp1666 = tmp84[*tmp84Offset : *tmp84Offset+2]
-	*tmp84Offset += int(2)
-	o.As = binary.BigEndian.Uint16(tmp1666[:])
-	tmp1523 := []uint8{}
-	if len(tmp84)-*tmp84Offset < 2 {
+	tmp1484 = tmp86[*tmp86Offset : *tmp86Offset+2]
+	*tmp86Offset += int(2)
+	o.As = binary.BigEndian.Uint16(tmp1484[:])
+	tmp1491 := []uint8{}
+	if len(tmp86)-*tmp86Offset < 2 {
 		return errors.New("not enough data to read for field \"Open::Hold\"")
 	}
-	tmp1523 = tmp84[*tmp84Offset : *tmp84Offset+2]
-	*tmp84Offset += int(2)
-	o.Hold = binary.BigEndian.Uint16(tmp1523[:])
-	tmp607 := []uint8{}
-	if len(tmp84)-*tmp84Offset < 4 {
+	tmp1491 = tmp86[*tmp86Offset : *tmp86Offset+2]
+	*tmp86Offset += int(2)
+	o.Hold = binary.BigEndian.Uint16(tmp1491[:])
+	tmp430 := []uint8{}
+	if len(tmp86)-*tmp86Offset < 4 {
 		return errors.New("not enough data to read for field \"Open::Id\"")
 	}
-	tmp607 = tmp84[*tmp84Offset : *tmp84Offset+4]
-	*tmp84Offset += int(4)
-	o.Id = binary.BigEndian.Uint32(tmp607[:])
-	tmp1507 := []uint8{}
-	if len(tmp84)-*tmp84Offset < 1 {
+	tmp430 = tmp86[*tmp86Offset : *tmp86Offset+4]
+	*tmp86Offset += int(4)
+	o.Id = binary.BigEndian.Uint32(tmp430[:])
+	tmp1460 := []uint8{}
+	if len(tmp86)-*tmp86Offset < 1 {
 		return errors.New("not enough data to read for field \"Open::Optlen\"")
 	}
-	tmp1507 = tmp84[*tmp84Offset : *tmp84Offset+1]
-	*tmp84Offset += int(1)
-	o.Optlen = tmp1507[0]
-	if len(tmp84)-*tmp84Offset < int(o.Optlen) {
+	tmp1460 = tmp86[*tmp86Offset : *tmp86Offset+1]
+	*tmp86Offset += int(1)
+	o.Optlen = tmp1460[0]
+	if len(tmp86)-*tmp86Offset < int(o.Optlen) {
 		return errors.New("not enough data for subrange")
 	}
-	tmp354 := tmp84[*tmp84Offset : *tmp84Offset+int(o.Optlen)]
-	tmp354OffsetBase := 0
-	tmp354Offset := &tmp354OffsetBase
-	*tmp84Offset += int(o.Optlen)
-	for len(tmp354)-*tmp354Offset >= 1 {
-		tmp1517 := BGPOption{}
-		tmp1515 := tmp1517.DecodeSlice(tmp354, tmp354Offset)
-		if tmp1515 != nil {
-			return tmp1515
+	tmp346 := tmp86[*tmp86Offset : *tmp86Offset+int(o.Optlen)]
+	tmp346OffsetBase := 0
+	tmp346Offset := &tmp346OffsetBase
+	*tmp86Offset += int(o.Optlen)
+	for len(tmp346)-*tmp346Offset >= 1 {
+		tmp1454 := BGPOption{}
+		tmp1450 := tmp1454.DecodeSlice(tmp346, tmp346Offset)
+		if tmp1450 != nil {
+			return tmp1450
 		}
-		o.Options = append(o.Options, tmp1517)
+		o.Options = append(o.Options, tmp1454)
 	}
 	return nil
 }
@@ -1133,19 +1491,19 @@ type MultiProtocolCapability struct {
 }
 
 func (m *MultiProtocolCapability) Write(tmp197 io.Writer) error {
-	tmp1693 := [2]uint8{}
-	binary.BigEndian.PutUint16(tmp1693[:], uint16(m.Afi))
-	if _, err := tmp197.Write(tmp1693[:2]); err != nil {
+	tmp1668 := [2]uint8{}
+	binary.BigEndian.PutUint16(tmp1668[:], uint16(m.Afi))
+	if _, err := tmp197.Write(tmp1668[:2]); err != nil {
 		return err
 	}
-	tmp1630 := [1]uint8{}
-	tmp1630[0] = m.Reserved
-	if _, err := tmp197.Write(tmp1630[:1]); err != nil {
+	tmp1612 := [1]uint8{}
+	tmp1612[0] = m.Reserved
+	if _, err := tmp197.Write(tmp1612[:1]); err != nil {
 		return err
 	}
-	tmp1627 := [1]uint8{}
-	tmp1627[0] = m.Safi
-	if _, err := tmp197.Write(tmp1627[:1]); err != nil {
+	tmp1609 := [1]uint8{}
+	tmp1609[0] = m.Safi
+	if _, err := tmp197.Write(tmp1609[:1]); err != nil {
 		return err
 	}
 	return nil
@@ -1166,26 +1524,26 @@ func (s *MultiProtocolCapability) MustEncodeCopy(reserved []byte) []byte {
 	return buf
 }
 func (m *MultiProtocolCapability) EncodeSlice(tmp197 []byte, tmp197Offset *int) error {
-	tmp1693 := []uint8{}
+	tmp1668 := []uint8{}
 	if len(tmp197)-*tmp197Offset < int(2) {
 		return errors.New("not enough space to reserve data for field \"MultiProtocolCapability::Afi\"")
 	}
-	tmp1693 = tmp197[*tmp197Offset : *tmp197Offset+int(2)]
-	binary.BigEndian.PutUint16(tmp1693[:], uint16(m.Afi))
+	tmp1668 = tmp197[*tmp197Offset : *tmp197Offset+int(2)]
+	binary.BigEndian.PutUint16(tmp1668[:], uint16(m.Afi))
 	*tmp197Offset += int(2)
-	tmp1630 := []uint8{}
+	tmp1612 := []uint8{}
 	if len(tmp197)-*tmp197Offset < int(1) {
 		return errors.New("not enough space to reserve data for field \"MultiProtocolCapability::Reserved\"")
 	}
-	tmp1630 = tmp197[*tmp197Offset : *tmp197Offset+int(1)]
-	tmp1630[0] = m.Reserved
+	tmp1612 = tmp197[*tmp197Offset : *tmp197Offset+int(1)]
+	tmp1612[0] = m.Reserved
 	*tmp197Offset += int(1)
-	tmp1627 := []uint8{}
+	tmp1609 := []uint8{}
 	if len(tmp197)-*tmp197Offset < int(1) {
 		return errors.New("not enough space to reserve data for field \"MultiProtocolCapability::Safi\"")
 	}
-	tmp1627 = tmp197[*tmp197Offset : *tmp197Offset+int(1)]
-	tmp1627[0] = m.Safi
+	tmp1609 = tmp197[*tmp197Offset : *tmp197Offset+int(1)]
+	tmp1609[0] = m.Safi
 	*tmp197Offset += int(1)
 	return nil
 }
@@ -1205,15 +1563,15 @@ func (s *MultiProtocolCapability) MustEncode(reserved []byte) []byte {
 	return buf
 }
 func (m *MultiProtocolCapability) Append(tmp197 []byte) ([]byte, error) {
-	tmp1693 := [2]uint8{}
-	binary.BigEndian.PutUint16(tmp1693[:], uint16(m.Afi))
-	tmp197 = append(tmp197, tmp1693[:2]...)
-	tmp1630 := [1]uint8{}
-	tmp1630[0] = m.Reserved
-	tmp197 = append(tmp197, tmp1630[:1]...)
-	tmp1627 := [1]uint8{}
-	tmp1627[0] = m.Safi
-	tmp197 = append(tmp197, tmp1627[:1]...)
+	tmp1668 := [2]uint8{}
+	binary.BigEndian.PutUint16(tmp1668[:], uint16(m.Afi))
+	tmp197 = append(tmp197, tmp1668[:2]...)
+	tmp1612 := [1]uint8{}
+	tmp1612[0] = m.Reserved
+	tmp197 = append(tmp197, tmp1612[:1]...)
+	tmp1609 := [1]uint8{}
+	tmp1609[0] = m.Safi
+	tmp197 = append(tmp197, tmp1609[:1]...)
 	return tmp197, nil
 }
 func (s *MultiProtocolCapability) MustAppend(buf []byte) []byte {
@@ -1224,23 +1582,41 @@ func (s *MultiProtocolCapability) MustAppend(buf []byte) []byte {
 	}
 	return buf
 }
+func (m *MultiProtocolCapability) encodedSize(tmp197 int) (int, error) {
+	tmp1668 := [2]uint8{}
+	binary.BigEndian.PutUint16(tmp1668[:], uint16(m.Afi))
+	tmp197 += int(2)
+	tmp1612 := [1]uint8{}
+	tmp1612[0] = m.Reserved
+	tmp197 += int(1)
+	tmp1609 := [1]uint8{}
+	tmp1609[0] = m.Safi
+	tmp197 += int(1)
+	return tmp197, nil
+}
+
+// EncodedSize returns how many bytes encoding this value produces, without
+// encoding it (so a buffer can be allocated once). It fails where encoding would.
+func (s *MultiProtocolCapability) EncodedSize() (int, error) {
+	return s.encodedSize(0)
+}
 
 func (m *MultiProtocolCapability) Read(tmp194 io.Reader) error {
-	tmp1646 := [2]uint8{}
-	if _, err := io.ReadFull(tmp194, tmp1646[0:0+2]); err != nil {
+	tmp1637 := [2]uint8{}
+	if _, err := io.ReadFull(tmp194, tmp1637[0:0+2]); err != nil {
 		return err
 	}
-	m.Afi = binary.BigEndian.Uint16(tmp1646[:])
-	tmp1645 := [1]uint8{}
-	if _, err := io.ReadFull(tmp194, tmp1645[0:0+1]); err != nil {
+	m.Afi = binary.BigEndian.Uint16(tmp1637[:])
+	tmp1634 := [1]uint8{}
+	if _, err := io.ReadFull(tmp194, tmp1634[0:0+1]); err != nil {
 		return err
 	}
-	m.Reserved = tmp1645[0]
-	tmp1637 := [1]uint8{}
-	if _, err := io.ReadFull(tmp194, tmp1637[0:0+1]); err != nil {
+	m.Reserved = tmp1634[0]
+	tmp1630 := [1]uint8{}
+	if _, err := io.ReadFull(tmp194, tmp1630[0:0+1]); err != nil {
 		return err
 	}
-	m.Safi = tmp1637[0]
+	m.Safi = tmp1630[0]
 	return nil
 }
 func (s *MultiProtocolCapability) DecodeCopy(buf []byte) ([]byte, error) {
@@ -1262,27 +1638,27 @@ func (s *MultiProtocolCapability) DecodeExactCopy(buf []byte) error {
 	return nil
 }
 func (m *MultiProtocolCapability) DecodeSlice(tmp194 []byte, tmp194Offset *int) error {
-	tmp1646 := []uint8{}
+	tmp1637 := []uint8{}
 	if len(tmp194)-*tmp194Offset < 2 {
 		return errors.New("not enough data to read for field \"MultiProtocolCapability::Afi\"")
 	}
-	tmp1646 = tmp194[*tmp194Offset : *tmp194Offset+2]
+	tmp1637 = tmp194[*tmp194Offset : *tmp194Offset+2]
 	*tmp194Offset += int(2)
-	m.Afi = binary.BigEndian.Uint16(tmp1646[:])
-	tmp1645 := []uint8{}
+	m.Afi = binary.BigEndian.Uint16(tmp1637[:])
+	tmp1634 := []uint8{}
 	if len(tmp194)-*tmp194Offset < 1 {
 		return errors.New("not enough data to read for field \"MultiProtocolCapability::Reserved\"")
 	}
-	tmp1645 = tmp194[*tmp194Offset : *tmp194Offset+1]
+	tmp1634 = tmp194[*tmp194Offset : *tmp194Offset+1]
 	*tmp194Offset += int(1)
-	m.Reserved = tmp1645[0]
-	tmp1637 := []uint8{}
+	m.Reserved = tmp1634[0]
+	tmp1630 := []uint8{}
 	if len(tmp194)-*tmp194Offset < 1 {
 		return errors.New("not enough data to read for field \"MultiProtocolCapability::Safi\"")
 	}
-	tmp1637 = tmp194[*tmp194Offset : *tmp194Offset+1]
+	tmp1630 = tmp194[*tmp194Offset : *tmp194Offset+1]
 	*tmp194Offset += int(1)
-	m.Safi = tmp1637[0]
+	m.Safi = tmp1630[0]
 	return nil
 }
 func (s *MultiProtocolCapability) Decode(buf []byte) ([]byte, error) {
@@ -1304,56 +1680,56 @@ func (s *MultiProtocolCapability) DecodeExact(buf []byte) error {
 	return nil
 }
 
-type tmp1624 struct {
+type tmp1606 struct {
 	MultiProtocol MultiProtocolCapability
 }
 
-func (v *tmp1624) isVariant456() {}
+func (v *tmp1606) isVariant449() {}
 
-type tmp1610 struct {
+type tmp1594 struct {
 	Data []uint8
 }
 
-func (v *tmp1610) isVariant456() {}
+func (v *tmp1594) isVariant449() {}
 
-type Variant456 interface {
-	isVariant456()
+type Variant449 interface {
+	isVariant449()
 }
 
 type Capability struct {
 	Code   CapabilityCode
 	Len    uint8
-	tmp855 Variant456
+	tmp836 Variant449
 }
 
 func (c *Capability) Data() *[]uint8 {
 	if c.Code == CapabilityCode_Multiprotocol {
 		return nil
 	} else {
-		tmp1609, ok := c.tmp855.(*tmp1610)
+		tmp1593, ok := c.tmp836.(*tmp1594)
 		if !ok {
 			return nil
 		}
-		_ = tmp1609 // to prevent unused warnings
-		return &tmp1609.Data
+		_ = tmp1593 // to prevent unused warnings
+		return &tmp1593.Data
 	}
 	return nil
 }
-func (c *Capability) SetData(tmp1506 []uint8) bool {
+func (c *Capability) SetData(tmp1474 []uint8) bool {
 	if c.Code == CapabilityCode_Multiprotocol {
 		return false
 	} else {
-		tmp1609, ok := c.tmp855.(*tmp1610)
+		tmp1593, ok := c.tmp836.(*tmp1594)
 		if !ok {
-			tmp1609 = &tmp1610{}
-			c.tmp855 = tmp1609
+			tmp1593 = &tmp1594{}
+			c.tmp836 = tmp1593
 		}
-		_ = tmp1609 // to prevent unused warnings
-		if len(tmp1506) > int(255) {
+		_ = tmp1593 // to prevent unused warnings
+		if len(tmp1474) > int(255) {
 			return false
 		}
-		c.Len = uint8(len(tmp1506))
-		tmp1609.Data = tmp1506
+		c.Len = uint8(len(tmp1474))
+		tmp1593.Data = tmp1474
 		return true
 	}
 	return false
@@ -1361,67 +1737,67 @@ func (c *Capability) SetData(tmp1506 []uint8) bool {
 
 func (c *Capability) MultiProtocol() *MultiProtocolCapability {
 	if c.Code == CapabilityCode_Multiprotocol {
-		tmp1612, ok := c.tmp855.(*tmp1624)
+		tmp1596, ok := c.tmp836.(*tmp1606)
 		if !ok {
 			return nil
 		}
-		_ = tmp1612 // to prevent unused warnings
-		return &tmp1612.MultiProtocol
+		_ = tmp1596 // to prevent unused warnings
+		return &tmp1596.MultiProtocol
 	}
 	return nil
 }
-func (c *Capability) SetMultiProtocol(tmp1673 MultiProtocolCapability) bool {
+func (c *Capability) SetMultiProtocol(tmp1625 MultiProtocolCapability) bool {
 	if c.Code == CapabilityCode_Multiprotocol {
-		tmp1612, ok := c.tmp855.(*tmp1624)
+		tmp1596, ok := c.tmp836.(*tmp1606)
 		if !ok {
-			tmp1612 = &tmp1624{}
-			c.tmp855 = tmp1612
+			tmp1596 = &tmp1606{}
+			c.tmp836 = tmp1596
 		}
-		_ = tmp1612 // to prevent unused warnings
-		tmp1612.MultiProtocol = tmp1673
+		_ = tmp1596 // to prevent unused warnings
+		tmp1596.MultiProtocol = tmp1625
 		return true
 	}
 	return false
 }
 
-func (c *Capability) Write(tmp160 io.Writer) error {
-	tmp1619 := [1]uint8{}
-	tmp1619[0] = uint8(c.Code)
-	if _, err := tmp160.Write(tmp1619[:1]); err != nil {
+func (c *Capability) Write(tmp162 io.Writer) error {
+	tmp1603 := [1]uint8{}
+	tmp1603[0] = uint8(c.Code)
+	if _, err := tmp162.Write(tmp1603[:1]); err != nil {
 		return err
 	}
-	tmp1616 := [1]uint8{}
-	tmp1616[0] = c.Len
-	if _, err := tmp160.Write(tmp1616[:1]); err != nil {
+	tmp1600 := [1]uint8{}
+	tmp1600[0] = c.Len
+	if _, err := tmp162.Write(tmp1600[:1]); err != nil {
 		return err
 	}
 	if c.Code == CapabilityCode_Multiprotocol {
-		tmp1612, ok := c.tmp855.(*tmp1624)
+		tmp1596, ok := c.tmp836.(*tmp1606)
 		if !ok {
 			return errors.New("invalid union type for encoding")
 		}
-		_ = tmp1612 // to prevent unused warnings
-		tmp857 := &bytes.Buffer{}
-		tmp1602 := tmp1612.MultiProtocol.Write(tmp857)
-		if tmp1602 != nil {
-			return tmp1602
+		_ = tmp1596 // to prevent unused warnings
+		tmp837 := &bytes.Buffer{}
+		tmp1582 := tmp1596.MultiProtocol.Write(tmp837)
+		if tmp1582 != nil {
+			return tmp1582
 		}
-		if tmp857.Len() != int(c.Len) {
-			return fmt.Errorf("subrange length mismatch: expected %d, got %d", int(c.Len), tmp857.Len())
+		if tmp837.Len() != int(c.Len) {
+			return fmt.Errorf("subrange length mismatch: expected %d, got %d", int(c.Len), tmp837.Len())
 		}
-		if _, err := tmp160.Write(tmp857.Bytes()); err != nil {
+		if _, err := tmp162.Write(tmp837.Bytes()); err != nil {
 			return err
 		}
 	} else {
-		tmp1609, ok := c.tmp855.(*tmp1610)
+		tmp1593, ok := c.tmp836.(*tmp1594)
 		if !ok {
 			return errors.New("invalid union type for encoding")
 		}
-		_ = tmp1609 // to prevent unused warnings
-		if len(tmp1609.Data) != int(int(c.Len)) {
-			return fmt.Errorf("size mismatch when writing field \"Capability::tmp855::Data\": expected %d, got %d", int(int(c.Len)), len(tmp1609.Data))
+		_ = tmp1593 // to prevent unused warnings
+		if len(tmp1593.Data) != int(int(c.Len)) {
+			return fmt.Errorf("size mismatch when writing field \"Capability::tmp836::Data\": expected %d, got %d", int(int(c.Len)), len(tmp1593.Data))
 		}
-		if _, err := tmp160.Write(tmp1609.Data); err != nil {
+		if _, err := tmp162.Write(tmp1593.Data); err != nil {
 			return err
 		}
 	}
@@ -1442,55 +1818,55 @@ func (s *Capability) MustEncodeCopy(reserved []byte) []byte {
 	}
 	return buf
 }
-func (c *Capability) EncodeSlice(tmp160 []byte, tmp160Offset *int) error {
-	tmp1619 := []uint8{}
-	if len(tmp160)-*tmp160Offset < int(1) {
+func (c *Capability) EncodeSlice(tmp162 []byte, tmp162Offset *int) error {
+	tmp1603 := []uint8{}
+	if len(tmp162)-*tmp162Offset < int(1) {
 		return errors.New("not enough space to reserve data for field \"Capability::Code\"")
 	}
-	tmp1619 = tmp160[*tmp160Offset : *tmp160Offset+int(1)]
-	tmp1619[0] = uint8(c.Code)
-	*tmp160Offset += int(1)
-	tmp1616 := []uint8{}
-	if len(tmp160)-*tmp160Offset < int(1) {
+	tmp1603 = tmp162[*tmp162Offset : *tmp162Offset+int(1)]
+	tmp1603[0] = uint8(c.Code)
+	*tmp162Offset += int(1)
+	tmp1600 := []uint8{}
+	if len(tmp162)-*tmp162Offset < int(1) {
 		return errors.New("not enough space to reserve data for field \"Capability::Len\"")
 	}
-	tmp1616 = tmp160[*tmp160Offset : *tmp160Offset+int(1)]
-	tmp1616[0] = c.Len
-	*tmp160Offset += int(1)
+	tmp1600 = tmp162[*tmp162Offset : *tmp162Offset+int(1)]
+	tmp1600[0] = c.Len
+	*tmp162Offset += int(1)
 	if c.Code == CapabilityCode_Multiprotocol {
-		tmp1612, ok := c.tmp855.(*tmp1624)
+		tmp1596, ok := c.tmp836.(*tmp1606)
 		if !ok {
 			return errors.New("invalid union type for encoding")
 		}
-		_ = tmp1612 // to prevent unused warnings
-		if len(tmp160)-*tmp160Offset < int(c.Len) {
+		_ = tmp1596 // to prevent unused warnings
+		if len(tmp162)-*tmp162Offset < int(c.Len) {
 			return errors.New("not enough space for subrange")
 		}
-		tmp857 := tmp160[*tmp160Offset : *tmp160Offset+int(c.Len)]
-		tmp857OffsetBase := 0
-		tmp857Offset := &tmp857OffsetBase
-		tmp1602 := tmp1612.MultiProtocol.EncodeSlice(tmp857, tmp857Offset)
-		if tmp1602 != nil {
-			return tmp1602
+		tmp837 := tmp162[*tmp162Offset : *tmp162Offset+int(c.Len)]
+		tmp837OffsetBase := 0
+		tmp837Offset := &tmp837OffsetBase
+		tmp1582 := tmp1596.MultiProtocol.EncodeSlice(tmp837, tmp837Offset)
+		if tmp1582 != nil {
+			return tmp1582
 		}
-		if *tmp857Offset != int(c.Len) {
-			return fmt.Errorf("subrange length mismatch: expected %d, got %d", int(c.Len), *tmp857Offset)
+		if *tmp837Offset != int(c.Len) {
+			return fmt.Errorf("subrange length mismatch: expected %d, got %d", int(c.Len), *tmp837Offset)
 		}
-		*tmp160Offset += int(c.Len)
+		*tmp162Offset += int(c.Len)
 	} else {
-		tmp1609, ok := c.tmp855.(*tmp1610)
+		tmp1593, ok := c.tmp836.(*tmp1594)
 		if !ok {
 			return errors.New("invalid union type for encoding")
 		}
-		_ = tmp1609 // to prevent unused warnings
-		if len(tmp1609.Data) != int(int(c.Len)) {
-			return fmt.Errorf("size mismatch when writing field \"Capability::tmp855::Data\": expected %d, got %d", int(int(c.Len)), len(tmp1609.Data))
+		_ = tmp1593 // to prevent unused warnings
+		if len(tmp1593.Data) != int(int(c.Len)) {
+			return fmt.Errorf("size mismatch when writing field \"Capability::tmp836::Data\": expected %d, got %d", int(int(c.Len)), len(tmp1593.Data))
 		}
-		if len(tmp160)-*tmp160Offset < int(0+int(c.Len)) {
-			return errors.New("not enough space to write for field \"Capability::tmp855::Data\"")
+		if len(tmp162)-*tmp162Offset < int(0+int(c.Len)) {
+			return errors.New("not enough space to write for field \"Capability::tmp836::Data\"")
 		}
-		copy(tmp160[*tmp160Offset:*tmp160Offset+int(int(c.Len))], tmp1609.Data)
-		*tmp160Offset += int(int(c.Len))
+		copy(tmp162[*tmp162Offset:*tmp162Offset+int(int(c.Len))], tmp1593.Data)
+		*tmp162Offset += int(int(c.Len))
 	}
 	return nil
 }
@@ -1509,42 +1885,42 @@ func (s *Capability) MustEncode(reserved []byte) []byte {
 	}
 	return buf
 }
-func (c *Capability) Append(tmp160 []byte) ([]byte, error) {
-	tmp1619 := [1]uint8{}
-	tmp1619[0] = uint8(c.Code)
-	tmp160 = append(tmp160, tmp1619[:1]...)
-	tmp1616 := [1]uint8{}
-	tmp1616[0] = c.Len
-	tmp160 = append(tmp160, tmp1616[:1]...)
+func (c *Capability) Append(tmp162 []byte) ([]byte, error) {
+	tmp1603 := [1]uint8{}
+	tmp1603[0] = uint8(c.Code)
+	tmp162 = append(tmp162, tmp1603[:1]...)
+	tmp1600 := [1]uint8{}
+	tmp1600[0] = c.Len
+	tmp162 = append(tmp162, tmp1600[:1]...)
 	if c.Code == CapabilityCode_Multiprotocol {
-		tmp1612, ok := c.tmp855.(*tmp1624)
+		tmp1596, ok := c.tmp836.(*tmp1606)
 		if !ok {
 			return nil, errors.New("invalid union type for encoding")
 		}
-		_ = tmp1612 // to prevent unused warnings
-		tmp857 := tmp160
-		var tmp1602 error
-		tmp857, tmp1602 = tmp1612.MultiProtocol.Append(tmp857)
+		_ = tmp1596 // to prevent unused warnings
+		tmp837 := tmp162
+		var tmp1582 error
+		tmp837, tmp1582 = tmp1596.MultiProtocol.Append(tmp837)
 
-		if tmp1602 != nil {
-			return nil, tmp1602
+		if tmp1582 != nil {
+			return nil, tmp1582
 		}
-		if len(tmp857)-len(tmp160) != int(c.Len) {
-			return nil, fmt.Errorf("subrange length mismatch: expected %d, got %d", int(c.Len), len(tmp857)-len(tmp160))
+		if len(tmp837)-len(tmp162) != int(c.Len) {
+			return nil, fmt.Errorf("subrange length mismatch: expected %d, got %d", int(c.Len), len(tmp837)-len(tmp162))
 		}
-		tmp160 = tmp857
+		tmp162 = tmp837
 	} else {
-		tmp1609, ok := c.tmp855.(*tmp1610)
+		tmp1593, ok := c.tmp836.(*tmp1594)
 		if !ok {
 			return nil, errors.New("invalid union type for encoding")
 		}
-		_ = tmp1609 // to prevent unused warnings
-		if len(tmp1609.Data) != int(int(c.Len)) {
-			return nil, fmt.Errorf("size mismatch when writing field \"Capability::tmp855::Data\": expected %d, got %d", int(int(c.Len)), len(tmp1609.Data))
+		_ = tmp1593 // to prevent unused warnings
+		if len(tmp1593.Data) != int(int(c.Len)) {
+			return nil, fmt.Errorf("size mismatch when writing field \"Capability::tmp836::Data\": expected %d, got %d", int(int(c.Len)), len(tmp1593.Data))
 		}
-		tmp160 = append(tmp160, tmp1609.Data...)
+		tmp162 = append(tmp162, tmp1593.Data...)
 	}
-	return tmp160, nil
+	return tmp162, nil
 }
 func (s *Capability) MustAppend(buf []byte) []byte {
 	var err error
@@ -1554,43 +1930,86 @@ func (s *Capability) MustAppend(buf []byte) []byte {
 	}
 	return buf
 }
-
-func (c *Capability) Read(tmp157 io.Reader) error {
-	tmp1598 := uint8(0)
-	tmp1597 := [1]uint8{}
-	if _, err := io.ReadFull(tmp157, tmp1597[0:0+1]); err != nil {
-		return err
-	}
-	tmp1598 = tmp1597[0]
-	c.Code = CapabilityCode(tmp1598)
-	tmp1594 := [1]uint8{}
-	if _, err := io.ReadFull(tmp157, tmp1594[0:0+1]); err != nil {
-		return err
-	}
-	c.Len = tmp1594[0]
+func (c *Capability) encodedSize(tmp162 int) (int, error) {
+	tmp1603 := [1]uint8{}
+	tmp1603[0] = uint8(c.Code)
+	tmp162 += int(1)
+	tmp1600 := [1]uint8{}
+	tmp1600[0] = c.Len
+	tmp162 += int(1)
 	if c.Code == CapabilityCode_Multiprotocol {
-		tmp1612, ok := c.tmp855.(*tmp1624)
+		tmp1596, ok := c.tmp836.(*tmp1606)
 		if !ok {
-			tmp1612 = &tmp1624{}
-			c.tmp855 = tmp1612
+			return 0, errors.New("invalid union type for encoding")
 		}
-		_ = tmp1612 // to prevent unused warnings
-		tmp852 := io.LimitReader(tmp157, int64(c.Len))
-		tmp1587 := tmp1612.MultiProtocol.Read(tmp852)
-		if tmp1587 != nil {
-			return tmp1587
+		_ = tmp1596 // to prevent unused warnings
+		tmp837 := tmp162
+		var tmp1582 error
+		tmp837, tmp1582 = tmp1596.MultiProtocol.encodedSize(tmp837)
+
+		if tmp1582 != nil {
+			return 0, tmp1582
 		}
-		if tmp852.(*io.LimitedReader).N != 0 {
-			return fmt.Errorf("subrange length mismatch: expected %d, but remains %d", int(c.Len), tmp852.(*io.LimitedReader).N)
+		if tmp837-tmp162 != int(c.Len) {
+			return 0, fmt.Errorf("subrange length mismatch: expected %d, got %d", int(c.Len), tmp837-tmp162)
+		}
+		tmp162 = tmp837
+	} else {
+		tmp1593, ok := c.tmp836.(*tmp1594)
+		if !ok {
+			return 0, errors.New("invalid union type for encoding")
+		}
+		_ = tmp1593 // to prevent unused warnings
+		if len(tmp1593.Data) != int(int(c.Len)) {
+			return 0, fmt.Errorf("size mismatch when writing field \"Capability::tmp836::Data\": expected %d, got %d", int(int(c.Len)), len(tmp1593.Data))
+		}
+		tmp162 += int(int(c.Len))
+	}
+	return tmp162, nil
+}
+
+// EncodedSize returns how many bytes encoding this value produces, without
+// encoding it (so a buffer can be allocated once). It fails where encoding would.
+func (s *Capability) EncodedSize() (int, error) {
+	return s.encodedSize(0)
+}
+
+func (c *Capability) Read(tmp160 io.Reader) error {
+	tmp1576 := uint8(0)
+	tmp1575 := [1]uint8{}
+	if _, err := io.ReadFull(tmp160, tmp1575[0:0+1]); err != nil {
+		return err
+	}
+	tmp1576 = tmp1575[0]
+	c.Code = CapabilityCode(tmp1576)
+	tmp1566 := [1]uint8{}
+	if _, err := io.ReadFull(tmp160, tmp1566[0:0+1]); err != nil {
+		return err
+	}
+	c.Len = tmp1566[0]
+	if c.Code == CapabilityCode_Multiprotocol {
+		tmp1596, ok := c.tmp836.(*tmp1606)
+		if !ok {
+			tmp1596 = &tmp1606{}
+			c.tmp836 = tmp1596
+		}
+		_ = tmp1596 // to prevent unused warnings
+		tmp834 := io.LimitReader(tmp160, int64(c.Len))
+		tmp1558 := tmp1596.MultiProtocol.Read(tmp834)
+		if tmp1558 != nil {
+			return tmp1558
+		}
+		if tmp834.(*io.LimitedReader).N != 0 {
+			return fmt.Errorf("subrange length mismatch: expected %d, but remains %d", int(c.Len), tmp834.(*io.LimitedReader).N)
 		}
 	} else {
-		tmp1609, ok := c.tmp855.(*tmp1610)
+		tmp1593, ok := c.tmp836.(*tmp1594)
 		if !ok {
-			tmp1609 = &tmp1610{}
-			c.tmp855 = tmp1609
+			tmp1593 = &tmp1594{}
+			c.tmp836 = tmp1593
 		}
-		_ = tmp1609 // to prevent unused warnings
-		if seeker, ok := tmp157.(io.Seeker); ok {
+		_ = tmp1593 // to prevent unused warnings
+		if seeker, ok := tmp160.(io.Seeker); ok {
 			current, err := seeker.Seek(0, io.SeekCurrent)
 			if err != nil {
 				return err
@@ -1606,18 +2025,18 @@ func (c *Capability) Read(tmp157 io.Reader) error {
 			if (endOffset - current) < int64(int(c.Len)) {
 				return fmt.Errorf("Too large length requested: %d < %d", endOffset-current, int64(int(c.Len)))
 			}
-			tmp1609.Data = make([]byte, int(c.Len))
-			if _, err := io.ReadFull(tmp157, tmp1609.Data[0:0+int(c.Len)]); err != nil {
+			tmp1593.Data = make([]byte, int(c.Len))
+			if _, err := io.ReadFull(tmp160, tmp1593.Data[0:0+int(c.Len)]); err != nil {
 				return err
 			}
 		} else {
 			// To mitigate DoS attack, use incremental buffer allocation
 			// for more performance, use (assert on DSL or safe-len-limit option) and trust-input-len option
-			io_temp_4277 := bytes.NewBuffer(nil)
-			if _, err := io.CopyN(io_temp_4277, tmp157, int64(int(c.Len))); err != nil {
+			io_temp_4334 := bytes.NewBuffer(nil)
+			if _, err := io.CopyN(io_temp_4334, tmp160, int64(int(c.Len))); err != nil {
 				return err
 			}
-			tmp1609.Data = io_temp_4277.Bytes()
+			tmp1593.Data = io_temp_4334.Bytes()
 		}
 	}
 	return nil
@@ -1640,53 +2059,53 @@ func (s *Capability) DecodeExactCopy(buf []byte) error {
 	}
 	return nil
 }
-func (c *Capability) DecodeSlice(tmp157 []byte, tmp157Offset *int) error {
-	tmp1598 := uint8(0)
-	tmp1597 := []uint8{}
-	if len(tmp157)-*tmp157Offset < 1 {
+func (c *Capability) DecodeSlice(tmp160 []byte, tmp160Offset *int) error {
+	tmp1576 := uint8(0)
+	tmp1575 := []uint8{}
+	if len(tmp160)-*tmp160Offset < 1 {
 		return errors.New("not enough data to read for field \"Capability::Code\"")
 	}
-	tmp1597 = tmp157[*tmp157Offset : *tmp157Offset+1]
-	*tmp157Offset += int(1)
-	tmp1598 = tmp1597[0]
-	c.Code = CapabilityCode(tmp1598)
-	tmp1594 := []uint8{}
-	if len(tmp157)-*tmp157Offset < 1 {
+	tmp1575 = tmp160[*tmp160Offset : *tmp160Offset+1]
+	*tmp160Offset += int(1)
+	tmp1576 = tmp1575[0]
+	c.Code = CapabilityCode(tmp1576)
+	tmp1566 := []uint8{}
+	if len(tmp160)-*tmp160Offset < 1 {
 		return errors.New("not enough data to read for field \"Capability::Len\"")
 	}
-	tmp1594 = tmp157[*tmp157Offset : *tmp157Offset+1]
-	*tmp157Offset += int(1)
-	c.Len = tmp1594[0]
+	tmp1566 = tmp160[*tmp160Offset : *tmp160Offset+1]
+	*tmp160Offset += int(1)
+	c.Len = tmp1566[0]
 	if c.Code == CapabilityCode_Multiprotocol {
-		tmp1612, ok := c.tmp855.(*tmp1624)
+		tmp1596, ok := c.tmp836.(*tmp1606)
 		if !ok {
-			tmp1612 = &tmp1624{}
-			c.tmp855 = tmp1612
+			tmp1596 = &tmp1606{}
+			c.tmp836 = tmp1596
 		}
-		_ = tmp1612 // to prevent unused warnings
-		if len(tmp157)-*tmp157Offset < int(c.Len) {
+		_ = tmp1596 // to prevent unused warnings
+		if len(tmp160)-*tmp160Offset < int(c.Len) {
 			return errors.New("not enough data for subrange")
 		}
-		tmp852 := tmp157[*tmp157Offset : *tmp157Offset+int(c.Len)]
-		tmp852OffsetBase := 0
-		tmp852Offset := &tmp852OffsetBase
-		*tmp157Offset += int(c.Len)
-		tmp1587 := tmp1612.MultiProtocol.DecodeSlice(tmp852, tmp852Offset)
-		if tmp1587 != nil {
-			return tmp1587
+		tmp834 := tmp160[*tmp160Offset : *tmp160Offset+int(c.Len)]
+		tmp834OffsetBase := 0
+		tmp834Offset := &tmp834OffsetBase
+		*tmp160Offset += int(c.Len)
+		tmp1558 := tmp1596.MultiProtocol.DecodeSlice(tmp834, tmp834Offset)
+		if tmp1558 != nil {
+			return tmp1558
 		}
 	} else {
-		tmp1609, ok := c.tmp855.(*tmp1610)
+		tmp1593, ok := c.tmp836.(*tmp1594)
 		if !ok {
-			tmp1609 = &tmp1610{}
-			c.tmp855 = tmp1609
+			tmp1593 = &tmp1594{}
+			c.tmp836 = tmp1593
 		}
-		_ = tmp1609 // to prevent unused warnings
-		if len(tmp157)-*tmp157Offset < int(c.Len) {
-			return errors.New("not enough data to read for field \"Capability::tmp855::Data\"")
+		_ = tmp1593 // to prevent unused warnings
+		if len(tmp160)-*tmp160Offset < int(c.Len) {
+			return errors.New("not enough data to read for field \"Capability::tmp836::Data\"")
 		}
-		tmp1609.Data = tmp157[*tmp157Offset : *tmp157Offset+int(c.Len)]
-		*tmp157Offset += int(int(c.Len))
+		tmp1593.Data = tmp160[*tmp160Offset : *tmp160Offset+int(c.Len)]
+		*tmp160Offset += int(int(c.Len))
 	}
 	return nil
 }
@@ -1709,48 +2128,48 @@ func (s *Capability) DecodeExact(buf []byte) error {
 	return nil
 }
 
-type tmp1579 struct {
+type tmp1549 struct {
 	Capabilities []Capability
 }
 
-func (v *tmp1579) isVariant453() {}
+func (v *tmp1549) isVariant439() {}
 
-type tmp1563 struct {
+type tmp1537 struct {
 	Data []uint8
 }
 
-func (v *tmp1563) isVariant453() {}
+func (v *tmp1537) isVariant439() {}
 
-type Variant453 interface {
-	isVariant453()
+type Variant439 interface {
+	isVariant439()
 }
 
 type BGPOption struct {
 	Type   BGPOptionType
 	Len    uint8
-	tmp843 Variant453
+	tmp822 Variant439
 }
 
 func (b *BGPOption) Capabilities() *[]Capability {
 	if b.Type == BGPOptionType_Capability {
-		tmp1562, ok := b.tmp843.(*tmp1579)
+		tmp1539, ok := b.tmp822.(*tmp1549)
 		if !ok {
 			return nil
 		}
-		_ = tmp1562 // to prevent unused warnings
-		return &tmp1562.Capabilities
+		_ = tmp1539 // to prevent unused warnings
+		return &tmp1539.Capabilities
 	}
 	return nil
 }
-func (b *BGPOption) SetCapabilities(tmp1524 []Capability) bool {
+func (b *BGPOption) SetCapabilities(tmp1500 []Capability) bool {
 	if b.Type == BGPOptionType_Capability {
-		tmp1562, ok := b.tmp843.(*tmp1579)
+		tmp1539, ok := b.tmp822.(*tmp1549)
 		if !ok {
-			tmp1562 = &tmp1579{}
-			b.tmp843 = tmp1562
+			tmp1539 = &tmp1549{}
+			b.tmp822 = tmp1539
 		}
-		_ = tmp1562 // to prevent unused warnings
-		tmp1562.Capabilities = tmp1524
+		_ = tmp1539 // to prevent unused warnings
+		tmp1539.Capabilities = tmp1500
 		return true
 	}
 	return false
@@ -1760,77 +2179,77 @@ func (b *BGPOption) Data() *[]uint8 {
 	if b.Type == BGPOptionType_Capability {
 		return nil
 	} else {
-		tmp1526, ok := b.tmp843.(*tmp1563)
+		tmp1536, ok := b.tmp822.(*tmp1537)
 		if !ok {
 			return nil
 		}
-		_ = tmp1526 // to prevent unused warnings
-		return &tmp1526.Data
+		_ = tmp1536 // to prevent unused warnings
+		return &tmp1536.Data
 	}
 	return nil
 }
-func (b *BGPOption) SetData(tmp1519 []uint8) bool {
+func (b *BGPOption) SetData(tmp1493 []uint8) bool {
 	if b.Type == BGPOptionType_Capability {
 		return false
 	} else {
-		tmp1526, ok := b.tmp843.(*tmp1563)
+		tmp1536, ok := b.tmp822.(*tmp1537)
 		if !ok {
-			tmp1526 = &tmp1563{}
-			b.tmp843 = tmp1526
+			tmp1536 = &tmp1537{}
+			b.tmp822 = tmp1536
 		}
-		_ = tmp1526 // to prevent unused warnings
-		if len(tmp1519) > int(255) {
+		_ = tmp1536 // to prevent unused warnings
+		if len(tmp1493) > int(255) {
 			return false
 		}
-		b.Len = uint8(len(tmp1519))
-		tmp1526.Data = tmp1519
+		b.Len = uint8(len(tmp1493))
+		tmp1536.Data = tmp1493
 		return true
 	}
 	return false
 }
 
-func (b *BGPOption) Write(tmp155 io.Writer) error {
-	tmp1577 := [1]uint8{}
-	tmp1577[0] = uint8(b.Type)
-	if _, err := tmp155.Write(tmp1577[:1]); err != nil {
+func (b *BGPOption) Write(tmp157 io.Writer) error {
+	tmp1545 := [1]uint8{}
+	tmp1545[0] = uint8(b.Type)
+	if _, err := tmp157.Write(tmp1545[:1]); err != nil {
 		return err
 	}
-	tmp1574 := [1]uint8{}
-	tmp1574[0] = b.Len
-	if _, err := tmp155.Write(tmp1574[:1]); err != nil {
+	tmp1541 := [1]uint8{}
+	tmp1541[0] = b.Len
+	if _, err := tmp157.Write(tmp1541[:1]); err != nil {
 		return err
 	}
 	if b.Type == BGPOptionType_Capability {
-		tmp1562, ok := b.tmp843.(*tmp1579)
+		tmp1539, ok := b.tmp822.(*tmp1549)
 		if !ok {
 			return errors.New("invalid union type for encoding")
 		}
-		_ = tmp1562 // to prevent unused warnings
-		tmp616 := &bytes.Buffer{}
-		tmp92 := int(0)
-		for tmp92 < len(tmp1562.Capabilities) {
-			tmp1554 := tmp1562.Capabilities[tmp92].Write(tmp616)
-			if tmp1554 != nil {
-				return tmp1554
+		_ = tmp1539 // to prevent unused warnings
+		tmp596 := &bytes.Buffer{}
+		tmp93 := int(0)
+		for tmp93 < len(tmp1539.Capabilities) {
+			tmp1524 := tmp1539.Capabilities[tmp93].Write(tmp596)
+			if tmp1524 != nil {
+				return tmp1524
 			}
-			tmp92 = tmp92 + int(1)
+			tmp93 = tmp93 + int(1)
 		}
-		if tmp616.Len() != int(b.Len) {
-			return fmt.Errorf("subrange length mismatch: expected %d, got %d", int(b.Len), tmp616.Len())
+		if tmp596.Len() != int(b.Len) {
+			return fmt.Errorf("subrange length mismatch: expected %d, got %d", int(b.Len), tmp596.Len())
 		}
-		if _, err := tmp155.Write(tmp616.Bytes()); err != nil {
+		if _, err := tmp157.Write(tmp596.Bytes()); err != nil {
 			return err
 		}
 	} else {
-		tmp1526, ok := b.tmp843.(*tmp1563)
+		tmp1536, ok := b.tmp822.(*tmp1537)
 		if !ok {
 			return errors.New("invalid union type for encoding")
 		}
-		_ = tmp1526 // to prevent unused warnings
-		if len(tmp1526.Data) != int(int(b.Len)) {
-			return fmt.Errorf("size mismatch when writing field \"BGPOption::tmp843::Data\": expected %d, got %d", int(int(b.Len)), len(tmp1526.Data))
+		_ = tmp1536 // to prevent unused warnings
+		if len(tmp1536.Data) != int(int(b.Len)) {
+			return fmt.Errorf("size mismatch when writing field \"BGPOption::tmp822::Data\": expected %d, got %d", int(int(b.Len)), len(tmp1536.Data))
 		}
-		if _, err := tmp155.Write(tmp1526.Data); err != nil {
+		if _, err := tmp157.Write(tmp1536.Data); err != nil {
 			return err
 		}
 	}
@@ -1851,59 +2270,59 @@ func (s *BGPOption) MustEncodeCopy(reserved []byte) []byte {
 	}
 	return buf
 }
-func (b *BGPOption) EncodeSlice(tmp155 []byte, tmp155Offset *int) error {
-	tmp1577 := []uint8{}
-	if len(tmp155)-*tmp155Offset < int(1) {
+func (b *BGPOption) EncodeSlice(tmp157 []byte, tmp157Offset *int) error {
+	tmp1545 := []uint8{}
+	if len(tmp157)-*tmp157Offset < int(1) {
 		return errors.New("not enough space to reserve data for field \"BGPOption::Type\"")
 	}
-	tmp1577 = tmp155[*tmp155Offset : *tmp155Offset+int(1)]
-	tmp1577[0] = uint8(b.Type)
-	*tmp155Offset += int(1)
-	tmp1574 := []uint8{}
-	if len(tmp155)-*tmp155Offset < int(1) {
+	tmp1545 = tmp157[*tmp157Offset : *tmp157Offset+int(1)]
+	tmp1545[0] = uint8(b.Type)
+	*tmp157Offset += int(1)
+	tmp1541 := []uint8{}
+	if len(tmp157)-*tmp157Offset < int(1) {
 		return errors.New("not enough space to reserve data for field \"BGPOption::Len\"")
 	}
-	tmp1574 = tmp155[*tmp155Offset : *tmp155Offset+int(1)]
-	tmp1574[0] = b.Len
-	*tmp155Offset += int(1)
+	tmp1541 = tmp157[*tmp157Offset : *tmp157Offset+int(1)]
+	tmp1541[0] = b.Len
+	*tmp157Offset += int(1)
 	if b.Type == BGPOptionType_Capability {
-		tmp1562, ok := b.tmp843.(*tmp1579)
+		tmp1539, ok := b.tmp822.(*tmp1549)
 		if !ok {
 			return errors.New("invalid union type for encoding")
 		}
-		_ = tmp1562 // to prevent unused warnings
-		if len(tmp155)-*tmp155Offset < int(b.Len) {
+		_ = tmp1539 // to prevent unused warnings
+		if len(tmp157)-*tmp157Offset < int(b.Len) {
 			return errors.New("not enough space for subrange")
 		}
-		tmp616 := tmp155[*tmp155Offset : *tmp155Offset+int(b.Len)]
-		tmp616OffsetBase := 0
-		tmp616Offset := &tmp616OffsetBase
-		tmp92 := int(0)
-		for tmp92 < len(tmp1562.Capabilities) {
-			tmp1554 := tmp1562.Capabilities[tmp92].EncodeSlice(tmp616, tmp616Offset)
-			if tmp1554 != nil {
-				return tmp1554
+		tmp596 := tmp157[*tmp157Offset : *tmp157Offset+int(b.Len)]
+		tmp596OffsetBase := 0
+		tmp596Offset := &tmp596OffsetBase
+		tmp93 := int(0)
+		for tmp93 < len(tmp1539.Capabilities) {
+			tmp1524 := tmp1539.Capabilities[tmp93].EncodeSlice(tmp596, tmp596Offset)
+			if tmp1524 != nil {
+				return tmp1524
 			}
-			tmp92 = tmp92 + int(1)
+			tmp93 = tmp93 + int(1)
 		}
-		if *tmp616Offset != int(b.Len) {
-			return fmt.Errorf("subrange length mismatch: expected %d, got %d", int(b.Len), *tmp616Offset)
+		if *tmp596Offset != int(b.Len) {
+			return fmt.Errorf("subrange length mismatch: expected %d, got %d", int(b.Len), *tmp596Offset)
 		}
-		*tmp155Offset += int(b.Len)
+		*tmp157Offset += int(b.Len)
 	} else {
-		tmp1526, ok := b.tmp843.(*tmp1563)
+		tmp1536, ok := b.tmp822.(*tmp1537)
 		if !ok {
 			return errors.New("invalid union type for encoding")
 		}
-		_ = tmp1526 // to prevent unused warnings
-		if len(tmp1526.Data) != int(int(b.Len)) {
-			return fmt.Errorf("size mismatch when writing field \"BGPOption::tmp843::Data\": expected %d, got %d", int(int(b.Len)), len(tmp1526.Data))
+		_ = tmp1536 // to prevent unused warnings
+		if len(tmp1536.Data) != int(int(b.Len)) {
+			return fmt.Errorf("size mismatch when writing field \"BGPOption::tmp822::Data\": expected %d, got %d", int(int(b.Len)), len(tmp1536.Data))
 		}
-		if len(tmp155)-*tmp155Offset < int(0+int(b.Len)) {
-			return errors.New("not enough space to write for field \"BGPOption::tmp843::Data\"")
+		if len(tmp157)-*tmp157Offset < int(0+int(b.Len)) {
+			return errors.New("not enough space to write for field \"BGPOption::tmp822::Data\"")
 		}
-		copy(tmp155[*tmp155Offset:*tmp155Offset+int(int(b.Len))], tmp1526.Data)
-		*tmp155Offset += int(int(b.Len))
+		copy(tmp157[*tmp157Offset:*tmp157Offset+int(int(b.Len))], tmp1536.Data)
+		*tmp157Offset += int(int(b.Len))
 	}
 	return nil
 }
@@ -1922,46 +2341,46 @@ func (s *BGPOption) MustEncode(reserved []byte) []byte {
 	}
 	return buf
 }
-func (b *BGPOption) Append(tmp155 []byte) ([]byte, error) {
-	tmp1577 := [1]uint8{}
-	tmp1577[0] = uint8(b.Type)
-	tmp155 = append(tmp155, tmp1577[:1]...)
-	tmp1574 := [1]uint8{}
-	tmp1574[0] = b.Len
-	tmp155 = append(tmp155, tmp1574[:1]...)
+func (b *BGPOption) Append(tmp157 []byte) ([]byte, error) {
+	tmp1545 := [1]uint8{}
+	tmp1545[0] = uint8(b.Type)
+	tmp157 = append(tmp157, tmp1545[:1]...)
+	tmp1541 := [1]uint8{}
+	tmp1541[0] = b.Len
+	tmp157 = append(tmp157, tmp1541[:1]...)
 	if b.Type == BGPOptionType_Capability {
-		tmp1562, ok := b.tmp843.(*tmp1579)
+		tmp1539, ok := b.tmp822.(*tmp1549)
 		if !ok {
 			return nil, errors.New("invalid union type for encoding")
 		}
-		_ = tmp1562 // to prevent unused warnings
-		tmp616 := tmp155
-		tmp92 := int(0)
-		for tmp92 < len(tmp1562.Capabilities) {
-			var tmp1554 error
-			tmp616, tmp1554 = tmp1562.Capabilities[tmp92].Append(tmp616)
+		_ = tmp1539 // to prevent unused warnings
+		tmp596 := tmp157
+		tmp93 := int(0)
+		for tmp93 < len(tmp1539.Capabilities) {
+			var tmp1524 error
+			tmp596, tmp1524 = tmp1539.Capabilities[tmp93].Append(tmp596)
 
-			if tmp1554 != nil {
-				return nil, tmp1554
+			if tmp1524 != nil {
+				return nil, tmp1524
 			}
-			tmp92 = tmp92 + int(1)
+			tmp93 = tmp93 + int(1)
 		}
-		if len(tmp616)-len(tmp155) != int(b.Len) {
-			return nil, fmt.Errorf("subrange length mismatch: expected %d, got %d", int(b.Len), len(tmp616)-len(tmp155))
+		if len(tmp596)-len(tmp157) != int(b.Len) {
+			return nil, fmt.Errorf("subrange length mismatch: expected %d, got %d", int(b.Len), len(tmp596)-len(tmp157))
 		}
-		tmp155 = tmp616
+		tmp157 = tmp596
 	} else {
-		tmp1526, ok := b.tmp843.(*tmp1563)
+		tmp1536, ok := b.tmp822.(*tmp1537)
 		if !ok {
 			return nil, errors.New("invalid union type for encoding")
 		}
-		_ = tmp1526 // to prevent unused warnings
-		if len(tmp1526.Data) != int(int(b.Len)) {
-			return nil, fmt.Errorf("size mismatch when writing field \"BGPOption::tmp843::Data\": expected %d, got %d", int(int(b.Len)), len(tmp1526.Data))
+		_ = tmp1536 // to prevent unused warnings
+		if len(tmp1536.Data) != int(int(b.Len)) {
+			return nil, fmt.Errorf("size mismatch when writing field \"BGPOption::tmp822::Data\": expected %d, got %d", int(int(b.Len)), len(tmp1536.Data))
 		}
-		tmp155 = append(tmp155, tmp1526.Data...)
+		tmp157 = append(tmp157, tmp1536.Data...)
 	}
-	return tmp155, nil
+	return tmp157, nil
 }
 func (s *BGPOption) MustAppend(buf []byte) []byte {
 	var err error
@@ -1971,50 +2390,97 @@ func (s *BGPOption) MustAppend(buf []byte) []byte {
 	}
 	return buf
 }
-
-func (b *BGPOption) Read(tmp152 io.Reader) error {
-	tmp1547 := uint8(0)
+func (b *BGPOption) encodedSize(tmp157 int) (int, error) {
 	tmp1545 := [1]uint8{}
-	if _, err := io.ReadFull(tmp152, tmp1545[0:0+1]); err != nil {
-		return err
-	}
-	tmp1547 = tmp1545[0]
-	b.Type = BGPOptionType(tmp1547)
-	tmp1581 := [1]uint8{}
-	if _, err := io.ReadFull(tmp152, tmp1581[0:0+1]); err != nil {
-		return err
-	}
-	b.Len = tmp1581[0]
+	tmp1545[0] = uint8(b.Type)
+	tmp157 += int(1)
+	tmp1541 := [1]uint8{}
+	tmp1541[0] = b.Len
+	tmp157 += int(1)
 	if b.Type == BGPOptionType_Capability {
-		tmp1562, ok := b.tmp843.(*tmp1579)
+		tmp1539, ok := b.tmp822.(*tmp1549)
 		if !ok {
-			tmp1562 = &tmp1579{}
-			b.tmp843 = tmp1562
+			return 0, errors.New("invalid union type for encoding")
 		}
-		_ = tmp1562 // to prevent unused warnings
-		tmp357 := io.LimitReader(tmp152, int64(b.Len))
+		_ = tmp1539 // to prevent unused warnings
+		tmp596 := tmp157
+		tmp93 := int(0)
+		for tmp93 < len(tmp1539.Capabilities) {
+			var tmp1524 error
+			tmp596, tmp1524 = tmp1539.Capabilities[tmp93].encodedSize(tmp596)
+
+			if tmp1524 != nil {
+				return 0, tmp1524
+			}
+			tmp93 = tmp93 + int(1)
+		}
+		if tmp596-tmp157 != int(b.Len) {
+			return 0, fmt.Errorf("subrange length mismatch: expected %d, got %d", int(b.Len), tmp596-tmp157)
+		}
+		tmp157 = tmp596
+	} else {
+		tmp1536, ok := b.tmp822.(*tmp1537)
+		if !ok {
+			return 0, errors.New("invalid union type for encoding")
+		}
+		_ = tmp1536 // to prevent unused warnings
+		if len(tmp1536.Data) != int(int(b.Len)) {
+			return 0, fmt.Errorf("size mismatch when writing field \"BGPOption::tmp822::Data\": expected %d, got %d", int(int(b.Len)), len(tmp1536.Data))
+		}
+		tmp157 += int(int(b.Len))
+	}
+	return tmp157, nil
+}
+
+// EncodedSize returns how many bytes encoding this value produces, without
+// encoding it (so a buffer can be allocated once). It fails where encoding would.
+func (s *BGPOption) EncodedSize() (int, error) {
+	return s.encodedSize(0)
+}
+
+func (b *BGPOption) Read(tmp154 io.Reader) error {
+	tmp1516 := uint8(0)
+	tmp1515 := [1]uint8{}
+	if _, err := io.ReadFull(tmp154, tmp1515[0:0+1]); err != nil {
+		return err
+	}
+	tmp1516 = tmp1515[0]
+	b.Type = BGPOptionType(tmp1516)
+	tmp1513 := [1]uint8{}
+	if _, err := io.ReadFull(tmp154, tmp1513[0:0+1]); err != nil {
+		return err
+	}
+	b.Len = tmp1513[0]
+	if b.Type == BGPOptionType_Capability {
+		tmp1539, ok := b.tmp822.(*tmp1549)
+		if !ok {
+			tmp1539 = &tmp1549{}
+			b.tmp822 = tmp1539
+		}
+		_ = tmp1539 // to prevent unused warnings
+		tmp354 := io.LimitReader(tmp154, int64(b.Len))
 		for true {
-			tmp1535 := Capability{}
-			tmp1534 := tmp1535.Read(tmp357)
-			if tmp1534 != nil {
-				if tmp1534 == io.EOF {
+			tmp1508 := Capability{}
+			tmp1504 := tmp1508.Read(tmp354)
+			if tmp1504 != nil {
+				if tmp1504 == io.EOF {
 					break
 				}
-				return tmp1534
+				return tmp1504
 			}
-			tmp1562.Capabilities = append(tmp1562.Capabilities, tmp1535)
+			tmp1539.Capabilities = append(tmp1539.Capabilities, tmp1508)
 		}
-		if tmp357.(*io.LimitedReader).N != 0 {
-			return fmt.Errorf("subrange length mismatch: expected %d, but remains %d", int(b.Len), tmp357.(*io.LimitedReader).N)
+		if tmp354.(*io.LimitedReader).N != 0 {
+			return fmt.Errorf("subrange length mismatch: expected %d, but remains %d", int(b.Len), tmp354.(*io.LimitedReader).N)
 		}
 	} else {
-		tmp1526, ok := b.tmp843.(*tmp1563)
+		tmp1536, ok := b.tmp822.(*tmp1537)
 		if !ok {
-			tmp1526 = &tmp1563{}
-			b.tmp843 = tmp1526
+			tmp1536 = &tmp1537{}
+			b.tmp822 = tmp1536
 		}
-		_ = tmp1526 // to prevent unused warnings
-		if seeker, ok := tmp152.(io.Seeker); ok {
+		_ = tmp1536 // to prevent unused warnings
+		if seeker, ok := tmp154.(io.Seeker); ok {
 			current, err := seeker.Seek(0, io.SeekCurrent)
 			if err != nil {
 				return err
@@ -2030,18 +2496,18 @@ func (b *BGPOption) Read(tmp152 io.Reader) error {
 			if (endOffset - current) < int64(int(b.Len)) {
 				return fmt.Errorf("Too large length requested: %d < %d", endOffset-current, int64(int(b.Len)))
 			}
-			tmp1526.Data = make([]byte, int(b.Len))
-			if _, err := io.ReadFull(tmp152, tmp1526.Data[0:0+int(b.Len)]); err != nil {
+			tmp1536.Data = make([]byte, int(b.Len))
+			if _, err := io.ReadFull(tmp154, tmp1536.Data[0:0+int(b.Len)]); err != nil {
 				return err
 			}
 		} else {
 			// To mitigate DoS attack, use incremental buffer allocation
 			// for more performance, use (assert on DSL or safe-len-limit option) and trust-input-len option
-			io_temp_4058 := bytes.NewBuffer(nil)
-			if _, err := io.CopyN(io_temp_4058, tmp152, int64(int(b.Len))); err != nil {
+			io_temp_4103 := bytes.NewBuffer(nil)
+			if _, err := io.CopyN(io_temp_4103, tmp154, int64(int(b.Len))); err != nil {
 				return err
 			}
-			tmp1526.Data = io_temp_4058.Bytes()
+			tmp1536.Data = io_temp_4103.Bytes()
 		}
 	}
 	return nil
@@ -2064,57 +2530,57 @@ func (s *BGPOption) DecodeExactCopy(buf []byte) error {
 	}
 	return nil
 }
-func (b *BGPOption) DecodeSlice(tmp152 []byte, tmp152Offset *int) error {
-	tmp1547 := uint8(0)
-	tmp1545 := []uint8{}
-	if len(tmp152)-*tmp152Offset < 1 {
+func (b *BGPOption) DecodeSlice(tmp154 []byte, tmp154Offset *int) error {
+	tmp1516 := uint8(0)
+	tmp1515 := []uint8{}
+	if len(tmp154)-*tmp154Offset < 1 {
 		return errors.New("not enough data to read for field \"BGPOption::Type\"")
 	}
-	tmp1545 = tmp152[*tmp152Offset : *tmp152Offset+1]
-	*tmp152Offset += int(1)
-	tmp1547 = tmp1545[0]
-	b.Type = BGPOptionType(tmp1547)
-	tmp1581 := []uint8{}
-	if len(tmp152)-*tmp152Offset < 1 {
+	tmp1515 = tmp154[*tmp154Offset : *tmp154Offset+1]
+	*tmp154Offset += int(1)
+	tmp1516 = tmp1515[0]
+	b.Type = BGPOptionType(tmp1516)
+	tmp1513 := []uint8{}
+	if len(tmp154)-*tmp154Offset < 1 {
 		return errors.New("not enough data to read for field \"BGPOption::Len\"")
 	}
-	tmp1581 = tmp152[*tmp152Offset : *tmp152Offset+1]
-	*tmp152Offset += int(1)
-	b.Len = tmp1581[0]
+	tmp1513 = tmp154[*tmp154Offset : *tmp154Offset+1]
+	*tmp154Offset += int(1)
+	b.Len = tmp1513[0]
 	if b.Type == BGPOptionType_Capability {
-		tmp1562, ok := b.tmp843.(*tmp1579)
+		tmp1539, ok := b.tmp822.(*tmp1549)
 		if !ok {
-			tmp1562 = &tmp1579{}
-			b.tmp843 = tmp1562
+			tmp1539 = &tmp1549{}
+			b.tmp822 = tmp1539
 		}
-		_ = tmp1562 // to prevent unused warnings
-		if len(tmp152)-*tmp152Offset < int(b.Len) {
+		_ = tmp1539 // to prevent unused warnings
+		if len(tmp154)-*tmp154Offset < int(b.Len) {
 			return errors.New("not enough data for subrange")
 		}
-		tmp357 := tmp152[*tmp152Offset : *tmp152Offset+int(b.Len)]
-		tmp357OffsetBase := 0
-		tmp357Offset := &tmp357OffsetBase
-		*tmp152Offset += int(b.Len)
-		for len(tmp357)-*tmp357Offset >= 1 {
-			tmp1535 := Capability{}
-			tmp1534 := tmp1535.DecodeSlice(tmp357, tmp357Offset)
-			if tmp1534 != nil {
-				return tmp1534
+		tmp354 := tmp154[*tmp154Offset : *tmp154Offset+int(b.Len)]
+		tmp354OffsetBase := 0
+		tmp354Offset := &tmp354OffsetBase
+		*tmp154Offset += int(b.Len)
+		for len(tmp354)-*tmp354Offset >= 1 {
+			tmp1508 := Capability{}
+			tmp1504 := tmp1508.DecodeSlice(tmp354, tmp354Offset)
+			if tmp1504 != nil {
+				return tmp1504
 			}
-			tmp1562.Capabilities = append(tmp1562.Capabilities, tmp1535)
+			tmp1539.Capabilities = append(tmp1539.Capabilities, tmp1508)
 		}
 	} else {
-		tmp1526, ok := b.tmp843.(*tmp1563)
+		tmp1536, ok := b.tmp822.(*tmp1537)
 		if !ok {
-			tmp1526 = &tmp1563{}
-			b.tmp843 = tmp1526
+			tmp1536 = &tmp1537{}
+			b.tmp822 = tmp1536
 		}
-		_ = tmp1526 // to prevent unused warnings
-		if len(tmp152)-*tmp152Offset < int(b.Len) {
-			return errors.New("not enough data to read for field \"BGPOption::tmp843::Data\"")
+		_ = tmp1536 // to prevent unused warnings
+		if len(tmp154)-*tmp154Offset < int(b.Len) {
+			return errors.New("not enough data to read for field \"BGPOption::tmp822::Data\"")
 		}
-		tmp1526.Data = tmp152[*tmp152Offset : *tmp152Offset+int(b.Len)]
-		*tmp152Offset += int(int(b.Len))
+		tmp1536.Data = tmp154[*tmp154Offset : *tmp154Offset+int(b.Len)]
+		*tmp154Offset += int(int(b.Len))
 	}
 	return nil
 }
@@ -2142,15 +2608,15 @@ type Prefix struct {
 	Prefix    []uint8
 }
 
-func (p *Prefix) Write(tmp224 io.Writer) error {
-	tmp224ByteIO, _ := tmp224.(io.ByteWriter)
-	_ = tmp224ByteIO
-	if tmp224ByteIO != nil {
-		if err := tmp224ByteIO.WriteByte(p.PrefixLen); err != nil {
+func (p *Prefix) Write(tmp223 io.Writer) error {
+	tmp223ByteIO, _ := tmp223.(io.ByteWriter)
+	_ = tmp223ByteIO
+	if tmp223ByteIO != nil {
+		if err := tmp223ByteIO.WriteByte(p.PrefixLen); err != nil {
 			return err
 		}
 	} else {
-		if _, err := tmp224.Write([]byte{p.PrefixLen}); err != nil {
+		if _, err := tmp223.Write([]byte{p.PrefixLen}); err != nil {
 			return err
 		}
 	}
@@ -2158,7 +2624,7 @@ func (p *Prefix) Write(tmp224 io.Writer) error {
 	if len(p.Prefix) != int(int(PrefixLenInBytes)) {
 		return fmt.Errorf("size mismatch when writing field \"Prefix::Prefix\": expected %d, got %d", int(int(PrefixLenInBytes)), len(p.Prefix))
 	}
-	if _, err := tmp224.Write(p.Prefix); err != nil {
+	if _, err := tmp223.Write(p.Prefix); err != nil {
 		return err
 	}
 	return nil
@@ -2178,23 +2644,23 @@ func (s *Prefix) MustEncodeCopy(reserved []byte) []byte {
 	}
 	return buf
 }
-func (p *Prefix) EncodeSlice(tmp224 []byte, tmp224Offset *int) error {
-	tmp1466 := []uint8{}
-	if len(tmp224)-*tmp224Offset < int(1) {
+func (p *Prefix) EncodeSlice(tmp223 []byte, tmp223Offset *int) error {
+	tmp1431 := []uint8{}
+	if len(tmp223)-*tmp223Offset < int(1) {
 		return errors.New("not enough space to reserve data for field \"Prefix::PrefixLen\"")
 	}
-	tmp1466 = tmp224[*tmp224Offset : *tmp224Offset+int(1)]
-	tmp1466[0] = p.PrefixLen
-	*tmp224Offset += int(1)
+	tmp1431 = tmp223[*tmp223Offset : *tmp223Offset+int(1)]
+	tmp1431[0] = p.PrefixLen
+	*tmp223Offset += int(1)
 	PrefixLenInBytes := (p.PrefixLen + 7) / 8
 	if len(p.Prefix) != int(int(PrefixLenInBytes)) {
 		return fmt.Errorf("size mismatch when writing field \"Prefix::Prefix\": expected %d, got %d", int(int(PrefixLenInBytes)), len(p.Prefix))
 	}
-	if len(tmp224)-*tmp224Offset < int(0+int(PrefixLenInBytes)) {
+	if len(tmp223)-*tmp223Offset < int(0+int(PrefixLenInBytes)) {
 		return errors.New("not enough space to write for field \"Prefix::Prefix\"")
 	}
-	copy(tmp224[*tmp224Offset:*tmp224Offset+int(int(PrefixLenInBytes))], p.Prefix)
-	*tmp224Offset += int(int(PrefixLenInBytes))
+	copy(tmp223[*tmp223Offset:*tmp223Offset+int(int(PrefixLenInBytes))], p.Prefix)
+	*tmp223Offset += int(int(PrefixLenInBytes))
 	return nil
 }
 func (s *Prefix) Encode(buf []byte) ([]byte, error) {
@@ -2212,16 +2678,16 @@ func (s *Prefix) MustEncode(reserved []byte) []byte {
 	}
 	return buf
 }
-func (p *Prefix) Append(tmp224 []byte) ([]byte, error) {
-	tmp1466 := [1]uint8{}
-	tmp1466[0] = p.PrefixLen
-	tmp224 = append(tmp224, tmp1466[:1]...)
+func (p *Prefix) Append(tmp223 []byte) ([]byte, error) {
+	tmp1431 := [1]uint8{}
+	tmp1431[0] = p.PrefixLen
+	tmp223 = append(tmp223, tmp1431[:1]...)
 	PrefixLenInBytes := (p.PrefixLen + 7) / 8
 	if len(p.Prefix) != int(int(PrefixLenInBytes)) {
 		return nil, fmt.Errorf("size mismatch when writing field \"Prefix::Prefix\": expected %d, got %d", int(int(PrefixLenInBytes)), len(p.Prefix))
 	}
-	tmp224 = append(tmp224, p.Prefix...)
-	return tmp224, nil
+	tmp223 = append(tmp223, p.Prefix...)
+	return tmp223, nil
 }
 func (s *Prefix) MustAppend(buf []byte) []byte {
 	var err error
@@ -2231,30 +2697,47 @@ func (s *Prefix) MustAppend(buf []byte) []byte {
 	}
 	return buf
 }
+func (p *Prefix) encodedSize(tmp223 int) (int, error) {
+	tmp1431 := [1]uint8{}
+	tmp1431[0] = p.PrefixLen
+	tmp223 += int(1)
+	PrefixLenInBytes := (p.PrefixLen + 7) / 8
+	if len(p.Prefix) != int(int(PrefixLenInBytes)) {
+		return 0, fmt.Errorf("size mismatch when writing field \"Prefix::Prefix\": expected %d, got %d", int(int(PrefixLenInBytes)), len(p.Prefix))
+	}
+	tmp223 += int(int(PrefixLenInBytes))
+	return tmp223, nil
+}
 
-func (p *Prefix) Read(tmp225 io.Reader) error {
-	tmp225ByteIO, _ := tmp225.(io.ByteReader)
-	_ = tmp225ByteIO
-	if tmp225ByteIO != nil {
+// EncodedSize returns how many bytes encoding this value produces, without
+// encoding it (so a buffer can be allocated once). It fails where encoding would.
+func (s *Prefix) EncodedSize() (int, error) {
+	return s.encodedSize(0)
+}
+
+func (p *Prefix) Read(tmp224 io.Reader) error {
+	tmp224ByteIO, _ := tmp224.(io.ByteReader)
+	_ = tmp224ByteIO
+	if tmp224ByteIO != nil {
 		var err error
-		p.PrefixLen, err = tmp225ByteIO.ReadByte()
+		p.PrefixLen, err = tmp224ByteIO.ReadByte()
 		if err != nil {
 			return err
 		}
 	} else {
 		var err error
-		var n int
+		var ioN3781 int
 		buf := [1]byte{0}
-		if n, err = io.ReadFull(tmp225, buf[:]); err != nil {
+		if ioN3781, err = io.ReadFull(tmp224, buf[:]); err != nil {
 			return err
 		}
-		if n != 1 {
-			return fmt.Errorf("failed to read byte for field \"Prefix::PrefixLen\": expected to read 1 byte, but read %d bytes", n)
+		if ioN3781 != 1 {
+			return fmt.Errorf("failed to read byte for field \"Prefix::PrefixLen\": expected to read 1 byte, but read %d bytes", ioN3781)
 		}
 		p.PrefixLen = buf[0]
 	}
 	PrefixLenInBytes := (p.PrefixLen + 7) / 8
-	if seeker, ok := tmp225.(io.Seeker); ok {
+	if seeker, ok := tmp224.(io.Seeker); ok {
 		current, err := seeker.Seek(0, io.SeekCurrent)
 		if err != nil {
 			return err
@@ -2271,17 +2754,17 @@ func (p *Prefix) Read(tmp225 io.Reader) error {
 			return fmt.Errorf("Too large length requested: %d < %d", endOffset-current, int64(int(PrefixLenInBytes)))
 		}
 		p.Prefix = make([]byte, int(PrefixLenInBytes))
-		if _, err := io.ReadFull(tmp225, p.Prefix[0:0+int(PrefixLenInBytes)]); err != nil {
+		if _, err := io.ReadFull(tmp224, p.Prefix[0:0+int(PrefixLenInBytes)]); err != nil {
 			return err
 		}
 	} else {
 		// To mitigate DoS attack, use incremental buffer allocation
 		// for more performance, use (assert on DSL or safe-len-limit option) and trust-input-len option
-		io_temp_3866 := bytes.NewBuffer(nil)
-		if _, err := io.CopyN(io_temp_3866, tmp225, int64(int(PrefixLenInBytes))); err != nil {
+		io_temp_3777 := bytes.NewBuffer(nil)
+		if _, err := io.CopyN(io_temp_3777, tmp224, int64(int(PrefixLenInBytes))); err != nil {
 			return err
 		}
-		p.Prefix = io_temp_3866.Bytes()
+		p.Prefix = io_temp_3777.Bytes()
 	}
 	return nil
 }
@@ -2303,20 +2786,20 @@ func (s *Prefix) DecodeExactCopy(buf []byte) error {
 	}
 	return nil
 }
-func (p *Prefix) DecodeSlice(tmp225 []byte, tmp225Offset *int) error {
-	tmp1473 := []uint8{}
-	if len(tmp225)-*tmp225Offset < 1 {
+func (p *Prefix) DecodeSlice(tmp224 []byte, tmp224Offset *int) error {
+	tmp1436 := []uint8{}
+	if len(tmp224)-*tmp224Offset < 1 {
 		return errors.New("not enough data to read for field \"Prefix::PrefixLen\"")
 	}
-	tmp1473 = tmp225[*tmp225Offset : *tmp225Offset+1]
-	*tmp225Offset += int(1)
-	p.PrefixLen = tmp1473[0]
+	tmp1436 = tmp224[*tmp224Offset : *tmp224Offset+1]
+	*tmp224Offset += int(1)
+	p.PrefixLen = tmp1436[0]
 	PrefixLenInBytes := (p.PrefixLen + 7) / 8
-	if len(tmp225)-*tmp225Offset < int(PrefixLenInBytes) {
+	if len(tmp224)-*tmp224Offset < int(PrefixLenInBytes) {
 		return errors.New("not enough data to read for field \"Prefix::Prefix\"")
 	}
-	p.Prefix = tmp225[*tmp225Offset : *tmp225Offset+int(PrefixLenInBytes)]
-	*tmp225Offset += int(int(PrefixLenInBytes))
+	p.Prefix = tmp224[*tmp224Offset : *tmp224Offset+int(PrefixLenInBytes)]
+	*tmp224Offset += int(int(PrefixLenInBytes))
 	return nil
 }
 func (s *Prefix) Decode(buf []byte) ([]byte, error) {
@@ -2343,25 +2826,25 @@ type WithdrawnRoutes struct {
 	Data []Prefix
 }
 
-func (w *WithdrawnRoutes) Write(tmp434 io.Writer) error {
-	tmp1455 := [2]uint8{}
-	binary.BigEndian.PutUint16(tmp1455[:], uint16(w.Len))
-	if _, err := tmp434.Write(tmp1455[:2]); err != nil {
+func (w *WithdrawnRoutes) Write(tmp424 io.Writer) error {
+	tmp1424 := [2]uint8{}
+	binary.BigEndian.PutUint16(tmp1424[:], uint16(w.Len))
+	if _, err := tmp424.Write(tmp1424[:2]); err != nil {
 		return err
 	}
-	tmp591 := &bytes.Buffer{}
-	tmp803 := int(0)
-	for tmp803 < len(w.Data) {
-		tmp1453 := w.Data[tmp803].Write(tmp591)
-		if tmp1453 != nil {
-			return tmp1453
+	tmp574 := &bytes.Buffer{}
+	tmp781 := int(0)
+	for tmp781 < len(w.Data) {
+		tmp1422 := w.Data[tmp781].Write(tmp574)
+		if tmp1422 != nil {
+			return tmp1422
 		}
-		tmp803 = tmp803 + int(1)
+		tmp781 = tmp781 + int(1)
 	}
-	if tmp591.Len() != int(w.Len) {
-		return fmt.Errorf("subrange length mismatch: expected %d, got %d", int(w.Len), tmp591.Len())
+	if tmp574.Len() != int(w.Len) {
+		return fmt.Errorf("subrange length mismatch: expected %d, got %d", int(w.Len), tmp574.Len())
 	}
-	if _, err := tmp434.Write(tmp591.Bytes()); err != nil {
+	if _, err := tmp424.Write(tmp574.Bytes()); err != nil {
 		return err
 	}
 	return nil
@@ -2381,32 +2864,32 @@ func (s *WithdrawnRoutes) MustEncodeCopy(reserved []byte) []byte {
 	}
 	return buf
 }
-func (w *WithdrawnRoutes) EncodeSlice(tmp434 []byte, tmp434Offset *int) error {
-	tmp1455 := []uint8{}
-	if len(tmp434)-*tmp434Offset < int(2) {
+func (w *WithdrawnRoutes) EncodeSlice(tmp424 []byte, tmp424Offset *int) error {
+	tmp1424 := []uint8{}
+	if len(tmp424)-*tmp424Offset < int(2) {
 		return errors.New("not enough space to reserve data for field \"WithdrawnRoutes::Len\"")
 	}
-	tmp1455 = tmp434[*tmp434Offset : *tmp434Offset+int(2)]
-	binary.BigEndian.PutUint16(tmp1455[:], uint16(w.Len))
-	*tmp434Offset += int(2)
-	if len(tmp434)-*tmp434Offset < int(w.Len) {
+	tmp1424 = tmp424[*tmp424Offset : *tmp424Offset+int(2)]
+	binary.BigEndian.PutUint16(tmp1424[:], uint16(w.Len))
+	*tmp424Offset += int(2)
+	if len(tmp424)-*tmp424Offset < int(w.Len) {
 		return errors.New("not enough space for subrange")
 	}
-	tmp591 := tmp434[*tmp434Offset : *tmp434Offset+int(w.Len)]
-	tmp591OffsetBase := 0
-	tmp591Offset := &tmp591OffsetBase
-	tmp803 := int(0)
-	for tmp803 < len(w.Data) {
-		tmp1453 := w.Data[tmp803].EncodeSlice(tmp591, tmp591Offset)
-		if tmp1453 != nil {
-			return tmp1453
+	tmp574 := tmp424[*tmp424Offset : *tmp424Offset+int(w.Len)]
+	tmp574OffsetBase := 0
+	tmp574Offset := &tmp574OffsetBase
+	tmp781 := int(0)
+	for tmp781 < len(w.Data) {
+		tmp1422 := w.Data[tmp781].EncodeSlice(tmp574, tmp574Offset)
+		if tmp1422 != nil {
+			return tmp1422
 		}
-		tmp803 = tmp803 + int(1)
+		tmp781 = tmp781 + int(1)
 	}
-	if *tmp591Offset != int(w.Len) {
-		return fmt.Errorf("subrange length mismatch: expected %d, got %d", int(w.Len), *tmp591Offset)
+	if *tmp574Offset != int(w.Len) {
+		return fmt.Errorf("subrange length mismatch: expected %d, got %d", int(w.Len), *tmp574Offset)
 	}
-	*tmp434Offset += int(w.Len)
+	*tmp424Offset += int(w.Len)
 	return nil
 }
 func (s *WithdrawnRoutes) Encode(buf []byte) ([]byte, error) {
@@ -2424,26 +2907,26 @@ func (s *WithdrawnRoutes) MustEncode(reserved []byte) []byte {
 	}
 	return buf
 }
-func (w *WithdrawnRoutes) Append(tmp434 []byte) ([]byte, error) {
-	tmp1455 := [2]uint8{}
-	binary.BigEndian.PutUint16(tmp1455[:], uint16(w.Len))
-	tmp434 = append(tmp434, tmp1455[:2]...)
-	tmp591 := tmp434
-	tmp803 := int(0)
-	for tmp803 < len(w.Data) {
-		var tmp1453 error
-		tmp591, tmp1453 = w.Data[tmp803].Append(tmp591)
+func (w *WithdrawnRoutes) Append(tmp424 []byte) ([]byte, error) {
+	tmp1424 := [2]uint8{}
+	binary.BigEndian.PutUint16(tmp1424[:], uint16(w.Len))
+	tmp424 = append(tmp424, tmp1424[:2]...)
+	tmp574 := tmp424
+	tmp781 := int(0)
+	for tmp781 < len(w.Data) {
+		var tmp1422 error
+		tmp574, tmp1422 = w.Data[tmp781].Append(tmp574)
 
-		if tmp1453 != nil {
-			return nil, tmp1453
+		if tmp1422 != nil {
+			return nil, tmp1422
 		}
-		tmp803 = tmp803 + int(1)
+		tmp781 = tmp781 + int(1)
 	}
-	if len(tmp591)-len(tmp434) != int(w.Len) {
-		return nil, fmt.Errorf("subrange length mismatch: expected %d, got %d", int(w.Len), len(tmp591)-len(tmp434))
+	if len(tmp574)-len(tmp424) != int(w.Len) {
+		return nil, fmt.Errorf("subrange length mismatch: expected %d, got %d", int(w.Len), len(tmp574)-len(tmp424))
 	}
-	tmp434 = tmp591
-	return tmp434, nil
+	tmp424 = tmp574
+	return tmp424, nil
 }
 func (s *WithdrawnRoutes) MustAppend(buf []byte) []byte {
 	var err error
@@ -2453,27 +2936,54 @@ func (s *WithdrawnRoutes) MustAppend(buf []byte) []byte {
 	}
 	return buf
 }
+func (w *WithdrawnRoutes) encodedSize(tmp424 int) (int, error) {
+	tmp1424 := [2]uint8{}
+	binary.BigEndian.PutUint16(tmp1424[:], uint16(w.Len))
+	tmp424 += int(2)
+	tmp574 := tmp424
+	tmp781 := int(0)
+	for tmp781 < len(w.Data) {
+		var tmp1422 error
+		tmp574, tmp1422 = w.Data[tmp781].encodedSize(tmp574)
 
-func (w *WithdrawnRoutes) Read(tmp430 io.Reader) error {
-	tmp1448 := [2]uint8{}
-	if _, err := io.ReadFull(tmp430, tmp1448[0:0+2]); err != nil {
+		if tmp1422 != nil {
+			return 0, tmp1422
+		}
+		tmp781 = tmp781 + int(1)
+	}
+	if tmp574-tmp424 != int(w.Len) {
+		return 0, fmt.Errorf("subrange length mismatch: expected %d, got %d", int(w.Len), tmp574-tmp424)
+	}
+	tmp424 = tmp574
+	return tmp424, nil
+}
+
+// EncodedSize returns how many bytes encoding this value produces, without
+// encoding it (so a buffer can be allocated once). It fails where encoding would.
+func (s *WithdrawnRoutes) EncodedSize() (int, error) {
+	return s.encodedSize(0)
+}
+
+func (w *WithdrawnRoutes) Read(tmp420 io.Reader) error {
+	tmp1417 := [2]uint8{}
+	if _, err := io.ReadFull(tmp420, tmp1417[0:0+2]); err != nil {
 		return err
 	}
-	w.Len = binary.BigEndian.Uint16(tmp1448[:])
-	tmp339 := io.LimitReader(tmp430, int64(w.Len))
+	w.Len = binary.BigEndian.Uint16(tmp1417[:])
+	tmp340 := io.LimitReader(tmp420, int64(w.Len))
 	for true {
-		tmp429 := Prefix{}
-		tmp1445 := tmp429.Read(tmp339)
-		if tmp1445 != nil {
-			if tmp1445 == io.EOF {
+		tmp419 := Prefix{}
+		tmp1414 := tmp419.Read(tmp340)
+		if tmp1414 != nil {
+			if tmp1414 == io.EOF {
 				break
 			}
-			return tmp1445
+			return tmp1414
 		}
-		w.Data = append(w.Data, tmp429)
+		w.Data = append(w.Data, tmp419)
 	}
-	if tmp339.(*io.LimitedReader).N != 0 {
-		return fmt.Errorf("subrange length mismatch: expected %d, but remains %d", int(w.Len), tmp339.(*io.LimitedReader).N)
+	if tmp340.(*io.LimitedReader).N != 0 {
+		return fmt.Errorf("subrange length mismatch: expected %d, but remains %d", int(w.Len), tmp340.(*io.LimitedReader).N)
 	}
 	return nil
 }
@@ -2495,28 +3005,28 @@ func (s *WithdrawnRoutes) DecodeExactCopy(buf []byte) error {
 	}
 	return nil
 }
-func (w *WithdrawnRoutes) DecodeSlice(tmp430 []byte, tmp430Offset *int) error {
-	tmp1448 := []uint8{}
-	if len(tmp430)-*tmp430Offset < 2 {
+func (w *WithdrawnRoutes) DecodeSlice(tmp420 []byte, tmp420Offset *int) error {
+	tmp1417 := []uint8{}
+	if len(tmp420)-*tmp420Offset < 2 {
 		return errors.New("not enough data to read for field \"WithdrawnRoutes::Len\"")
 	}
-	tmp1448 = tmp430[*tmp430Offset : *tmp430Offset+2]
-	*tmp430Offset += int(2)
-	w.Len = binary.BigEndian.Uint16(tmp1448[:])
-	if len(tmp430)-*tmp430Offset < int(w.Len) {
+	tmp1417 = tmp420[*tmp420Offset : *tmp420Offset+2]
+	*tmp420Offset += int(2)
+	w.Len = binary.BigEndian.Uint16(tmp1417[:])
+	if len(tmp420)-*tmp420Offset < int(w.Len) {
 		return errors.New("not enough data for subrange")
 	}
-	tmp339 := tmp430[*tmp430Offset : *tmp430Offset+int(w.Len)]
-	tmp339OffsetBase := 0
-	tmp339Offset := &tmp339OffsetBase
-	*tmp430Offset += int(w.Len)
-	for len(tmp339)-*tmp339Offset >= 1 {
-		tmp429 := Prefix{}
-		tmp1445 := tmp429.DecodeSlice(tmp339, tmp339Offset)
-		if tmp1445 != nil {
-			return tmp1445
+	tmp340 := tmp420[*tmp420Offset : *tmp420Offset+int(w.Len)]
+	tmp340OffsetBase := 0
+	tmp340Offset := &tmp340OffsetBase
+	*tmp420Offset += int(w.Len)
+	for len(tmp340)-*tmp340Offset >= 1 {
+		tmp419 := Prefix{}
+		tmp1414 := tmp419.DecodeSlice(tmp340, tmp340Offset)
+		if tmp1414 != nil {
+			return tmp1414
 		}
-		w.Data = append(w.Data, tmp429)
+		w.Data = append(w.Data, tmp419)
 	}
 	return nil
 }
@@ -2544,25 +3054,25 @@ type PathAttributes struct {
 	Data []PathAttribute
 }
 
-func (p *PathAttributes) Write(tmp379 io.Writer) error {
-	tmp997 := [2]uint8{}
-	binary.BigEndian.PutUint16(tmp997[:], uint16(p.Len))
-	if _, err := tmp379.Write(tmp997[:2]); err != nil {
+func (p *PathAttributes) Write(tmp377 io.Writer) error {
+	tmp982 := [2]uint8{}
+	binary.BigEndian.PutUint16(tmp982[:], uint16(p.Len))
+	if _, err := tmp377.Write(tmp982[:2]); err != nil {
 		return err
 	}
-	tmp489 := &bytes.Buffer{}
-	tmp685 := int(0)
-	for tmp685 < len(p.Data) {
-		tmp994 := p.Data[tmp685].Write(tmp489)
-		if tmp994 != nil {
-			return tmp994
+	tmp482 := &bytes.Buffer{}
+	tmp669 := int(0)
+	for tmp669 < len(p.Data) {
+		tmp979 := p.Data[tmp669].Write(tmp482)
+		if tmp979 != nil {
+			return tmp979
 		}
-		tmp685 = tmp685 + int(1)
+		tmp669 = tmp669 + int(1)
 	}
-	if tmp489.Len() != int(p.Len) {
-		return fmt.Errorf("subrange length mismatch: expected %d, got %d", int(p.Len), tmp489.Len())
+	if tmp482.Len() != int(p.Len) {
+		return fmt.Errorf("subrange length mismatch: expected %d, got %d", int(p.Len), tmp482.Len())
 	}
-	if _, err := tmp379.Write(tmp489.Bytes()); err != nil {
+	if _, err := tmp377.Write(tmp482.Bytes()); err != nil {
 		return err
 	}
 	return nil
@@ -2582,32 +3092,32 @@ func (s *PathAttributes) MustEncodeCopy(reserved []byte) []byte {
 	}
 	return buf
 }
-func (p *PathAttributes) EncodeSlice(tmp379 []byte, tmp379Offset *int) error {
-	tmp997 := []uint8{}
-	if len(tmp379)-*tmp379Offset < int(2) {
+func (p *PathAttributes) EncodeSlice(tmp377 []byte, tmp377Offset *int) error {
+	tmp982 := []uint8{}
+	if len(tmp377)-*tmp377Offset < int(2) {
 		return errors.New("not enough space to reserve data for field \"PathAttributes::Len\"")
 	}
-	tmp997 = tmp379[*tmp379Offset : *tmp379Offset+int(2)]
-	binary.BigEndian.PutUint16(tmp997[:], uint16(p.Len))
-	*tmp379Offset += int(2)
-	if len(tmp379)-*tmp379Offset < int(p.Len) {
+	tmp982 = tmp377[*tmp377Offset : *tmp377Offset+int(2)]
+	binary.BigEndian.PutUint16(tmp982[:], uint16(p.Len))
+	*tmp377Offset += int(2)
+	if len(tmp377)-*tmp377Offset < int(p.Len) {
 		return errors.New("not enough space for subrange")
 	}
-	tmp489 := tmp379[*tmp379Offset : *tmp379Offset+int(p.Len)]
-	tmp489OffsetBase := 0
-	tmp489Offset := &tmp489OffsetBase
-	tmp685 := int(0)
-	for tmp685 < len(p.Data) {
-		tmp994 := p.Data[tmp685].EncodeSlice(tmp489, tmp489Offset)
-		if tmp994 != nil {
-			return tmp994
+	tmp482 := tmp377[*tmp377Offset : *tmp377Offset+int(p.Len)]
+	tmp482OffsetBase := 0
+	tmp482Offset := &tmp482OffsetBase
+	tmp669 := int(0)
+	for tmp669 < len(p.Data) {
+		tmp979 := p.Data[tmp669].EncodeSlice(tmp482, tmp482Offset)
+		if tmp979 != nil {
+			return tmp979
 		}
-		tmp685 = tmp685 + int(1)
+		tmp669 = tmp669 + int(1)
 	}
-	if *tmp489Offset != int(p.Len) {
-		return fmt.Errorf("subrange length mismatch: expected %d, got %d", int(p.Len), *tmp489Offset)
+	if *tmp482Offset != int(p.Len) {
+		return fmt.Errorf("subrange length mismatch: expected %d, got %d", int(p.Len), *tmp482Offset)
 	}
-	*tmp379Offset += int(p.Len)
+	*tmp377Offset += int(p.Len)
 	return nil
 }
 func (s *PathAttributes) Encode(buf []byte) ([]byte, error) {
@@ -2625,26 +3135,26 @@ func (s *PathAttributes) MustEncode(reserved []byte) []byte {
 	}
 	return buf
 }
-func (p *PathAttributes) Append(tmp379 []byte) ([]byte, error) {
-	tmp997 := [2]uint8{}
-	binary.BigEndian.PutUint16(tmp997[:], uint16(p.Len))
-	tmp379 = append(tmp379, tmp997[:2]...)
-	tmp489 := tmp379
-	tmp685 := int(0)
-	for tmp685 < len(p.Data) {
-		var tmp994 error
-		tmp489, tmp994 = p.Data[tmp685].Append(tmp489)
+func (p *PathAttributes) Append(tmp377 []byte) ([]byte, error) {
+	tmp982 := [2]uint8{}
+	binary.BigEndian.PutUint16(tmp982[:], uint16(p.Len))
+	tmp377 = append(tmp377, tmp982[:2]...)
+	tmp482 := tmp377
+	tmp669 := int(0)
+	for tmp669 < len(p.Data) {
+		var tmp979 error
+		tmp482, tmp979 = p.Data[tmp669].Append(tmp482)
 
-		if tmp994 != nil {
-			return nil, tmp994
+		if tmp979 != nil {
+			return nil, tmp979
 		}
-		tmp685 = tmp685 + int(1)
+		tmp669 = tmp669 + int(1)
 	}
-	if len(tmp489)-len(tmp379) != int(p.Len) {
-		return nil, fmt.Errorf("subrange length mismatch: expected %d, got %d", int(p.Len), len(tmp489)-len(tmp379))
+	if len(tmp482)-len(tmp377) != int(p.Len) {
+		return nil, fmt.Errorf("subrange length mismatch: expected %d, got %d", int(p.Len), len(tmp482)-len(tmp377))
 	}
-	tmp379 = tmp489
-	return tmp379, nil
+	tmp377 = tmp482
+	return tmp377, nil
 }
 func (s *PathAttributes) MustAppend(buf []byte) []byte {
 	var err error
@@ -2654,27 +3164,54 @@ func (s *PathAttributes) MustAppend(buf []byte) []byte {
 	}
 	return buf
 }
+func (p *PathAttributes) encodedSize(tmp377 int) (int, error) {
+	tmp982 := [2]uint8{}
+	binary.BigEndian.PutUint16(tmp982[:], uint16(p.Len))
+	tmp377 += int(2)
+	tmp482 := tmp377
+	tmp669 := int(0)
+	for tmp669 < len(p.Data) {
+		var tmp979 error
+		tmp482, tmp979 = p.Data[tmp669].encodedSize(tmp482)
 
-func (p *PathAttributes) Read(tmp376 io.Reader) error {
-	tmp989 := [2]uint8{}
-	if _, err := io.ReadFull(tmp376, tmp989[0:0+2]); err != nil {
+		if tmp979 != nil {
+			return 0, tmp979
+		}
+		tmp669 = tmp669 + int(1)
+	}
+	if tmp482-tmp377 != int(p.Len) {
+		return 0, fmt.Errorf("subrange length mismatch: expected %d, got %d", int(p.Len), tmp482-tmp377)
+	}
+	tmp377 = tmp482
+	return tmp377, nil
+}
+
+// EncodedSize returns how many bytes encoding this value produces, without
+// encoding it (so a buffer can be allocated once). It fails where encoding would.
+func (s *PathAttributes) EncodedSize() (int, error) {
+	return s.encodedSize(0)
+}
+
+func (p *PathAttributes) Read(tmp374 io.Reader) error {
+	tmp974 := [2]uint8{}
+	if _, err := io.ReadFull(tmp374, tmp974[0:0+2]); err != nil {
 		return err
 	}
-	p.Len = binary.BigEndian.Uint16(tmp989[:])
-	tmp312 := io.LimitReader(tmp376, int64(p.Len))
+	p.Len = binary.BigEndian.Uint16(tmp974[:])
+	tmp311 := io.LimitReader(tmp374, int64(p.Len))
 	for true {
-		tmp986 := PathAttribute{}
-		tmp984 := tmp986.Read(tmp312)
-		if tmp984 != nil {
-			if tmp984 == io.EOF {
+		tmp971 := PathAttribute{}
+		tmp969 := tmp971.Read(tmp311)
+		if tmp969 != nil {
+			if tmp969 == io.EOF {
 				break
 			}
-			return tmp984
+			return tmp969
 		}
-		p.Data = append(p.Data, tmp986)
+		p.Data = append(p.Data, tmp971)
 	}
-	if tmp312.(*io.LimitedReader).N != 0 {
-		return fmt.Errorf("subrange length mismatch: expected %d, but remains %d", int(p.Len), tmp312.(*io.LimitedReader).N)
+	if tmp311.(*io.LimitedReader).N != 0 {
+		return fmt.Errorf("subrange length mismatch: expected %d, but remains %d", int(p.Len), tmp311.(*io.LimitedReader).N)
 	}
 	return nil
 }
@@ -2696,28 +3233,28 @@ func (s *PathAttributes) DecodeExactCopy(buf []byte) error {
 	}
 	return nil
 }
-func (p *PathAttributes) DecodeSlice(tmp376 []byte, tmp376Offset *int) error {
-	tmp989 := []uint8{}
-	if len(tmp376)-*tmp376Offset < 2 {
+func (p *PathAttributes) DecodeSlice(tmp374 []byte, tmp374Offset *int) error {
+	tmp974 := []uint8{}
+	if len(tmp374)-*tmp374Offset < 2 {
 		return errors.New("not enough data to read for field \"PathAttributes::Len\"")
 	}
-	tmp989 = tmp376[*tmp376Offset : *tmp376Offset+2]
-	*tmp376Offset += int(2)
-	p.Len = binary.BigEndian.Uint16(tmp989[:])
-	if len(tmp376)-*tmp376Offset < int(p.Len) {
+	tmp974 = tmp374[*tmp374Offset : *tmp374Offset+2]
+	*tmp374Offset += int(2)
+	p.Len = binary.BigEndian.Uint16(tmp974[:])
+	if len(tmp374)-*tmp374Offset < int(p.Len) {
 		return errors.New("not enough data for subrange")
 	}
-	tmp312 := tmp376[*tmp376Offset : *tmp376Offset+int(p.Len)]
-	tmp312OffsetBase := 0
-	tmp312Offset := &tmp312OffsetBase
-	*tmp376Offset += int(p.Len)
-	for len(tmp312)-*tmp312Offset >= 1 {
-		tmp986 := PathAttribute{}
-		tmp984 := tmp986.DecodeSlice(tmp312, tmp312Offset)
-		if tmp984 != nil {
-			return tmp984
+	tmp311 := tmp374[*tmp374Offset : *tmp374Offset+int(p.Len)]
+	tmp311OffsetBase := 0
+	tmp311Offset := &tmp311OffsetBase
+	*tmp374Offset += int(p.Len)
+	for len(tmp311)-*tmp311Offset >= 1 {
+		tmp971 := PathAttribute{}
+		tmp969 := tmp971.DecodeSlice(tmp311, tmp311Offset)
+		if tmp969 != nil {
+			return tmp969
 		}
-		p.Data = append(p.Data, tmp986)
+		p.Data = append(p.Data, tmp971)
 	}
 	return nil
 }
@@ -2746,22 +3283,22 @@ type Update struct {
 	Nlri            []Prefix
 }
 
-func (u *Update) Write(tmp244 io.Writer) error {
-	tmp970 := u.WithdrawnRoutes.Write(tmp244)
-	if tmp970 != nil {
-		return tmp970
+func (u *Update) Write(tmp248 io.Writer) error {
+	tmp955 := u.WithdrawnRoutes.Write(tmp248)
+	if tmp955 != nil {
+		return tmp955
 	}
-	tmp967 := u.PathAttr.Write(tmp244)
-	if tmp967 != nil {
-		return tmp967
+	tmp952 := u.PathAttr.Write(tmp248)
+	if tmp952 != nil {
+		return tmp952
 	}
-	tmp678 := int(0)
-	for tmp678 < len(u.Nlri) {
-		tmp965 := u.Nlri[tmp678].Write(tmp244)
-		if tmp965 != nil {
-			return tmp965
+	tmp662 := int(0)
+	for tmp662 < len(u.Nlri) {
+		tmp950 := u.Nlri[tmp662].Write(tmp248)
+		if tmp950 != nil {
+			return tmp950
 		}
-		tmp678 = tmp678 + int(1)
+		tmp662 = tmp662 + int(1)
 	}
 	return nil
 }
@@ -2780,22 +3317,22 @@ func (s *Update) MustEncodeCopy(reserved []byte) []byte {
 	}
 	return buf
 }
-func (u *Update) EncodeSlice(tmp244 []byte, tmp244Offset *int) error {
-	tmp970 := u.WithdrawnRoutes.EncodeSlice(tmp244, tmp244Offset)
-	if tmp970 != nil {
-		return tmp970
+func (u *Update) EncodeSlice(tmp248 []byte, tmp248Offset *int) error {
+	tmp955 := u.WithdrawnRoutes.EncodeSlice(tmp248, tmp248Offset)
+	if tmp955 != nil {
+		return tmp955
 	}
-	tmp967 := u.PathAttr.EncodeSlice(tmp244, tmp244Offset)
-	if tmp967 != nil {
-		return tmp967
+	tmp952 := u.PathAttr.EncodeSlice(tmp248, tmp248Offset)
+	if tmp952 != nil {
+		return tmp952
 	}
-	tmp678 := int(0)
-	for tmp678 < len(u.Nlri) {
-		tmp965 := u.Nlri[tmp678].EncodeSlice(tmp244, tmp244Offset)
-		if tmp965 != nil {
-			return tmp965
+	tmp662 := int(0)
+	for tmp662 < len(u.Nlri) {
+		tmp950 := u.Nlri[tmp662].EncodeSlice(tmp248, tmp248Offset)
+		if tmp950 != nil {
+			return tmp950
 		}
-		tmp678 = tmp678 + int(1)
+		tmp662 = tmp662 + int(1)
 	}
 	return nil
 }
@@ -2814,30 +3351,30 @@ func (s *Update) MustEncode(reserved []byte) []byte {
 	}
 	return buf
 }
-func (u *Update) Append(tmp244 []byte) ([]byte, error) {
-	var tmp970 error
-	tmp244, tmp970 = u.WithdrawnRoutes.Append(tmp244)
+func (u *Update) Append(tmp248 []byte) ([]byte, error) {
+	var tmp955 error
+	tmp248, tmp955 = u.WithdrawnRoutes.Append(tmp248)
 
-	if tmp970 != nil {
-		return nil, tmp970
+	if tmp955 != nil {
+		return nil, tmp955
 	}
-	var tmp967 error
-	tmp244, tmp967 = u.PathAttr.Append(tmp244)
+	var tmp952 error
+	tmp248, tmp952 = u.PathAttr.Append(tmp248)
 
-	if tmp967 != nil {
-		return nil, tmp967
+	if tmp952 != nil {
+		return nil, tmp952
 	}
-	tmp678 := int(0)
-	for tmp678 < len(u.Nlri) {
-		var tmp965 error
-		tmp244, tmp965 = u.Nlri[tmp678].Append(tmp244)
+	tmp662 := int(0)
+	for tmp662 < len(u.Nlri) {
+		var tmp950 error
+		tmp248, tmp950 = u.Nlri[tmp662].Append(tmp248)
 
-		if tmp965 != nil {
-			return nil, tmp965
+		if tmp950 != nil {
+			return nil, tmp950
 		}
-		tmp678 = tmp678 + int(1)
+		tmp662 = tmp662 + int(1)
 	}
-	return tmp244, nil
+	return tmp248, nil
 }
 func (s *Update) MustAppend(buf []byte) []byte {
 	var err error
@@ -2847,26 +3384,57 @@ func (s *Update) MustAppend(buf []byte) []byte {
 	}
 	return buf
 }
+func (u *Update) encodedSize(tmp248 int) (int, error) {
+	var tmp955 error
+	tmp248, tmp955 = u.WithdrawnRoutes.encodedSize(tmp248)
 
-func (u *Update) Read(tmp169 io.Reader) error {
-	tmp980 := u.WithdrawnRoutes.Read(tmp169)
-	if tmp980 != nil {
-		return tmp980
+	if tmp955 != nil {
+		return 0, tmp955
 	}
-	tmp976 := u.PathAttr.Read(tmp169)
-	if tmp976 != nil {
-		return tmp976
+	var tmp952 error
+	tmp248, tmp952 = u.PathAttr.encodedSize(tmp248)
+
+	if tmp952 != nil {
+		return 0, tmp952
+	}
+	tmp662 := int(0)
+	for tmp662 < len(u.Nlri) {
+		var tmp950 error
+		tmp248, tmp950 = u.Nlri[tmp662].encodedSize(tmp248)
+
+		if tmp950 != nil {
+			return 0, tmp950
+		}
+		tmp662 = tmp662 + int(1)
+	}
+	return tmp248, nil
+}
+
+// EncodedSize returns how many bytes encoding this value produces, without
+// encoding it (so a buffer can be allocated once). It fails where encoding would.
+func (s *Update) EncodedSize() (int, error) {
+	return s.encodedSize(0)
+}
+
+func (u *Update) Read(tmp170 io.Reader) error {
+	tmp965 := u.WithdrawnRoutes.Read(tmp170)
+	if tmp965 != nil {
+		return tmp965
+	}
+	tmp961 := u.PathAttr.Read(tmp170)
+	if tmp961 != nil {
+		return tmp961
 	}
 	for true {
-		tmp974 := Prefix{}
-		tmp973 := tmp974.Read(tmp169)
-		if tmp973 != nil {
-			if tmp973 == io.EOF {
+		tmp959 := Prefix{}
+		tmp958 := tmp959.Read(tmp170)
+		if tmp958 != nil {
+			if tmp958 == io.EOF {
 				break
 			}
-			return tmp973
+			return tmp958
 		}
-		u.Nlri = append(u.Nlri, tmp974)
+		u.Nlri = append(u.Nlri, tmp959)
 	}
 	return nil
 }
@@ -2888,22 +3456,22 @@ func (s *Update) DecodeExactCopy(buf []byte) error {
 	}
 	return nil
 }
-func (u *Update) DecodeSlice(tmp169 []byte, tmp169Offset *int) error {
-	tmp980 := u.WithdrawnRoutes.DecodeSlice(tmp169, tmp169Offset)
-	if tmp980 != nil {
-		return tmp980
+func (u *Update) DecodeSlice(tmp170 []byte, tmp170Offset *int) error {
+	tmp965 := u.WithdrawnRoutes.DecodeSlice(tmp170, tmp170Offset)
+	if tmp965 != nil {
+		return tmp965
 	}
-	tmp976 := u.PathAttr.DecodeSlice(tmp169, tmp169Offset)
-	if tmp976 != nil {
-		return tmp976
+	tmp961 := u.PathAttr.DecodeSlice(tmp170, tmp170Offset)
+	if tmp961 != nil {
+		return tmp961
 	}
-	for len(tmp169)-*tmp169Offset >= 1 {
-		tmp974 := Prefix{}
-		tmp973 := tmp974.DecodeSlice(tmp169, tmp169Offset)
-		if tmp973 != nil {
-			return tmp973
+	for len(tmp170)-*tmp170Offset >= 1 {
+		tmp959 := Prefix{}
+		tmp958 := tmp959.DecodeSlice(tmp170, tmp170Offset)
+		if tmp958 != nil {
+			return tmp958
 		}
-		u.Nlri = append(u.Nlri, tmp974)
+		u.Nlri = append(u.Nlri, tmp959)
 	}
 	return nil
 }
@@ -2972,7 +3540,7 @@ func (u *AttributeType) Optional() bool {
 	return intVal != 0
 }
 func (a *AttributeType) optional() uint8 {
-	return uint8(((a.tmp91 >> uint8(7)) & uint8(1)))
+	return uint8(((a.tmp94 >> uint8(7)) & uint8(1)))
 }
 
 func (a *AttributeType) SetOptional(value bool) bool {
@@ -2984,8 +3552,8 @@ func (a *AttributeType) SetOptional(value bool) bool {
 	}
 	return a.setOptional(intVal)
 }
-func (a *AttributeType) setOptional(tmp1560 uint8) bool {
-	a.tmp91 = (a.tmp91 & (^(uint8(1) << uint8(7)))) | ((uint8(tmp1560) & uint8(1)) << uint8(7))
+func (a *AttributeType) setOptional(tmp1546 uint8) bool {
+	a.tmp94 = (a.tmp94 & (^(uint8(1) << uint8(7)))) | ((uint8(tmp1546) & uint8(1)) << uint8(7))
 	return true
 }
 
@@ -2994,7 +3562,7 @@ func (a *AttributeType) Transitive() bool {
 	return intVal != 0
 }
 func (a *AttributeType) transitive() uint8 {
-	return uint8(((a.tmp91 >> uint8(6)) & uint8(1)))
+	return uint8(((a.tmp94 >> uint8(6)) & uint8(1)))
 }
 
 func (a *AttributeType) SetTransitive(value bool) bool {
@@ -3006,8 +3574,8 @@ func (a *AttributeType) SetTransitive(value bool) bool {
 	}
 	return a.setTransitive(intVal)
 }
-func (a *AttributeType) setTransitive(tmp1543 uint8) bool {
-	a.tmp91 = (a.tmp91 & (^(uint8(1) << uint8(6)))) | ((uint8(tmp1543) & uint8(1)) << uint8(6))
+func (a *AttributeType) setTransitive(tmp1527 uint8) bool {
+	a.tmp94 = (a.tmp94 & (^(uint8(1) << uint8(6)))) | ((uint8(tmp1527) & uint8(1)) << uint8(6))
 	return true
 }
 
@@ -3016,7 +3584,7 @@ func (a *AttributeType) Partial() bool {
 	return intVal != 0
 }
 func (a *AttributeType) partial() uint8 {
-	return uint8(((a.tmp91 >> uint8(5)) & uint8(1)))
+	return uint8(((a.tmp94 >> uint8(5)) & uint8(1)))
 }
 
 func (a *AttributeType) SetPartial(value bool) bool {
@@ -3028,8 +3596,8 @@ func (a *AttributeType) SetPartial(value bool) bool {
 	}
 	return a.setPartial(intVal)
 }
-func (a *AttributeType) setPartial(tmp1537 uint8) bool {
-	a.tmp91 = (a.tmp91 & (^(uint8(1) << uint8(5)))) | ((uint8(tmp1537) & uint8(1)) << uint8(5))
+func (a *AttributeType) setPartial(tmp1525 uint8) bool {
+	a.tmp94 = (a.tmp94 & (^(uint8(1) << uint8(5)))) | ((uint8(tmp1525) & uint8(1)) << uint8(5))
 	return true
 }
 
@@ -3038,7 +3606,7 @@ func (a *AttributeType) Extended() bool {
 	return intVal != 0
 }
 func (a *AttributeType) extended() uint8 {
-	return uint8(((a.tmp91 >> uint8(4)) & uint8(1)))
+	return uint8(((a.tmp94 >> uint8(4)) & uint8(1)))
 }
 
 func (a *AttributeType) SetExtended(value bool) bool {
@@ -3050,38 +3618,38 @@ func (a *AttributeType) SetExtended(value bool) bool {
 	}
 	return a.setExtended(intVal)
 }
-func (a *AttributeType) setExtended(tmp1529 uint8) bool {
-	a.tmp91 = (a.tmp91 & (^(uint8(1) << uint8(4)))) | ((uint8(tmp1529) & uint8(1)) << uint8(4))
+func (a *AttributeType) setExtended(tmp1517 uint8) bool {
+	a.tmp94 = (a.tmp94 & (^(uint8(1) << uint8(4)))) | ((uint8(tmp1517) & uint8(1)) << uint8(4))
 	return true
 }
 
 func (a *AttributeType) Unused() uint8 {
-	return uint8(((a.tmp91 >> uint8(0)) & uint8(15)))
+	return uint8(((a.tmp94 >> uint8(0)) & uint8(15)))
 }
 
 func (a *AttributeType) SetUnused(tmp1501 uint8) bool {
-	a.tmp91 = (a.tmp91 & (^(uint8(15) << uint8(0)))) | ((uint8(tmp1501) & uint8(15)) << uint8(0))
+	a.tmp94 = (a.tmp94 & (^(uint8(15) << uint8(0)))) | ((uint8(tmp1501) & uint8(15)) << uint8(0))
 	return true
 }
 
 type AttributeType struct {
-	tmp91 uint8
+	tmp94 uint8
 	Code  AttributeCode
 }
 
-func (a *AttributeType) Write(tmp103 io.Writer) error {
-	tmp1558 := [1]uint8{}
-	tmp1558[0] = uint8((a.optional() & 1)) << uint8(7)
-	tmp1558[0] = tmp1558[0] | (uint8((a.transitive() & 1)) << uint8(6))
-	tmp1558[0] = tmp1558[0] | (uint8((a.partial() & 1)) << uint8(5))
-	tmp1558[0] = tmp1558[0] | (uint8((a.extended() & 1)) << uint8(4))
-	tmp1558[0] = tmp1558[0] | uint8((a.Unused() & 15))
-	if _, err := tmp103.Write(tmp1558[:1]); err != nil {
+func (a *AttributeType) Write(tmp109 io.Writer) error {
+	tmp1552 := [1]uint8{}
+	tmp1552[0] = uint8((a.optional() & 1)) << uint8(7)
+	tmp1552[0] = tmp1552[0] | (uint8((a.transitive() & 1)) << uint8(6))
+	tmp1552[0] = tmp1552[0] | (uint8((a.partial() & 1)) << uint8(5))
+	tmp1552[0] = tmp1552[0] | (uint8((a.extended() & 1)) << uint8(4))
+	tmp1552[0] = tmp1552[0] | uint8((a.Unused() & 15))
+	if _, err := tmp109.Write(tmp1552[:1]); err != nil {
 		return err
 	}
-	tmp1432 := [1]uint8{}
-	tmp1432[0] = uint8(a.Code)
-	if _, err := tmp103.Write(tmp1432[:1]); err != nil {
+	tmp1405 := [1]uint8{}
+	tmp1405[0] = uint8(a.Code)
+	if _, err := tmp109.Write(tmp1405[:1]); err != nil {
 		return err
 	}
 	return nil
@@ -3101,25 +3669,25 @@ func (s *AttributeType) MustEncodeCopy(reserved []byte) []byte {
 	}
 	return buf
 }
-func (a *AttributeType) EncodeSlice(tmp103 []byte, tmp103Offset *int) error {
-	tmp1558 := []uint8{}
-	if len(tmp103)-*tmp103Offset < int(1) {
+func (a *AttributeType) EncodeSlice(tmp109 []byte, tmp109Offset *int) error {
+	tmp1552 := []uint8{}
+	if len(tmp109)-*tmp109Offset < int(1) {
 		return errors.New("not enough space to reserve data for field \"AttributeType::Unused\"")
 	}
-	tmp1558 = tmp103[*tmp103Offset : *tmp103Offset+int(1)]
-	tmp1558[0] = uint8((a.optional() & 1)) << uint8(7)
-	tmp1558[0] = tmp1558[0] | (uint8((a.transitive() & 1)) << uint8(6))
-	tmp1558[0] = tmp1558[0] | (uint8((a.partial() & 1)) << uint8(5))
-	tmp1558[0] = tmp1558[0] | (uint8((a.extended() & 1)) << uint8(4))
-	tmp1558[0] = tmp1558[0] | uint8((a.Unused() & 15))
-	*tmp103Offset += int(1)
-	tmp1432 := []uint8{}
-	if len(tmp103)-*tmp103Offset < int(1) {
+	tmp1552 = tmp109[*tmp109Offset : *tmp109Offset+int(1)]
+	tmp1552[0] = uint8((a.optional() & 1)) << uint8(7)
+	tmp1552[0] = tmp1552[0] | (uint8((a.transitive() & 1)) << uint8(6))
+	tmp1552[0] = tmp1552[0] | (uint8((a.partial() & 1)) << uint8(5))
+	tmp1552[0] = tmp1552[0] | (uint8((a.extended() & 1)) << uint8(4))
+	tmp1552[0] = tmp1552[0] | uint8((a.Unused() & 15))
+	*tmp109Offset += int(1)
+	tmp1405 := []uint8{}
+	if len(tmp109)-*tmp109Offset < int(1) {
 		return errors.New("not enough space to reserve data for field \"AttributeType::Code\"")
 	}
-	tmp1432 = tmp103[*tmp103Offset : *tmp103Offset+int(1)]
-	tmp1432[0] = uint8(a.Code)
-	*tmp103Offset += int(1)
+	tmp1405 = tmp109[*tmp109Offset : *tmp109Offset+int(1)]
+	tmp1405[0] = uint8(a.Code)
+	*tmp109Offset += int(1)
 	return nil
 }
 func (s *AttributeType) Encode(buf []byte) ([]byte, error) {
@@ -3137,18 +3705,18 @@ func (s *AttributeType) MustEncode(reserved []byte) []byte {
 	}
 	return buf
 }
-func (a *AttributeType) Append(tmp103 []byte) ([]byte, error) {
-	tmp1558 := [1]uint8{}
-	tmp1558[0] = uint8((a.optional() & 1)) << uint8(7)
-	tmp1558[0] = tmp1558[0] | (uint8((a.transitive() & 1)) << uint8(6))
-	tmp1558[0] = tmp1558[0] | (uint8((a.partial() & 1)) << uint8(5))
-	tmp1558[0] = tmp1558[0] | (uint8((a.extended() & 1)) << uint8(4))
-	tmp1558[0] = tmp1558[0] | uint8((a.Unused() & 15))
-	tmp103 = append(tmp103, tmp1558[:1]...)
-	tmp1432 := [1]uint8{}
-	tmp1432[0] = uint8(a.Code)
-	tmp103 = append(tmp103, tmp1432[:1]...)
-	return tmp103, nil
+func (a *AttributeType) Append(tmp109 []byte) ([]byte, error) {
+	tmp1552 := [1]uint8{}
+	tmp1552[0] = uint8((a.optional() & 1)) << uint8(7)
+	tmp1552[0] = tmp1552[0] | (uint8((a.transitive() & 1)) << uint8(6))
+	tmp1552[0] = tmp1552[0] | (uint8((a.partial() & 1)) << uint8(5))
+	tmp1552[0] = tmp1552[0] | (uint8((a.extended() & 1)) << uint8(4))
+	tmp1552[0] = tmp1552[0] | uint8((a.Unused() & 15))
+	tmp109 = append(tmp109, tmp1552[:1]...)
+	tmp1405 := [1]uint8{}
+	tmp1405[0] = uint8(a.Code)
+	tmp109 = append(tmp109, tmp1405[:1]...)
+	return tmp109, nil
 }
 func (s *AttributeType) MustAppend(buf []byte) []byte {
 	var err error
@@ -3158,34 +3726,53 @@ func (s *AttributeType) MustAppend(buf []byte) []byte {
 	}
 	return buf
 }
+func (a *AttributeType) encodedSize(tmp109 int) (int, error) {
+	tmp1552 := [1]uint8{}
+	tmp1552[0] = uint8((a.optional() & 1)) << uint8(7)
+	tmp1552[0] = tmp1552[0] | (uint8((a.transitive() & 1)) << uint8(6))
+	tmp1552[0] = tmp1552[0] | (uint8((a.partial() & 1)) << uint8(5))
+	tmp1552[0] = tmp1552[0] | (uint8((a.extended() & 1)) << uint8(4))
+	tmp1552[0] = tmp1552[0] | uint8((a.Unused() & 15))
+	tmp109 += int(1)
+	tmp1405 := [1]uint8{}
+	tmp1405[0] = uint8(a.Code)
+	tmp109 += int(1)
+	return tmp109, nil
+}
 
-func (a *AttributeType) Read(tmp83 io.Reader) error {
-	tmp1584 := [1]uint8{}
-	if _, err := io.ReadFull(tmp83, tmp1584[0:0+1]); err != nil {
+// EncodedSize returns how many bytes encoding this value produces, without
+// encoding it (so a buffer can be allocated once). It fails where encoding would.
+func (s *AttributeType) EncodedSize() (int, error) {
+	return s.encodedSize(0)
+}
+
+func (a *AttributeType) Read(tmp85 io.Reader) error {
+	tmp1591 := [1]uint8{}
+	if _, err := io.ReadFull(tmp85, tmp1591[0:0+1]); err != nil {
 		return err
 	}
-	tmp452 := uint8(0)
-	tmp452 = uint8(((tmp1584[0] & 128) >> uint8(7)))
-	a.setOptional(tmp452)
-	tmp1528 := uint8(0)
-	tmp1528 = uint8(((tmp1584[0] & uint8(64)) >> uint8(6)))
-	a.setTransitive(tmp1528)
-	tmp1525 := uint8(0)
-	tmp1525 = uint8(((tmp1584[0] & uint8(32)) >> uint8(5)))
-	a.setPartial(tmp1525)
-	tmp1439 := uint8(0)
-	tmp1439 = uint8(((tmp1584[0] & uint8(16)) >> uint8(4)))
-	a.setExtended(tmp1439)
-	tmp1569 := uint8(0)
-	tmp1569 = uint8((tmp1584[0] & uint8(15)))
-	a.SetUnused(tmp1569)
-	tmp1438 := uint8(0)
-	tmp1437 := [1]uint8{}
-	if _, err := io.ReadFull(tmp83, tmp1437[0:0+1]); err != nil {
+	tmp445 := uint8(0)
+	tmp445 = uint8(((tmp1591[0] & 128) >> uint8(7)))
+	a.setOptional(tmp445)
+	tmp1573 := uint8(0)
+	tmp1573 = uint8(((tmp1591[0] & uint8(64)) >> uint8(6)))
+	a.setTransitive(tmp1573)
+	tmp1571 := uint8(0)
+	tmp1571 = uint8(((tmp1591[0] & uint8(32)) >> uint8(5)))
+	a.setPartial(tmp1571)
+	tmp1562 := uint8(0)
+	tmp1562 = uint8(((tmp1591[0] & uint8(16)) >> uint8(4)))
+	a.setExtended(tmp1562)
+	tmp1556 := uint8(0)
+	tmp1556 = uint8((tmp1591[0] & uint8(15)))
+	a.SetUnused(tmp1556)
+	tmp1411 := uint8(0)
+	tmp1410 := [1]uint8{}
+	if _, err := io.ReadFull(tmp85, tmp1410[0:0+1]); err != nil {
 		return err
 	}
-	tmp1438 = tmp1437[0]
-	a.Code = AttributeCode(tmp1438)
+	tmp1411 = tmp1410[0]
+	a.Code = AttributeCode(tmp1411)
 	return nil
 }
 func (s *AttributeType) DecodeCopy(buf []byte) ([]byte, error) {
@@ -3206,37 +3793,37 @@ func (s *AttributeType) DecodeExactCopy(buf []byte) error {
 	}
 	return nil
 }
-func (a *AttributeType) DecodeSlice(tmp83 []byte, tmp83Offset *int) error {
-	tmp1584 := []uint8{}
-	if len(tmp83)-*tmp83Offset < 1 {
-		return errors.New("not enough data to read for field \"tmp578\"")
+func (a *AttributeType) DecodeSlice(tmp85 []byte, tmp85Offset *int) error {
+	tmp1591 := []uint8{}
+	if len(tmp85)-*tmp85Offset < 1 {
+		return errors.New("not enough data to read for field \"tmp562\"")
 	}
-	tmp1584 = tmp83[*tmp83Offset : *tmp83Offset+1]
-	*tmp83Offset += int(1)
-	tmp452 := uint8(0)
-	tmp452 = uint8(((tmp1584[0] & 128) >> uint8(7)))
-	a.setOptional(tmp452)
-	tmp1528 := uint8(0)
-	tmp1528 = uint8(((tmp1584[0] & uint8(64)) >> uint8(6)))
-	a.setTransitive(tmp1528)
-	tmp1525 := uint8(0)
-	tmp1525 = uint8(((tmp1584[0] & uint8(32)) >> uint8(5)))
-	a.setPartial(tmp1525)
-	tmp1439 := uint8(0)
-	tmp1439 = uint8(((tmp1584[0] & uint8(16)) >> uint8(4)))
-	a.setExtended(tmp1439)
-	tmp1569 := uint8(0)
-	tmp1569 = uint8((tmp1584[0] & uint8(15)))
-	a.SetUnused(tmp1569)
-	tmp1438 := uint8(0)
-	tmp1437 := []uint8{}
-	if len(tmp83)-*tmp83Offset < 1 {
+	tmp1591 = tmp85[*tmp85Offset : *tmp85Offset+1]
+	*tmp85Offset += int(1)
+	tmp445 := uint8(0)
+	tmp445 = uint8(((tmp1591[0] & 128) >> uint8(7)))
+	a.setOptional(tmp445)
+	tmp1573 := uint8(0)
+	tmp1573 = uint8(((tmp1591[0] & uint8(64)) >> uint8(6)))
+	a.setTransitive(tmp1573)
+	tmp1571 := uint8(0)
+	tmp1571 = uint8(((tmp1591[0] & uint8(32)) >> uint8(5)))
+	a.setPartial(tmp1571)
+	tmp1562 := uint8(0)
+	tmp1562 = uint8(((tmp1591[0] & uint8(16)) >> uint8(4)))
+	a.setExtended(tmp1562)
+	tmp1556 := uint8(0)
+	tmp1556 = uint8((tmp1591[0] & uint8(15)))
+	a.SetUnused(tmp1556)
+	tmp1411 := uint8(0)
+	tmp1410 := []uint8{}
+	if len(tmp85)-*tmp85Offset < 1 {
 		return errors.New("not enough data to read for field \"AttributeType::Code\"")
 	}
-	tmp1437 = tmp83[*tmp83Offset : *tmp83Offset+1]
-	*tmp83Offset += int(1)
-	tmp1438 = tmp1437[0]
-	a.Code = AttributeCode(tmp1438)
+	tmp1410 = tmp85[*tmp85Offset : *tmp85Offset+1]
+	*tmp85Offset += int(1)
+	tmp1411 = tmp1410[0]
+	a.Code = AttributeCode(tmp1411)
 	return nil
 }
 func (s *AttributeType) Decode(buf []byte) ([]byte, error) {
@@ -3258,133 +3845,133 @@ func (s *AttributeType) DecodeExact(buf []byte) error {
 	return nil
 }
 
-type tmp1429 struct {
+type tmp1402 struct {
 	Len uint16
 }
 
-func (v *tmp1429) isVariant424() {}
+func (v *tmp1402) isVariant414() {}
 
-type tmp1427 struct {
+type tmp1400 struct {
 	Len uint8
 }
 
-func (v *tmp1427) isVariant424() {}
+func (v *tmp1400) isVariant414() {}
 
-type Variant424 interface {
-	isVariant424()
+type Variant414 interface {
+	isVariant414()
 }
 
-type tmp1413 struct {
-	Origin OriginValue
+type tmp1397 struct {
+	Origin Origin
 }
 
-func (v *tmp1413) isVariant81() {}
+func (v *tmp1397) isVariant83() {}
 
-type tmp1355 struct {
+type tmp1338 struct {
 	AsPath AsPath
 }
 
-func (v *tmp1355) isVariant81() {}
+func (v *tmp1338) isVariant83() {}
 
-type tmp1347 struct {
+type tmp1330 struct {
 	NextHop [4]uint8
 }
 
-func (v *tmp1347) isVariant81() {}
+func (v *tmp1330) isVariant83() {}
 
-type tmp1335 struct {
-	MultiExitDisc U32Value
+type tmp1324 struct {
+	MultiExitDisc uint32
 }
 
-func (v *tmp1335) isVariant81() {}
+func (v *tmp1324) isVariant83() {}
 
-type tmp1328 struct {
-	LocalPref U32Value
+type tmp1317 struct {
+	LocalPref uint32
 }
 
-func (v *tmp1328) isVariant81() {}
+func (v *tmp1317) isVariant83() {}
 
-type tmp3339 struct {
+type tmp3332 struct {
 }
 
-func (v *tmp3339) isVariant81() {}
+func (v *tmp3332) isVariant83() {}
 
-type tmp1308 struct {
+type tmp1296 struct {
 	Aggregator Aggregator
 }
 
-func (v *tmp1308) isVariant81() {}
+func (v *tmp1296) isVariant83() {}
 
-type tmp1300 struct {
+type tmp1288 struct {
 	Communities []uint32
 }
 
-func (v *tmp1300) isVariant81() {}
+func (v *tmp1288) isVariant83() {}
 
-type tmp1259 struct {
+type tmp1247 struct {
 	MpReachNlri MPReachNLRI
 }
 
-func (v *tmp1259) isVariant81() {}
+func (v *tmp1247) isVariant83() {}
 
-type tmp1234 struct {
+type tmp1222 struct {
 	MpUnreachNlri MPUnreachNLRI
 }
 
-func (v *tmp1234) isVariant81() {}
+func (v *tmp1222) isVariant83() {}
 
-type tmp1227 struct {
+type tmp1215 struct {
 	Data []uint8
 }
 
-func (v *tmp1227) isVariant81() {}
+func (v *tmp1215) isVariant83() {}
 
-type Variant81 interface {
-	isVariant81()
+type Variant83 interface {
+	isVariant83()
 }
 
 type PathAttribute struct {
 	Type   AttributeType
-	tmp794 Variant424
-	tmp786 Variant81
+	tmp772 Variant414
+	tmp768 Variant83
 }
 
 func (p *PathAttribute) Len() uint16 {
 	if p.Type.extended() == 1 {
-		tmp1428, ok := p.tmp794.(*tmp1429)
+		tmp1401, ok := p.tmp772.(*tmp1402)
 		if !ok {
 			return uint16(0)
 		}
-		_ = tmp1428 // to prevent unused warnings
-		return uint16(tmp1428.Len)
+		_ = tmp1401 // to prevent unused warnings
+		return uint16(tmp1401.Len)
 	} else {
-		tmp1426, ok := p.tmp794.(*tmp1427)
+		tmp1399, ok := p.tmp772.(*tmp1400)
 		if !ok {
 			return uint16(0)
 		}
-		_ = tmp1426 // to prevent unused warnings
-		return uint16(tmp1426.Len)
+		_ = tmp1399 // to prevent unused warnings
+		return uint16(tmp1399.Len)
 	}
 	return uint16(0)
 }
-func (p *PathAttribute) SetLen(tmp1461 uint16) bool {
+func (p *PathAttribute) SetLen(tmp1451 uint16) bool {
 	if p.Type.extended() == 1 {
-		tmp1428, ok := p.tmp794.(*tmp1429)
+		tmp1401, ok := p.tmp772.(*tmp1402)
 		if !ok {
-			tmp1428 = &tmp1429{}
-			p.tmp794 = tmp1428
+			tmp1401 = &tmp1402{}
+			p.tmp772 = tmp1401
 		}
-		_ = tmp1428 // to prevent unused warnings
-		tmp1428.Len = uint16(tmp1461)
+		_ = tmp1401 // to prevent unused warnings
+		tmp1401.Len = uint16(tmp1451)
 		return true
 	} else {
-		tmp1426, ok := p.tmp794.(*tmp1427)
+		tmp1399, ok := p.tmp772.(*tmp1400)
 		if !ok {
-			tmp1426 = &tmp1427{}
-			p.tmp794 = tmp1426
+			tmp1399 = &tmp1400{}
+			p.tmp772 = tmp1399
 		}
-		_ = tmp1426 // to prevent unused warnings
-		tmp1426.Len = uint8(tmp1461)
+		_ = tmp1399 // to prevent unused warnings
+		tmp1399.Len = uint8(tmp1451)
 		return true
 	}
 	return false
@@ -3394,26 +3981,26 @@ func (p *PathAttribute) Aggregator() *Aggregator {
 	if (((((AttributeCode_ORIGIN == p.Type.Code) || (AttributeCode_AS_PATH == p.Type.Code)) || (AttributeCode_NEXT_HOP == p.Type.Code)) || (AttributeCode_MULTI_EXIT_DISC == p.Type.Code)) || (AttributeCode_LOCAL_PREF == p.Type.Code)) || (AttributeCode_ATOMIC_AGGREGATE == p.Type.Code) {
 		return nil
 	} else if p.Type.Code == AttributeCode_AGGREGATOR {
-		tmp1303, ok := p.tmp786.(*tmp1308)
+		tmp1291, ok := p.tmp768.(*tmp1296)
 		if !ok {
 			return nil
 		}
-		_ = tmp1303 // to prevent unused warnings
-		return &tmp1303.Aggregator
+		_ = tmp1291 // to prevent unused warnings
+		return &tmp1291.Aggregator
 	}
 	return nil
 }
-func (p *PathAttribute) SetAggregator(tmp1130 Aggregator) bool {
+func (p *PathAttribute) SetAggregator(tmp1115 Aggregator) bool {
 	if (((((AttributeCode_ORIGIN == p.Type.Code) || (AttributeCode_AS_PATH == p.Type.Code)) || (AttributeCode_NEXT_HOP == p.Type.Code)) || (AttributeCode_MULTI_EXIT_DISC == p.Type.Code)) || (AttributeCode_LOCAL_PREF == p.Type.Code)) || (AttributeCode_ATOMIC_AGGREGATE == p.Type.Code) {
 		return false
 	} else if p.Type.Code == AttributeCode_AGGREGATOR {
-		tmp1303, ok := p.tmp786.(*tmp1308)
+		tmp1291, ok := p.tmp768.(*tmp1296)
 		if !ok {
-			tmp1303 = &tmp1308{}
-			p.tmp786 = tmp1303
+			tmp1291 = &tmp1296{}
+			p.tmp768 = tmp1291
 		}
-		_ = tmp1303 // to prevent unused warnings
-		tmp1303.Aggregator = tmp1130
+		_ = tmp1291 // to prevent unused warnings
+		tmp1291.Aggregator = tmp1115
 		return true
 	}
 	return false
@@ -3423,26 +4010,26 @@ func (p *PathAttribute) AsPath() *AsPath {
 	if p.Type.Code == AttributeCode_ORIGIN {
 		return nil
 	} else if p.Type.Code == AttributeCode_AS_PATH {
-		tmp1350, ok := p.tmp786.(*tmp1355)
+		tmp1333, ok := p.tmp768.(*tmp1338)
 		if !ok {
 			return nil
 		}
-		_ = tmp1350 // to prevent unused warnings
-		return &tmp1350.AsPath
+		_ = tmp1333 // to prevent unused warnings
+		return &tmp1333.AsPath
 	}
 	return nil
 }
-func (p *PathAttribute) SetAsPath(tmp1127 AsPath) bool {
+func (p *PathAttribute) SetAsPath(tmp1112 AsPath) bool {
 	if p.Type.Code == AttributeCode_ORIGIN {
 		return false
 	} else if p.Type.Code == AttributeCode_AS_PATH {
-		tmp1350, ok := p.tmp786.(*tmp1355)
+		tmp1333, ok := p.tmp768.(*tmp1338)
 		if !ok {
-			tmp1350 = &tmp1355{}
-			p.tmp786 = tmp1350
+			tmp1333 = &tmp1338{}
+			p.tmp768 = tmp1333
 		}
-		_ = tmp1350 // to prevent unused warnings
-		tmp1350.AsPath = tmp1127
+		_ = tmp1333 // to prevent unused warnings
+		tmp1333.AsPath = tmp1112
 		return true
 	}
 	return false
@@ -3452,26 +4039,26 @@ func (p *PathAttribute) Communities() *[]uint32 {
 	if ((((((AttributeCode_ORIGIN == p.Type.Code) || (AttributeCode_AS_PATH == p.Type.Code)) || (AttributeCode_NEXT_HOP == p.Type.Code)) || (AttributeCode_MULTI_EXIT_DISC == p.Type.Code)) || (AttributeCode_LOCAL_PREF == p.Type.Code)) || (AttributeCode_ATOMIC_AGGREGATE == p.Type.Code)) || (AttributeCode_AGGREGATOR == p.Type.Code) {
 		return nil
 	} else if p.Type.Code == AttributeCode_COMMUNITIES {
-		tmp1294, ok := p.tmp786.(*tmp1300)
+		tmp1282, ok := p.tmp768.(*tmp1288)
 		if !ok {
 			return nil
 		}
-		_ = tmp1294 // to prevent unused warnings
-		return &tmp1294.Communities
+		_ = tmp1282 // to prevent unused warnings
+		return &tmp1282.Communities
 	}
 	return nil
 }
-func (p *PathAttribute) SetCommunities(tmp1108 []uint32) bool {
+func (p *PathAttribute) SetCommunities(tmp1093 []uint32) bool {
 	if ((((((AttributeCode_ORIGIN == p.Type.Code) || (AttributeCode_AS_PATH == p.Type.Code)) || (AttributeCode_NEXT_HOP == p.Type.Code)) || (AttributeCode_MULTI_EXIT_DISC == p.Type.Code)) || (AttributeCode_LOCAL_PREF == p.Type.Code)) || (AttributeCode_ATOMIC_AGGREGATE == p.Type.Code)) || (AttributeCode_AGGREGATOR == p.Type.Code) {
 		return false
 	} else if p.Type.Code == AttributeCode_COMMUNITIES {
-		tmp1294, ok := p.tmp786.(*tmp1300)
+		tmp1282, ok := p.tmp768.(*tmp1288)
 		if !ok {
-			tmp1294 = &tmp1300{}
-			p.tmp786 = tmp1294
+			tmp1282 = &tmp1288{}
+			p.tmp768 = tmp1282
 		}
-		_ = tmp1294 // to prevent unused warnings
-		tmp1294.Communities = tmp1108
+		_ = tmp1282 // to prevent unused warnings
+		tmp1282.Communities = tmp1093
 		return true
 	}
 	return false
@@ -3481,55 +4068,55 @@ func (p *PathAttribute) Data() *[]uint8 {
 	if (((((((((AttributeCode_ORIGIN == p.Type.Code) || (AttributeCode_AS_PATH == p.Type.Code)) || (AttributeCode_NEXT_HOP == p.Type.Code)) || (AttributeCode_MULTI_EXIT_DISC == p.Type.Code)) || (AttributeCode_LOCAL_PREF == p.Type.Code)) || (AttributeCode_ATOMIC_AGGREGATE == p.Type.Code)) || (AttributeCode_AGGREGATOR == p.Type.Code)) || (AttributeCode_COMMUNITIES == p.Type.Code)) || (AttributeCode_MP_REACH_NLRI == p.Type.Code)) || (AttributeCode_MP_UNREACH_NLRI == p.Type.Code) {
 		return nil
 	} else {
-		tmp1226, ok := p.tmp786.(*tmp1227)
+		tmp1214, ok := p.tmp768.(*tmp1215)
 		if !ok {
 			return nil
 		}
-		_ = tmp1226 // to prevent unused warnings
-		return &tmp1226.Data
+		_ = tmp1214 // to prevent unused warnings
+		return &tmp1214.Data
 	}
 	return nil
 }
-func (p *PathAttribute) SetData(tmp1083 []uint8) bool {
+func (p *PathAttribute) SetData(tmp1068 []uint8) bool {
 	if (((((((((AttributeCode_ORIGIN == p.Type.Code) || (AttributeCode_AS_PATH == p.Type.Code)) || (AttributeCode_NEXT_HOP == p.Type.Code)) || (AttributeCode_MULTI_EXIT_DISC == p.Type.Code)) || (AttributeCode_LOCAL_PREF == p.Type.Code)) || (AttributeCode_ATOMIC_AGGREGATE == p.Type.Code)) || (AttributeCode_AGGREGATOR == p.Type.Code)) || (AttributeCode_COMMUNITIES == p.Type.Code)) || (AttributeCode_MP_REACH_NLRI == p.Type.Code)) || (AttributeCode_MP_UNREACH_NLRI == p.Type.Code) {
 		return false
 	} else {
-		tmp1226, ok := p.tmp786.(*tmp1227)
+		tmp1214, ok := p.tmp768.(*tmp1215)
 		if !ok {
-			tmp1226 = &tmp1227{}
-			p.tmp786 = tmp1226
+			tmp1214 = &tmp1215{}
+			p.tmp768 = tmp1214
 		}
-		_ = tmp1226 // to prevent unused warnings
-		tmp1226.Data = tmp1083
+		_ = tmp1214 // to prevent unused warnings
+		tmp1214.Data = tmp1068
 		return true
 	}
 	return false
 }
 
-func (p *PathAttribute) LocalPref() *U32Value {
+func (p *PathAttribute) LocalPref() *uint32 {
 	if (((AttributeCode_ORIGIN == p.Type.Code) || (AttributeCode_AS_PATH == p.Type.Code)) || (AttributeCode_NEXT_HOP == p.Type.Code)) || (AttributeCode_MULTI_EXIT_DISC == p.Type.Code) {
 		return nil
 	} else if p.Type.Code == AttributeCode_LOCAL_PREF {
-		tmp1325, ok := p.tmp786.(*tmp1328)
+		tmp1313, ok := p.tmp768.(*tmp1317)
 		if !ok {
 			return nil
 		}
-		_ = tmp1325 // to prevent unused warnings
-		return &tmp1325.LocalPref
+		_ = tmp1313 // to prevent unused warnings
+		return &tmp1313.LocalPref
 	}
 	return nil
 }
-func (p *PathAttribute) SetLocalPref(tmp1070 U32Value) bool {
+func (p *PathAttribute) SetLocalPref(tmp1055 uint32) bool {
 	if (((AttributeCode_ORIGIN == p.Type.Code) || (AttributeCode_AS_PATH == p.Type.Code)) || (AttributeCode_NEXT_HOP == p.Type.Code)) || (AttributeCode_MULTI_EXIT_DISC == p.Type.Code) {
 		return false
 	} else if p.Type.Code == AttributeCode_LOCAL_PREF {
-		tmp1325, ok := p.tmp786.(*tmp1328)
+		tmp1313, ok := p.tmp768.(*tmp1317)
 		if !ok {
-			tmp1325 = &tmp1328{}
-			p.tmp786 = tmp1325
+			tmp1313 = &tmp1317{}
+			p.tmp768 = tmp1313
 		}
-		_ = tmp1325 // to prevent unused warnings
-		tmp1325.LocalPref = tmp1070
+		_ = tmp1313 // to prevent unused warnings
+		tmp1313.LocalPref = tmp1055
 		return true
 	}
 	return false
@@ -3539,26 +4126,26 @@ func (p *PathAttribute) MpReachNlri() *MPReachNLRI {
 	if (((((((AttributeCode_ORIGIN == p.Type.Code) || (AttributeCode_AS_PATH == p.Type.Code)) || (AttributeCode_NEXT_HOP == p.Type.Code)) || (AttributeCode_MULTI_EXIT_DISC == p.Type.Code)) || (AttributeCode_LOCAL_PREF == p.Type.Code)) || (AttributeCode_ATOMIC_AGGREGATE == p.Type.Code)) || (AttributeCode_AGGREGATOR == p.Type.Code)) || (AttributeCode_COMMUNITIES == p.Type.Code) {
 		return nil
 	} else if p.Type.Code == AttributeCode_MP_REACH_NLRI {
-		tmp1254, ok := p.tmp786.(*tmp1259)
+		tmp1242, ok := p.tmp768.(*tmp1247)
 		if !ok {
 			return nil
 		}
-		_ = tmp1254 // to prevent unused warnings
-		return &tmp1254.MpReachNlri
+		_ = tmp1242 // to prevent unused warnings
+		return &tmp1242.MpReachNlri
 	}
 	return nil
 }
-func (p *PathAttribute) SetMpReachNlri(tmp1048 MPReachNLRI) bool {
+func (p *PathAttribute) SetMpReachNlri(tmp1033 MPReachNLRI) bool {
 	if (((((((AttributeCode_ORIGIN == p.Type.Code) || (AttributeCode_AS_PATH == p.Type.Code)) || (AttributeCode_NEXT_HOP == p.Type.Code)) || (AttributeCode_MULTI_EXIT_DISC == p.Type.Code)) || (AttributeCode_LOCAL_PREF == p.Type.Code)) || (AttributeCode_ATOMIC_AGGREGATE == p.Type.Code)) || (AttributeCode_AGGREGATOR == p.Type.Code)) || (AttributeCode_COMMUNITIES == p.Type.Code) {
 		return false
 	} else if p.Type.Code == AttributeCode_MP_REACH_NLRI {
-		tmp1254, ok := p.tmp786.(*tmp1259)
+		tmp1242, ok := p.tmp768.(*tmp1247)
 		if !ok {
-			tmp1254 = &tmp1259{}
-			p.tmp786 = tmp1254
+			tmp1242 = &tmp1247{}
+			p.tmp768 = tmp1242
 		}
-		_ = tmp1254 // to prevent unused warnings
-		tmp1254.MpReachNlri = tmp1048
+		_ = tmp1242 // to prevent unused warnings
+		tmp1242.MpReachNlri = tmp1033
 		return true
 	}
 	return false
@@ -3568,55 +4155,55 @@ func (p *PathAttribute) MpUnreachNlri() *MPUnreachNLRI {
 	if ((((((((AttributeCode_ORIGIN == p.Type.Code) || (AttributeCode_AS_PATH == p.Type.Code)) || (AttributeCode_NEXT_HOP == p.Type.Code)) || (AttributeCode_MULTI_EXIT_DISC == p.Type.Code)) || (AttributeCode_LOCAL_PREF == p.Type.Code)) || (AttributeCode_ATOMIC_AGGREGATE == p.Type.Code)) || (AttributeCode_AGGREGATOR == p.Type.Code)) || (AttributeCode_COMMUNITIES == p.Type.Code)) || (AttributeCode_MP_REACH_NLRI == p.Type.Code) {
 		return nil
 	} else if p.Type.Code == AttributeCode_MP_UNREACH_NLRI {
-		tmp1229, ok := p.tmp786.(*tmp1234)
+		tmp1217, ok := p.tmp768.(*tmp1222)
 		if !ok {
 			return nil
 		}
-		_ = tmp1229 // to prevent unused warnings
-		return &tmp1229.MpUnreachNlri
+		_ = tmp1217 // to prevent unused warnings
+		return &tmp1217.MpUnreachNlri
 	}
 	return nil
 }
-func (p *PathAttribute) SetMpUnreachNlri(tmp1025 MPUnreachNLRI) bool {
+func (p *PathAttribute) SetMpUnreachNlri(tmp1010 MPUnreachNLRI) bool {
 	if ((((((((AttributeCode_ORIGIN == p.Type.Code) || (AttributeCode_AS_PATH == p.Type.Code)) || (AttributeCode_NEXT_HOP == p.Type.Code)) || (AttributeCode_MULTI_EXIT_DISC == p.Type.Code)) || (AttributeCode_LOCAL_PREF == p.Type.Code)) || (AttributeCode_ATOMIC_AGGREGATE == p.Type.Code)) || (AttributeCode_AGGREGATOR == p.Type.Code)) || (AttributeCode_COMMUNITIES == p.Type.Code)) || (AttributeCode_MP_REACH_NLRI == p.Type.Code) {
 		return false
 	} else if p.Type.Code == AttributeCode_MP_UNREACH_NLRI {
-		tmp1229, ok := p.tmp786.(*tmp1234)
+		tmp1217, ok := p.tmp768.(*tmp1222)
 		if !ok {
-			tmp1229 = &tmp1234{}
-			p.tmp786 = tmp1229
+			tmp1217 = &tmp1222{}
+			p.tmp768 = tmp1217
 		}
-		_ = tmp1229 // to prevent unused warnings
-		tmp1229.MpUnreachNlri = tmp1025
+		_ = tmp1217 // to prevent unused warnings
+		tmp1217.MpUnreachNlri = tmp1010
 		return true
 	}
 	return false
 }
 
-func (p *PathAttribute) MultiExitDisc() *U32Value {
+func (p *PathAttribute) MultiExitDisc() *uint32 {
 	if ((AttributeCode_ORIGIN == p.Type.Code) || (AttributeCode_AS_PATH == p.Type.Code)) || (AttributeCode_NEXT_HOP == p.Type.Code) {
 		return nil
 	} else if p.Type.Code == AttributeCode_MULTI_EXIT_DISC {
-		tmp1331, ok := p.tmp786.(*tmp1335)
+		tmp1320, ok := p.tmp768.(*tmp1324)
 		if !ok {
 			return nil
 		}
-		_ = tmp1331 // to prevent unused warnings
-		return &tmp1331.MultiExitDisc
+		_ = tmp1320 // to prevent unused warnings
+		return &tmp1320.MultiExitDisc
 	}
 	return nil
 }
-func (p *PathAttribute) SetMultiExitDisc(tmp1014 U32Value) bool {
+func (p *PathAttribute) SetMultiExitDisc(tmp999 uint32) bool {
 	if ((AttributeCode_ORIGIN == p.Type.Code) || (AttributeCode_AS_PATH == p.Type.Code)) || (AttributeCode_NEXT_HOP == p.Type.Code) {
 		return false
 	} else if p.Type.Code == AttributeCode_MULTI_EXIT_DISC {
-		tmp1331, ok := p.tmp786.(*tmp1335)
+		tmp1320, ok := p.tmp768.(*tmp1324)
 		if !ok {
-			tmp1331 = &tmp1335{}
-			p.tmp786 = tmp1331
+			tmp1320 = &tmp1324{}
+			p.tmp768 = tmp1320
 		}
-		_ = tmp1331 // to prevent unused warnings
-		tmp1331.MultiExitDisc = tmp1014
+		_ = tmp1320 // to prevent unused warnings
+		tmp1320.MultiExitDisc = tmp999
 		return true
 	}
 	return false
@@ -3626,267 +4213,293 @@ func (p *PathAttribute) NextHop() *[4]uint8 {
 	if (AttributeCode_ORIGIN == p.Type.Code) || (AttributeCode_AS_PATH == p.Type.Code) {
 		return nil
 	} else if p.Type.Code == AttributeCode_NEXT_HOP {
-		tmp1344, ok := p.tmp786.(*tmp1347)
+		tmp1327, ok := p.tmp768.(*tmp1330)
 		if !ok {
 			return nil
 		}
-		_ = tmp1344 // to prevent unused warnings
-		return &tmp1344.NextHop
+		_ = tmp1327 // to prevent unused warnings
+		return &tmp1327.NextHop
 	}
 	return nil
 }
-func (p *PathAttribute) SetNextHop(tmp1005 [4]uint8) bool {
+func (p *PathAttribute) SetNextHop(tmp990 [4]uint8) bool {
 	if (AttributeCode_ORIGIN == p.Type.Code) || (AttributeCode_AS_PATH == p.Type.Code) {
 		return false
 	} else if p.Type.Code == AttributeCode_NEXT_HOP {
-		tmp1344, ok := p.tmp786.(*tmp1347)
+		tmp1327, ok := p.tmp768.(*tmp1330)
 		if !ok {
-			tmp1344 = &tmp1347{}
-			p.tmp786 = tmp1344
+			tmp1327 = &tmp1330{}
+			p.tmp768 = tmp1327
 		}
-		_ = tmp1344 // to prevent unused warnings
-		tmp1344.NextHop = tmp1005
+		_ = tmp1327 // to prevent unused warnings
+		tmp1327.NextHop = tmp990
 		return true
 	}
 	return false
 }
 
-func (p *PathAttribute) Origin() *OriginValue {
+func (p *PathAttribute) Origin() *Origin {
 	if p.Type.Code == AttributeCode_ORIGIN {
-		tmp1395, ok := p.tmp786.(*tmp1413)
+		tmp1379, ok := p.tmp768.(*tmp1397)
 		if !ok {
 			return nil
 		}
-		_ = tmp1395 // to prevent unused warnings
-		return &tmp1395.Origin
+		_ = tmp1379 // to prevent unused warnings
+		return &tmp1379.Origin
 	}
 	return nil
 }
-func (p *PathAttribute) SetOrigin(tmp1002 OriginValue) bool {
+func (p *PathAttribute) SetOrigin(tmp987 Origin) bool {
 	if p.Type.Code == AttributeCode_ORIGIN {
-		tmp1395, ok := p.tmp786.(*tmp1413)
+		tmp1379, ok := p.tmp768.(*tmp1397)
 		if !ok {
-			tmp1395 = &tmp1413{}
-			p.tmp786 = tmp1395
+			tmp1379 = &tmp1397{}
+			p.tmp768 = tmp1379
 		}
-		_ = tmp1395 // to prevent unused warnings
-		tmp1395.Origin = tmp1002
+		_ = tmp1379 // to prevent unused warnings
+		tmp1379.Origin = tmp987
 		return true
 	}
 	return false
 }
 
-func (p *PathAttribute) Write(tmp64 io.Writer) error {
-	tmp64ByteIO, _ := tmp64.(io.ByteWriter)
-	_ = tmp64ByteIO
-	tmp1403 := p.Type.Write(tmp64)
-	if tmp1403 != nil {
-		return tmp1403
+func (p *PathAttribute) Write(tmp60 io.Writer) error {
+	tmp60ByteIO, _ := tmp60.(io.ByteWriter)
+	_ = tmp60ByteIO
+	tmp1387 := p.Type.Write(tmp60)
+	if tmp1387 != nil {
+		return tmp1387
 	}
 	if p.Type.extended() == 1 {
-		tmp1428, ok := p.tmp794.(*tmp1429)
+		tmp1401, ok := p.tmp772.(*tmp1402)
 		if !ok {
 			return errors.New("invalid union type for encoding")
 		}
-		_ = tmp1428 // to prevent unused warnings
-		tmp1401 := [2]uint8{}
-		binary.BigEndian.PutUint16(tmp1401[:], uint16(tmp1428.Len))
-		if _, err := tmp64.Write(tmp1401[:2]); err != nil {
+		_ = tmp1401 // to prevent unused warnings
+		tmp1385 := [2]uint8{}
+		binary.BigEndian.PutUint16(tmp1385[:], uint16(tmp1401.Len))
+		if _, err := tmp60.Write(tmp1385[:2]); err != nil {
 			return err
 		}
 	} else {
-		tmp1426, ok := p.tmp794.(*tmp1427)
+		tmp1399, ok := p.tmp772.(*tmp1400)
 		if !ok {
 			return errors.New("invalid union type for encoding")
 		}
-		_ = tmp1426 // to prevent unused warnings
-		if tmp64ByteIO != nil {
-			if err := tmp64ByteIO.WriteByte(tmp1426.Len); err != nil {
+		_ = tmp1399 // to prevent unused warnings
+		if tmp60ByteIO != nil {
+			if err := tmp60ByteIO.WriteByte(tmp1399.Len); err != nil {
 				return err
 			}
 		} else {
-			if _, err := tmp64.Write([]byte{tmp1426.Len}); err != nil {
+			if _, err := tmp60.Write([]byte{tmp1399.Len}); err != nil {
 				return err
 			}
 		}
 	}
 	LenTmp := uint16(p.Len())
 	if p.Type.Code == AttributeCode_ORIGIN {
-		tmp1395, ok := p.tmp786.(*tmp1413)
+		tmp1379, ok := p.tmp768.(*tmp1397)
 		if !ok {
 			return errors.New("invalid union type for encoding")
 		}
-		_ = tmp1395 // to prevent unused warnings
-		tmp787 := &bytes.Buffer{}
-		tmp1220 := tmp1395.Origin.Write(tmp787)
-		if tmp1220 != nil {
-			return tmp1220
+		_ = tmp1379 // to prevent unused warnings
+		tmp553 := &bytes.Buffer{}
+		var tmp553ByteIO io.ByteWriter = tmp553
+		_ = tmp553ByteIO
+		if tmp553ByteIO != nil {
+			if err := tmp553ByteIO.WriteByte(uint8(tmp1379.Origin)); err != nil {
+				return err
+			}
+		} else {
+			if _, err := tmp553.Write([]byte{uint8(tmp1379.Origin)}); err != nil {
+				return err
+			}
 		}
-		if tmp787.Len() != int(LenTmp) {
-			return fmt.Errorf("subrange length mismatch: expected %d, got %d", int(LenTmp), tmp787.Len())
+		if tmp553.Len() != int(LenTmp) {
+			return fmt.Errorf("subrange length mismatch: expected %d, got %d", int(LenTmp), tmp553.Len())
 		}
-		if _, err := tmp64.Write(tmp787.Bytes()); err != nil {
+		if _, err := tmp60.Write(tmp553.Bytes()); err != nil {
 			return err
 		}
 	} else if p.Type.Code == AttributeCode_AS_PATH {
-		tmp1350, ok := p.tmp786.(*tmp1355)
+		tmp1333, ok := p.tmp768.(*tmp1338)
 		if !ok {
 			return errors.New("invalid union type for encoding")
 		}
-		_ = tmp1350 // to prevent unused warnings
-		tmp777 := &bytes.Buffer{}
-		tmp1352 := tmp1350.AsPath.Write(tmp777)
-		if tmp1352 != nil {
-			return tmp1352
+		_ = tmp1333 // to prevent unused warnings
+		tmp759 := &bytes.Buffer{}
+		var tmp759ByteIO io.ByteWriter = tmp759
+		_ = tmp759ByteIO
+		tmp1335 := tmp1333.AsPath.Write(tmp759)
+		if tmp1335 != nil {
+			return tmp1335
 		}
-		if tmp777.Len() != int(LenTmp) {
-			return fmt.Errorf("subrange length mismatch: expected %d, got %d", int(LenTmp), tmp777.Len())
+		if tmp759.Len() != int(LenTmp) {
+			return fmt.Errorf("subrange length mismatch: expected %d, got %d", int(LenTmp), tmp759.Len())
 		}
-		if _, err := tmp64.Write(tmp777.Bytes()); err != nil {
+		if _, err := tmp60.Write(tmp759.Bytes()); err != nil {
 			return err
 		}
 	} else if p.Type.Code == AttributeCode_NEXT_HOP {
-		tmp1344, ok := p.tmp786.(*tmp1347)
+		tmp1327, ok := p.tmp768.(*tmp1330)
 		if !ok {
 			return errors.New("invalid union type for encoding")
 		}
-		_ = tmp1344 // to prevent unused warnings
-		tmp1345 := &bytes.Buffer{}
-		if _, err := tmp1345.Write(tmp1344.NextHop[:4]); err != nil {
+		_ = tmp1327 // to prevent unused warnings
+		tmp1328 := &bytes.Buffer{}
+		var tmp1328ByteIO io.ByteWriter = tmp1328
+		_ = tmp1328ByteIO
+		if _, err := tmp1328.Write(tmp1327.NextHop[:4]); err != nil {
 			return err
 		}
-		if tmp1345.Len() != int(LenTmp) {
-			return fmt.Errorf("subrange length mismatch: expected %d, got %d", int(LenTmp), tmp1345.Len())
+		if tmp1328.Len() != int(LenTmp) {
+			return fmt.Errorf("subrange length mismatch: expected %d, got %d", int(LenTmp), tmp1328.Len())
 		}
-		if _, err := tmp64.Write(tmp1345.Bytes()); err != nil {
+		if _, err := tmp60.Write(tmp1328.Bytes()); err != nil {
 			return err
 		}
 	} else if p.Type.Code == AttributeCode_MULTI_EXIT_DISC {
-		tmp1331, ok := p.tmp786.(*tmp1335)
+		tmp1320, ok := p.tmp768.(*tmp1324)
 		if !ok {
 			return errors.New("invalid union type for encoding")
 		}
-		_ = tmp1331 // to prevent unused warnings
-		tmp774 := &bytes.Buffer{}
-		tmp1333 := tmp1331.MultiExitDisc.Write(tmp774)
-		if tmp1333 != nil {
-			return tmp1333
+		_ = tmp1320 // to prevent unused warnings
+		tmp756 := &bytes.Buffer{}
+		var tmp756ByteIO io.ByteWriter = tmp756
+		_ = tmp756ByteIO
+		tmp1322 := [4]uint8{}
+		binary.BigEndian.PutUint32(tmp1322[:], uint32(tmp1320.MultiExitDisc))
+		if _, err := tmp756.Write(tmp1322[:4]); err != nil {
+			return err
 		}
-		if tmp774.Len() != int(LenTmp) {
-			return fmt.Errorf("subrange length mismatch: expected %d, got %d", int(LenTmp), tmp774.Len())
+		if tmp756.Len() != int(LenTmp) {
+			return fmt.Errorf("subrange length mismatch: expected %d, got %d", int(LenTmp), tmp756.Len())
 		}
-		if _, err := tmp64.Write(tmp774.Bytes()); err != nil {
+		if _, err := tmp60.Write(tmp756.Bytes()); err != nil {
 			return err
 		}
 	} else if p.Type.Code == AttributeCode_LOCAL_PREF {
-		tmp1325, ok := p.tmp786.(*tmp1328)
+		tmp1313, ok := p.tmp768.(*tmp1317)
 		if !ok {
 			return errors.New("invalid union type for encoding")
 		}
-		_ = tmp1325 // to prevent unused warnings
-		tmp771 := &bytes.Buffer{}
-		tmp1327 := tmp1325.LocalPref.Write(tmp771)
-		if tmp1327 != nil {
-			return tmp1327
+		_ = tmp1313 // to prevent unused warnings
+		tmp754 := &bytes.Buffer{}
+		var tmp754ByteIO io.ByteWriter = tmp754
+		_ = tmp754ByteIO
+		tmp1315 := [4]uint8{}
+		binary.BigEndian.PutUint32(tmp1315[:], uint32(tmp1313.LocalPref))
+		if _, err := tmp754.Write(tmp1315[:4]); err != nil {
+			return err
 		}
-		if tmp771.Len() != int(LenTmp) {
-			return fmt.Errorf("subrange length mismatch: expected %d, got %d", int(LenTmp), tmp771.Len())
+		if tmp754.Len() != int(LenTmp) {
+			return fmt.Errorf("subrange length mismatch: expected %d, got %d", int(LenTmp), tmp754.Len())
 		}
-		if _, err := tmp64.Write(tmp771.Bytes()); err != nil {
+		if _, err := tmp60.Write(tmp754.Bytes()); err != nil {
 			return err
 		}
 	} else if p.Type.Code == AttributeCode_ATOMIC_AGGREGATE {
-		tmp1322, ok := p.tmp786.(*tmp3339)
+		tmp1310, ok := p.tmp768.(*tmp3332)
 		if !ok {
-			return errors.New("invalid union type for encoding")
+			tmp1310 = &tmp3332{}
+			p.tmp768 = tmp1310
 		}
-		_ = tmp1322 // to prevent unused warnings
+		_ = tmp1310 // to prevent unused warnings
 		if !(LenTmp == 0) {
 			return errors.New("Assertion failed")
 		}
 	} else if p.Type.Code == AttributeCode_AGGREGATOR {
-		tmp1303, ok := p.tmp786.(*tmp1308)
+		tmp1291, ok := p.tmp768.(*tmp1296)
 		if !ok {
 			return errors.New("invalid union type for encoding")
 		}
-		_ = tmp1303 // to prevent unused warnings
-		tmp769 := &bytes.Buffer{}
-		tmp1305 := tmp1303.Aggregator.Write(tmp769)
-		if tmp1305 != nil {
-			return tmp1305
+		_ = tmp1291 // to prevent unused warnings
+		tmp752 := &bytes.Buffer{}
+		var tmp752ByteIO io.ByteWriter = tmp752
+		_ = tmp752ByteIO
+		tmp1293 := tmp1291.Aggregator.Write(tmp752)
+		if tmp1293 != nil {
+			return tmp1293
 		}
-		if tmp769.Len() != int(LenTmp) {
-			return fmt.Errorf("subrange length mismatch: expected %d, got %d", int(LenTmp), tmp769.Len())
+		if tmp752.Len() != int(LenTmp) {
+			return fmt.Errorf("subrange length mismatch: expected %d, got %d", int(LenTmp), tmp752.Len())
 		}
-		if _, err := tmp64.Write(tmp769.Bytes()); err != nil {
+		if _, err := tmp60.Write(tmp752.Bytes()); err != nil {
 			return err
 		}
 	} else if p.Type.Code == AttributeCode_COMMUNITIES {
-		tmp1294, ok := p.tmp786.(*tmp1300)
+		tmp1282, ok := p.tmp768.(*tmp1288)
 		if !ok {
 			return errors.New("invalid union type for encoding")
 		}
-		_ = tmp1294 // to prevent unused warnings
-		tmp533 := &bytes.Buffer{}
-		tmp766 := int(0)
-		for tmp766 < len(tmp1294.Communities) {
-			tmp1298 := [4]uint8{}
-			binary.BigEndian.PutUint32(tmp1298[:], uint32(tmp1294.Communities[tmp766]))
-			if _, err := tmp533.Write(tmp1298[:4]); err != nil {
+		_ = tmp1282 // to prevent unused warnings
+		tmp524 := &bytes.Buffer{}
+		var tmp524ByteIO io.ByteWriter = tmp524
+		_ = tmp524ByteIO
+		tmp749 := int(0)
+		for tmp749 < len(tmp1282.Communities) {
+			tmp1286 := [4]uint8{}
+			binary.BigEndian.PutUint32(tmp1286[:], uint32(tmp1282.Communities[tmp749]))
+			if _, err := tmp524.Write(tmp1286[:4]); err != nil {
 				return err
 			}
-			tmp766 = tmp766 + int(1)
+			tmp749 = tmp749 + int(1)
 		}
-		if tmp533.Len() != int(LenTmp) {
-			return fmt.Errorf("subrange length mismatch: expected %d, got %d", int(LenTmp), tmp533.Len())
+		if tmp524.Len() != int(LenTmp) {
+			return fmt.Errorf("subrange length mismatch: expected %d, got %d", int(LenTmp), tmp524.Len())
 		}
-		if _, err := tmp64.Write(tmp533.Bytes()); err != nil {
+		if _, err := tmp60.Write(tmp524.Bytes()); err != nil {
 			return err
 		}
 	} else if p.Type.Code == AttributeCode_MP_REACH_NLRI {
-		tmp1254, ok := p.tmp786.(*tmp1259)
+		tmp1242, ok := p.tmp768.(*tmp1247)
 		if !ok {
 			return errors.New("invalid union type for encoding")
 		}
-		_ = tmp1254 // to prevent unused warnings
-		tmp761 := &bytes.Buffer{}
-		tmp1256 := tmp1254.MpReachNlri.Write(tmp761)
-		if tmp1256 != nil {
-			return tmp1256
+		_ = tmp1242 // to prevent unused warnings
+		tmp744 := &bytes.Buffer{}
+		var tmp744ByteIO io.ByteWriter = tmp744
+		_ = tmp744ByteIO
+		tmp1244 := tmp1242.MpReachNlri.Write(tmp744)
+		if tmp1244 != nil {
+			return tmp1244
 		}
-		if tmp761.Len() != int(LenTmp) {
-			return fmt.Errorf("subrange length mismatch: expected %d, got %d", int(LenTmp), tmp761.Len())
+		if tmp744.Len() != int(LenTmp) {
+			return fmt.Errorf("subrange length mismatch: expected %d, got %d", int(LenTmp), tmp744.Len())
 		}
-		if _, err := tmp64.Write(tmp761.Bytes()); err != nil {
+		if _, err := tmp60.Write(tmp744.Bytes()); err != nil {
 			return err
 		}
 	} else if p.Type.Code == AttributeCode_MP_UNREACH_NLRI {
-		tmp1229, ok := p.tmp786.(*tmp1234)
+		tmp1217, ok := p.tmp768.(*tmp1222)
 		if !ok {
 			return errors.New("invalid union type for encoding")
 		}
-		_ = tmp1229 // to prevent unused warnings
-		tmp755 := &bytes.Buffer{}
-		tmp1231 := tmp1229.MpUnreachNlri.Write(tmp755)
-		if tmp1231 != nil {
-			return tmp1231
+		_ = tmp1217 // to prevent unused warnings
+		tmp738 := &bytes.Buffer{}
+		var tmp738ByteIO io.ByteWriter = tmp738
+		_ = tmp738ByteIO
+		tmp1219 := tmp1217.MpUnreachNlri.Write(tmp738)
+		if tmp1219 != nil {
+			return tmp1219
 		}
-		if tmp755.Len() != int(LenTmp) {
-			return fmt.Errorf("subrange length mismatch: expected %d, got %d", int(LenTmp), tmp755.Len())
+		if tmp738.Len() != int(LenTmp) {
+			return fmt.Errorf("subrange length mismatch: expected %d, got %d", int(LenTmp), tmp738.Len())
 		}
-		if _, err := tmp64.Write(tmp755.Bytes()); err != nil {
+		if _, err := tmp60.Write(tmp738.Bytes()); err != nil {
 			return err
 		}
 	} else {
-		tmp1226, ok := p.tmp786.(*tmp1227)
+		tmp1214, ok := p.tmp768.(*tmp1215)
 		if !ok {
 			return errors.New("invalid union type for encoding")
 		}
-		_ = tmp1226 // to prevent unused warnings
-		if len(tmp1226.Data) != int(int(LenTmp)) {
-			return fmt.Errorf("size mismatch when writing field \"PathAttribute::tmp786::Data\": expected %d, got %d", int(int(LenTmp)), len(tmp1226.Data))
+		_ = tmp1214 // to prevent unused warnings
+		if len(tmp1214.Data) != int(int(LenTmp)) {
+			return fmt.Errorf("size mismatch when writing field \"PathAttribute::tmp768::Data\": expected %d, got %d", int(int(LenTmp)), len(tmp1214.Data))
 		}
-		if _, err := tmp64.Write(tmp1226.Data); err != nil {
+		if _, err := tmp60.Write(tmp1214.Data); err != nil {
 			return err
 		}
 	}
@@ -3907,250 +4520,260 @@ func (s *PathAttribute) MustEncodeCopy(reserved []byte) []byte {
 	}
 	return buf
 }
-func (p *PathAttribute) EncodeSlice(tmp64 []byte, tmp64Offset *int) error {
-	tmp1403 := p.Type.EncodeSlice(tmp64, tmp64Offset)
-	if tmp1403 != nil {
-		return tmp1403
+func (p *PathAttribute) EncodeSlice(tmp60 []byte, tmp60Offset *int) error {
+	tmp1387 := p.Type.EncodeSlice(tmp60, tmp60Offset)
+	if tmp1387 != nil {
+		return tmp1387
 	}
 	if p.Type.extended() == 1 {
-		tmp1428, ok := p.tmp794.(*tmp1429)
+		tmp1401, ok := p.tmp772.(*tmp1402)
 		if !ok {
 			return errors.New("invalid union type for encoding")
 		}
-		_ = tmp1428 // to prevent unused warnings
-		tmp1401 := []uint8{}
-		if len(tmp64)-*tmp64Offset < int(2) {
-			return errors.New("not enough space to reserve data for field \"PathAttribute::tmp794::Len\"")
+		_ = tmp1401 // to prevent unused warnings
+		tmp1385 := []uint8{}
+		if len(tmp60)-*tmp60Offset < int(2) {
+			return errors.New("not enough space to reserve data for field \"PathAttribute::tmp772::Len\"")
 		}
-		tmp1401 = tmp64[*tmp64Offset : *tmp64Offset+int(2)]
-		binary.BigEndian.PutUint16(tmp1401[:], uint16(tmp1428.Len))
-		*tmp64Offset += int(2)
+		tmp1385 = tmp60[*tmp60Offset : *tmp60Offset+int(2)]
+		binary.BigEndian.PutUint16(tmp1385[:], uint16(tmp1401.Len))
+		*tmp60Offset += int(2)
 	} else {
-		tmp1426, ok := p.tmp794.(*tmp1427)
+		tmp1399, ok := p.tmp772.(*tmp1400)
 		if !ok {
 			return errors.New("invalid union type for encoding")
 		}
-		_ = tmp1426 // to prevent unused warnings
-		tmp1399 := []uint8{}
-		if len(tmp64)-*tmp64Offset < int(1) {
-			return errors.New("not enough space to reserve data for field \"PathAttribute::tmp794::Len\"")
+		_ = tmp1399 // to prevent unused warnings
+		tmp1383 := []uint8{}
+		if len(tmp60)-*tmp60Offset < int(1) {
+			return errors.New("not enough space to reserve data for field \"PathAttribute::tmp772::Len\"")
 		}
-		tmp1399 = tmp64[*tmp64Offset : *tmp64Offset+int(1)]
-		tmp1399[0] = tmp1426.Len
-		*tmp64Offset += int(1)
+		tmp1383 = tmp60[*tmp60Offset : *tmp60Offset+int(1)]
+		tmp1383[0] = tmp1399.Len
+		*tmp60Offset += int(1)
 	}
 	LenTmp := uint16(p.Len())
 	if p.Type.Code == AttributeCode_ORIGIN {
-		tmp1395, ok := p.tmp786.(*tmp1413)
+		tmp1379, ok := p.tmp768.(*tmp1397)
 		if !ok {
 			return errors.New("invalid union type for encoding")
 		}
-		_ = tmp1395 // to prevent unused warnings
-		if len(tmp64)-*tmp64Offset < int(LenTmp) {
+		_ = tmp1379 // to prevent unused warnings
+		if len(tmp60)-*tmp60Offset < int(LenTmp) {
 			return errors.New("not enough space for subrange")
 		}
-		tmp787 := tmp64[*tmp64Offset : *tmp64Offset+int(LenTmp)]
-		tmp787OffsetBase := 0
-		tmp787Offset := &tmp787OffsetBase
-		tmp1220 := tmp1395.Origin.EncodeSlice(tmp787, tmp787Offset)
-		if tmp1220 != nil {
-			return tmp1220
+		tmp553 := tmp60[*tmp60Offset : *tmp60Offset+int(LenTmp)]
+		tmp553OffsetBase := 0
+		tmp553Offset := &tmp553OffsetBase
+		tmp1209 := []uint8{}
+		if len(tmp553)-*tmp553Offset < int(1) {
+			return errors.New("not enough space to reserve data for field \"PathAttribute::tmp768::Origin\"")
 		}
-		if *tmp787Offset != int(LenTmp) {
-			return fmt.Errorf("subrange length mismatch: expected %d, got %d", int(LenTmp), *tmp787Offset)
+		tmp1209 = tmp553[*tmp553Offset : *tmp553Offset+int(1)]
+		tmp1209[0] = uint8(tmp1379.Origin)
+		*tmp553Offset += int(1)
+		if *tmp553Offset != int(LenTmp) {
+			return fmt.Errorf("subrange length mismatch: expected %d, got %d", int(LenTmp), *tmp553Offset)
 		}
-		*tmp64Offset += int(LenTmp)
+		*tmp60Offset += int(LenTmp)
 	} else if p.Type.Code == AttributeCode_AS_PATH {
-		tmp1350, ok := p.tmp786.(*tmp1355)
+		tmp1333, ok := p.tmp768.(*tmp1338)
 		if !ok {
 			return errors.New("invalid union type for encoding")
 		}
-		_ = tmp1350 // to prevent unused warnings
-		if len(tmp64)-*tmp64Offset < int(LenTmp) {
+		_ = tmp1333 // to prevent unused warnings
+		if len(tmp60)-*tmp60Offset < int(LenTmp) {
 			return errors.New("not enough space for subrange")
 		}
-		tmp777 := tmp64[*tmp64Offset : *tmp64Offset+int(LenTmp)]
-		tmp777OffsetBase := 0
-		tmp777Offset := &tmp777OffsetBase
-		tmp1352 := tmp1350.AsPath.EncodeSlice(tmp777, tmp777Offset)
-		if tmp1352 != nil {
-			return tmp1352
+		tmp759 := tmp60[*tmp60Offset : *tmp60Offset+int(LenTmp)]
+		tmp759OffsetBase := 0
+		tmp759Offset := &tmp759OffsetBase
+		tmp1335 := tmp1333.AsPath.EncodeSlice(tmp759, tmp759Offset)
+		if tmp1335 != nil {
+			return tmp1335
 		}
-		if *tmp777Offset != int(LenTmp) {
-			return fmt.Errorf("subrange length mismatch: expected %d, got %d", int(LenTmp), *tmp777Offset)
+		if *tmp759Offset != int(LenTmp) {
+			return fmt.Errorf("subrange length mismatch: expected %d, got %d", int(LenTmp), *tmp759Offset)
 		}
-		*tmp64Offset += int(LenTmp)
+		*tmp60Offset += int(LenTmp)
 	} else if p.Type.Code == AttributeCode_NEXT_HOP {
-		tmp1344, ok := p.tmp786.(*tmp1347)
+		tmp1327, ok := p.tmp768.(*tmp1330)
 		if !ok {
 			return errors.New("invalid union type for encoding")
 		}
-		_ = tmp1344 // to prevent unused warnings
-		if len(tmp64)-*tmp64Offset < int(LenTmp) {
+		_ = tmp1327 // to prevent unused warnings
+		if len(tmp60)-*tmp60Offset < int(LenTmp) {
 			return errors.New("not enough space for subrange")
 		}
-		tmp1345 := tmp64[*tmp64Offset : *tmp64Offset+int(LenTmp)]
-		tmp1345OffsetBase := 0
-		tmp1345Offset := &tmp1345OffsetBase
-		if len(tmp1345)-*tmp1345Offset < int(4) {
-			return errors.New("not enough space to write for field \"PathAttribute::tmp786::NextHop\"")
+		tmp1328 := tmp60[*tmp60Offset : *tmp60Offset+int(LenTmp)]
+		tmp1328OffsetBase := 0
+		tmp1328Offset := &tmp1328OffsetBase
+		if len(tmp1328)-*tmp1328Offset < int(4) {
+			return errors.New("not enough space to write for field \"PathAttribute::tmp768::NextHop\"")
 		}
-		copy(tmp1345[*tmp1345Offset:*tmp1345Offset+int(4)], tmp1344.NextHop[:])
-		*tmp1345Offset += int(4)
-		if *tmp1345Offset != int(LenTmp) {
-			return fmt.Errorf("subrange length mismatch: expected %d, got %d", int(LenTmp), *tmp1345Offset)
+		copy(tmp1328[*tmp1328Offset:*tmp1328Offset+int(4)], tmp1327.NextHop[:])
+		*tmp1328Offset += int(4)
+		if *tmp1328Offset != int(LenTmp) {
+			return fmt.Errorf("subrange length mismatch: expected %d, got %d", int(LenTmp), *tmp1328Offset)
 		}
-		*tmp64Offset += int(LenTmp)
+		*tmp60Offset += int(LenTmp)
 	} else if p.Type.Code == AttributeCode_MULTI_EXIT_DISC {
-		tmp1331, ok := p.tmp786.(*tmp1335)
+		tmp1320, ok := p.tmp768.(*tmp1324)
 		if !ok {
 			return errors.New("invalid union type for encoding")
 		}
-		_ = tmp1331 // to prevent unused warnings
-		if len(tmp64)-*tmp64Offset < int(LenTmp) {
+		_ = tmp1320 // to prevent unused warnings
+		if len(tmp60)-*tmp60Offset < int(LenTmp) {
 			return errors.New("not enough space for subrange")
 		}
-		tmp774 := tmp64[*tmp64Offset : *tmp64Offset+int(LenTmp)]
-		tmp774OffsetBase := 0
-		tmp774Offset := &tmp774OffsetBase
-		tmp1333 := tmp1331.MultiExitDisc.EncodeSlice(tmp774, tmp774Offset)
-		if tmp1333 != nil {
-			return tmp1333
+		tmp756 := tmp60[*tmp60Offset : *tmp60Offset+int(LenTmp)]
+		tmp756OffsetBase := 0
+		tmp756Offset := &tmp756OffsetBase
+		tmp1322 := []uint8{}
+		if len(tmp756)-*tmp756Offset < int(4) {
+			return errors.New("not enough space to reserve data for field \"PathAttribute::tmp768::MultiExitDisc\"")
 		}
-		if *tmp774Offset != int(LenTmp) {
-			return fmt.Errorf("subrange length mismatch: expected %d, got %d", int(LenTmp), *tmp774Offset)
+		tmp1322 = tmp756[*tmp756Offset : *tmp756Offset+int(4)]
+		binary.BigEndian.PutUint32(tmp1322[:], uint32(tmp1320.MultiExitDisc))
+		*tmp756Offset += int(4)
+		if *tmp756Offset != int(LenTmp) {
+			return fmt.Errorf("subrange length mismatch: expected %d, got %d", int(LenTmp), *tmp756Offset)
 		}
-		*tmp64Offset += int(LenTmp)
+		*tmp60Offset += int(LenTmp)
 	} else if p.Type.Code == AttributeCode_LOCAL_PREF {
-		tmp1325, ok := p.tmp786.(*tmp1328)
+		tmp1313, ok := p.tmp768.(*tmp1317)
 		if !ok {
 			return errors.New("invalid union type for encoding")
 		}
-		_ = tmp1325 // to prevent unused warnings
-		if len(tmp64)-*tmp64Offset < int(LenTmp) {
+		_ = tmp1313 // to prevent unused warnings
+		if len(tmp60)-*tmp60Offset < int(LenTmp) {
 			return errors.New("not enough space for subrange")
 		}
-		tmp771 := tmp64[*tmp64Offset : *tmp64Offset+int(LenTmp)]
-		tmp771OffsetBase := 0
-		tmp771Offset := &tmp771OffsetBase
-		tmp1327 := tmp1325.LocalPref.EncodeSlice(tmp771, tmp771Offset)
-		if tmp1327 != nil {
-			return tmp1327
+		tmp754 := tmp60[*tmp60Offset : *tmp60Offset+int(LenTmp)]
+		tmp754OffsetBase := 0
+		tmp754Offset := &tmp754OffsetBase
+		tmp1315 := []uint8{}
+		if len(tmp754)-*tmp754Offset < int(4) {
+			return errors.New("not enough space to reserve data for field \"PathAttribute::tmp768::LocalPref\"")
 		}
-		if *tmp771Offset != int(LenTmp) {
-			return fmt.Errorf("subrange length mismatch: expected %d, got %d", int(LenTmp), *tmp771Offset)
+		tmp1315 = tmp754[*tmp754Offset : *tmp754Offset+int(4)]
+		binary.BigEndian.PutUint32(tmp1315[:], uint32(tmp1313.LocalPref))
+		*tmp754Offset += int(4)
+		if *tmp754Offset != int(LenTmp) {
+			return fmt.Errorf("subrange length mismatch: expected %d, got %d", int(LenTmp), *tmp754Offset)
 		}
-		*tmp64Offset += int(LenTmp)
+		*tmp60Offset += int(LenTmp)
 	} else if p.Type.Code == AttributeCode_ATOMIC_AGGREGATE {
-		tmp1322, ok := p.tmp786.(*tmp3339)
+		tmp1310, ok := p.tmp768.(*tmp3332)
 		if !ok {
-			return errors.New("invalid union type for encoding")
+			tmp1310 = &tmp3332{}
+			p.tmp768 = tmp1310
 		}
-		_ = tmp1322 // to prevent unused warnings
+		_ = tmp1310 // to prevent unused warnings
 		if !(LenTmp == 0) {
 			return errors.New("Assertion failed")
 		}
 	} else if p.Type.Code == AttributeCode_AGGREGATOR {
-		tmp1303, ok := p.tmp786.(*tmp1308)
+		tmp1291, ok := p.tmp768.(*tmp1296)
 		if !ok {
 			return errors.New("invalid union type for encoding")
 		}
-		_ = tmp1303 // to prevent unused warnings
-		if len(tmp64)-*tmp64Offset < int(LenTmp) {
+		_ = tmp1291 // to prevent unused warnings
+		if len(tmp60)-*tmp60Offset < int(LenTmp) {
 			return errors.New("not enough space for subrange")
 		}
-		tmp769 := tmp64[*tmp64Offset : *tmp64Offset+int(LenTmp)]
-		tmp769OffsetBase := 0
-		tmp769Offset := &tmp769OffsetBase
-		tmp1305 := tmp1303.Aggregator.EncodeSlice(tmp769, tmp769Offset)
-		if tmp1305 != nil {
-			return tmp1305
+		tmp752 := tmp60[*tmp60Offset : *tmp60Offset+int(LenTmp)]
+		tmp752OffsetBase := 0
+		tmp752Offset := &tmp752OffsetBase
+		tmp1293 := tmp1291.Aggregator.EncodeSlice(tmp752, tmp752Offset)
+		if tmp1293 != nil {
+			return tmp1293
 		}
-		if *tmp769Offset != int(LenTmp) {
-			return fmt.Errorf("subrange length mismatch: expected %d, got %d", int(LenTmp), *tmp769Offset)
+		if *tmp752Offset != int(LenTmp) {
+			return fmt.Errorf("subrange length mismatch: expected %d, got %d", int(LenTmp), *tmp752Offset)
 		}
-		*tmp64Offset += int(LenTmp)
+		*tmp60Offset += int(LenTmp)
 	} else if p.Type.Code == AttributeCode_COMMUNITIES {
-		tmp1294, ok := p.tmp786.(*tmp1300)
+		tmp1282, ok := p.tmp768.(*tmp1288)
 		if !ok {
 			return errors.New("invalid union type for encoding")
 		}
-		_ = tmp1294 // to prevent unused warnings
-		if len(tmp64)-*tmp64Offset < int(LenTmp) {
+		_ = tmp1282 // to prevent unused warnings
+		if len(tmp60)-*tmp60Offset < int(LenTmp) {
 			return errors.New("not enough space for subrange")
 		}
-		tmp533 := tmp64[*tmp64Offset : *tmp64Offset+int(LenTmp)]
-		tmp533OffsetBase := 0
-		tmp533Offset := &tmp533OffsetBase
-		tmp766 := int(0)
-		for tmp766 < len(tmp1294.Communities) {
-			tmp1298 := []uint8{}
-			if len(tmp533)-*tmp533Offset < int(4) {
-				return errors.New("not enough space to reserve data for field \"PathAttribute::tmp786::Communities\"")
+		tmp524 := tmp60[*tmp60Offset : *tmp60Offset+int(LenTmp)]
+		tmp524OffsetBase := 0
+		tmp524Offset := &tmp524OffsetBase
+		tmp749 := int(0)
+		for tmp749 < len(tmp1282.Communities) {
+			tmp1286 := []uint8{}
+			if len(tmp524)-*tmp524Offset < int(4) {
+				return errors.New("not enough space to reserve data for field \"PathAttribute::tmp768::Communities\"")
 			}
-			tmp1298 = tmp533[*tmp533Offset : *tmp533Offset+int(4)]
-			binary.BigEndian.PutUint32(tmp1298[:], uint32(tmp1294.Communities[tmp766]))
-			*tmp533Offset += int(4)
-			tmp766 = tmp766 + int(1)
+			tmp1286 = tmp524[*tmp524Offset : *tmp524Offset+int(4)]
+			binary.BigEndian.PutUint32(tmp1286[:], uint32(tmp1282.Communities[tmp749]))
+			*tmp524Offset += int(4)
+			tmp749 = tmp749 + int(1)
 		}
-		if *tmp533Offset != int(LenTmp) {
-			return fmt.Errorf("subrange length mismatch: expected %d, got %d", int(LenTmp), *tmp533Offset)
+		if *tmp524Offset != int(LenTmp) {
+			return fmt.Errorf("subrange length mismatch: expected %d, got %d", int(LenTmp), *tmp524Offset)
 		}
-		*tmp64Offset += int(LenTmp)
+		*tmp60Offset += int(LenTmp)
 	} else if p.Type.Code == AttributeCode_MP_REACH_NLRI {
-		tmp1254, ok := p.tmp786.(*tmp1259)
+		tmp1242, ok := p.tmp768.(*tmp1247)
 		if !ok {
 			return errors.New("invalid union type for encoding")
 		}
-		_ = tmp1254 // to prevent unused warnings
-		if len(tmp64)-*tmp64Offset < int(LenTmp) {
+		_ = tmp1242 // to prevent unused warnings
+		if len(tmp60)-*tmp60Offset < int(LenTmp) {
 			return errors.New("not enough space for subrange")
 		}
-		tmp761 := tmp64[*tmp64Offset : *tmp64Offset+int(LenTmp)]
-		tmp761OffsetBase := 0
-		tmp761Offset := &tmp761OffsetBase
-		tmp1256 := tmp1254.MpReachNlri.EncodeSlice(tmp761, tmp761Offset)
-		if tmp1256 != nil {
-			return tmp1256
+		tmp744 := tmp60[*tmp60Offset : *tmp60Offset+int(LenTmp)]
+		tmp744OffsetBase := 0
+		tmp744Offset := &tmp744OffsetBase
+		tmp1244 := tmp1242.MpReachNlri.EncodeSlice(tmp744, tmp744Offset)
+		if tmp1244 != nil {
+			return tmp1244
 		}
-		if *tmp761Offset != int(LenTmp) {
-			return fmt.Errorf("subrange length mismatch: expected %d, got %d", int(LenTmp), *tmp761Offset)
+		if *tmp744Offset != int(LenTmp) {
+			return fmt.Errorf("subrange length mismatch: expected %d, got %d", int(LenTmp), *tmp744Offset)
 		}
-		*tmp64Offset += int(LenTmp)
+		*tmp60Offset += int(LenTmp)
 	} else if p.Type.Code == AttributeCode_MP_UNREACH_NLRI {
-		tmp1229, ok := p.tmp786.(*tmp1234)
+		tmp1217, ok := p.tmp768.(*tmp1222)
 		if !ok {
 			return errors.New("invalid union type for encoding")
 		}
-		_ = tmp1229 // to prevent unused warnings
-		if len(tmp64)-*tmp64Offset < int(LenTmp) {
+		_ = tmp1217 // to prevent unused warnings
+		if len(tmp60)-*tmp60Offset < int(LenTmp) {
 			return errors.New("not enough space for subrange")
 		}
-		tmp755 := tmp64[*tmp64Offset : *tmp64Offset+int(LenTmp)]
-		tmp755OffsetBase := 0
-		tmp755Offset := &tmp755OffsetBase
-		tmp1231 := tmp1229.MpUnreachNlri.EncodeSlice(tmp755, tmp755Offset)
-		if tmp1231 != nil {
-			return tmp1231
+		tmp738 := tmp60[*tmp60Offset : *tmp60Offset+int(LenTmp)]
+		tmp738OffsetBase := 0
+		tmp738Offset := &tmp738OffsetBase
+		tmp1219 := tmp1217.MpUnreachNlri.EncodeSlice(tmp738, tmp738Offset)
+		if tmp1219 != nil {
+			return tmp1219
 		}
-		if *tmp755Offset != int(LenTmp) {
-			return fmt.Errorf("subrange length mismatch: expected %d, got %d", int(LenTmp), *tmp755Offset)
+		if *tmp738Offset != int(LenTmp) {
+			return fmt.Errorf("subrange length mismatch: expected %d, got %d", int(LenTmp), *tmp738Offset)
 		}
-		*tmp64Offset += int(LenTmp)
+		*tmp60Offset += int(LenTmp)
 	} else {
-		tmp1226, ok := p.tmp786.(*tmp1227)
+		tmp1214, ok := p.tmp768.(*tmp1215)
 		if !ok {
 			return errors.New("invalid union type for encoding")
 		}
-		_ = tmp1226 // to prevent unused warnings
-		if len(tmp1226.Data) != int(int(LenTmp)) {
-			return fmt.Errorf("size mismatch when writing field \"PathAttribute::tmp786::Data\": expected %d, got %d", int(int(LenTmp)), len(tmp1226.Data))
+		_ = tmp1214 // to prevent unused warnings
+		if len(tmp1214.Data) != int(int(LenTmp)) {
+			return fmt.Errorf("size mismatch when writing field \"PathAttribute::tmp768::Data\": expected %d, got %d", int(int(LenTmp)), len(tmp1214.Data))
 		}
-		if len(tmp64)-*tmp64Offset < int(0+int(LenTmp)) {
-			return errors.New("not enough space to write for field \"PathAttribute::tmp786::Data\"")
+		if len(tmp60)-*tmp60Offset < int(0+int(LenTmp)) {
+			return errors.New("not enough space to write for field \"PathAttribute::tmp768::Data\"")
 		}
-		copy(tmp64[*tmp64Offset:*tmp64Offset+int(int(LenTmp))], tmp1226.Data)
-		*tmp64Offset += int(int(LenTmp))
+		copy(tmp60[*tmp60Offset:*tmp60Offset+int(int(LenTmp))], tmp1214.Data)
+		*tmp60Offset += int(int(LenTmp))
 	}
 	return nil
 }
@@ -4169,203 +4792,195 @@ func (s *PathAttribute) MustEncode(reserved []byte) []byte {
 	}
 	return buf
 }
-func (p *PathAttribute) Append(tmp64 []byte) ([]byte, error) {
-	var tmp1403 error
-	tmp64, tmp1403 = p.Type.Append(tmp64)
+func (p *PathAttribute) Append(tmp60 []byte) ([]byte, error) {
+	var tmp1387 error
+	tmp60, tmp1387 = p.Type.Append(tmp60)
 
-	if tmp1403 != nil {
-		return nil, tmp1403
+	if tmp1387 != nil {
+		return nil, tmp1387
 	}
 	if p.Type.extended() == 1 {
-		tmp1428, ok := p.tmp794.(*tmp1429)
+		tmp1401, ok := p.tmp772.(*tmp1402)
 		if !ok {
 			return nil, errors.New("invalid union type for encoding")
 		}
-		_ = tmp1428 // to prevent unused warnings
-		tmp1401 := [2]uint8{}
-		binary.BigEndian.PutUint16(tmp1401[:], uint16(tmp1428.Len))
-		tmp64 = append(tmp64, tmp1401[:2]...)
+		_ = tmp1401 // to prevent unused warnings
+		tmp1385 := [2]uint8{}
+		binary.BigEndian.PutUint16(tmp1385[:], uint16(tmp1401.Len))
+		tmp60 = append(tmp60, tmp1385[:2]...)
 	} else {
-		tmp1426, ok := p.tmp794.(*tmp1427)
+		tmp1399, ok := p.tmp772.(*tmp1400)
 		if !ok {
 			return nil, errors.New("invalid union type for encoding")
 		}
-		_ = tmp1426 // to prevent unused warnings
-		tmp1399 := [1]uint8{}
-		tmp1399[0] = tmp1426.Len
-		tmp64 = append(tmp64, tmp1399[:1]...)
+		_ = tmp1399 // to prevent unused warnings
+		tmp1383 := [1]uint8{}
+		tmp1383[0] = tmp1399.Len
+		tmp60 = append(tmp60, tmp1383[:1]...)
 	}
 	LenTmp := uint16(p.Len())
 	if p.Type.Code == AttributeCode_ORIGIN {
-		tmp1395, ok := p.tmp786.(*tmp1413)
+		tmp1379, ok := p.tmp768.(*tmp1397)
 		if !ok {
 			return nil, errors.New("invalid union type for encoding")
 		}
-		_ = tmp1395 // to prevent unused warnings
-		tmp787 := tmp64
-		var tmp1220 error
-		tmp787, tmp1220 = tmp1395.Origin.Append(tmp787)
-
-		if tmp1220 != nil {
-			return nil, tmp1220
+		_ = tmp1379 // to prevent unused warnings
+		tmp553 := tmp60
+		tmp1209 := [1]uint8{}
+		tmp1209[0] = uint8(tmp1379.Origin)
+		tmp553 = append(tmp553, tmp1209[:1]...)
+		if len(tmp553)-len(tmp60) != int(LenTmp) {
+			return nil, fmt.Errorf("subrange length mismatch: expected %d, got %d", int(LenTmp), len(tmp553)-len(tmp60))
 		}
-		if len(tmp787)-len(tmp64) != int(LenTmp) {
-			return nil, fmt.Errorf("subrange length mismatch: expected %d, got %d", int(LenTmp), len(tmp787)-len(tmp64))
-		}
-		tmp64 = tmp787
+		tmp60 = tmp553
 	} else if p.Type.Code == AttributeCode_AS_PATH {
-		tmp1350, ok := p.tmp786.(*tmp1355)
+		tmp1333, ok := p.tmp768.(*tmp1338)
 		if !ok {
 			return nil, errors.New("invalid union type for encoding")
 		}
-		_ = tmp1350 // to prevent unused warnings
-		tmp777 := tmp64
-		var tmp1352 error
-		tmp777, tmp1352 = tmp1350.AsPath.Append(tmp777)
+		_ = tmp1333 // to prevent unused warnings
+		tmp759 := tmp60
+		var tmp1335 error
+		tmp759, tmp1335 = tmp1333.AsPath.Append(tmp759)
 
-		if tmp1352 != nil {
-			return nil, tmp1352
+		if tmp1335 != nil {
+			return nil, tmp1335
 		}
-		if len(tmp777)-len(tmp64) != int(LenTmp) {
-			return nil, fmt.Errorf("subrange length mismatch: expected %d, got %d", int(LenTmp), len(tmp777)-len(tmp64))
+		if len(tmp759)-len(tmp60) != int(LenTmp) {
+			return nil, fmt.Errorf("subrange length mismatch: expected %d, got %d", int(LenTmp), len(tmp759)-len(tmp60))
 		}
-		tmp64 = tmp777
+		tmp60 = tmp759
 	} else if p.Type.Code == AttributeCode_NEXT_HOP {
-		tmp1344, ok := p.tmp786.(*tmp1347)
+		tmp1327, ok := p.tmp768.(*tmp1330)
 		if !ok {
 			return nil, errors.New("invalid union type for encoding")
 		}
-		_ = tmp1344 // to prevent unused warnings
-		tmp1345 := tmp64
-		tmp1345 = append(tmp1345, tmp1344.NextHop[:4]...)
-		if len(tmp1345)-len(tmp64) != int(LenTmp) {
-			return nil, fmt.Errorf("subrange length mismatch: expected %d, got %d", int(LenTmp), len(tmp1345)-len(tmp64))
+		_ = tmp1327 // to prevent unused warnings
+		tmp1328 := tmp60
+		tmp1328 = append(tmp1328, tmp1327.NextHop[:4]...)
+		if len(tmp1328)-len(tmp60) != int(LenTmp) {
+			return nil, fmt.Errorf("subrange length mismatch: expected %d, got %d", int(LenTmp), len(tmp1328)-len(tmp60))
 		}
-		tmp64 = tmp1345
+		tmp60 = tmp1328
 	} else if p.Type.Code == AttributeCode_MULTI_EXIT_DISC {
-		tmp1331, ok := p.tmp786.(*tmp1335)
+		tmp1320, ok := p.tmp768.(*tmp1324)
 		if !ok {
 			return nil, errors.New("invalid union type for encoding")
 		}
-		_ = tmp1331 // to prevent unused warnings
-		tmp774 := tmp64
-		var tmp1333 error
-		tmp774, tmp1333 = tmp1331.MultiExitDisc.Append(tmp774)
-
-		if tmp1333 != nil {
-			return nil, tmp1333
+		_ = tmp1320 // to prevent unused warnings
+		tmp756 := tmp60
+		tmp1322 := [4]uint8{}
+		binary.BigEndian.PutUint32(tmp1322[:], uint32(tmp1320.MultiExitDisc))
+		tmp756 = append(tmp756, tmp1322[:4]...)
+		if len(tmp756)-len(tmp60) != int(LenTmp) {
+			return nil, fmt.Errorf("subrange length mismatch: expected %d, got %d", int(LenTmp), len(tmp756)-len(tmp60))
 		}
-		if len(tmp774)-len(tmp64) != int(LenTmp) {
-			return nil, fmt.Errorf("subrange length mismatch: expected %d, got %d", int(LenTmp), len(tmp774)-len(tmp64))
-		}
-		tmp64 = tmp774
+		tmp60 = tmp756
 	} else if p.Type.Code == AttributeCode_LOCAL_PREF {
-		tmp1325, ok := p.tmp786.(*tmp1328)
+		tmp1313, ok := p.tmp768.(*tmp1317)
 		if !ok {
 			return nil, errors.New("invalid union type for encoding")
 		}
-		_ = tmp1325 // to prevent unused warnings
-		tmp771 := tmp64
-		var tmp1327 error
-		tmp771, tmp1327 = tmp1325.LocalPref.Append(tmp771)
-
-		if tmp1327 != nil {
-			return nil, tmp1327
+		_ = tmp1313 // to prevent unused warnings
+		tmp754 := tmp60
+		tmp1315 := [4]uint8{}
+		binary.BigEndian.PutUint32(tmp1315[:], uint32(tmp1313.LocalPref))
+		tmp754 = append(tmp754, tmp1315[:4]...)
+		if len(tmp754)-len(tmp60) != int(LenTmp) {
+			return nil, fmt.Errorf("subrange length mismatch: expected %d, got %d", int(LenTmp), len(tmp754)-len(tmp60))
 		}
-		if len(tmp771)-len(tmp64) != int(LenTmp) {
-			return nil, fmt.Errorf("subrange length mismatch: expected %d, got %d", int(LenTmp), len(tmp771)-len(tmp64))
-		}
-		tmp64 = tmp771
+		tmp60 = tmp754
 	} else if p.Type.Code == AttributeCode_ATOMIC_AGGREGATE {
-		tmp1322, ok := p.tmp786.(*tmp3339)
+		tmp1310, ok := p.tmp768.(*tmp3332)
 		if !ok {
-			return nil, errors.New("invalid union type for encoding")
+			tmp1310 = &tmp3332{}
+			p.tmp768 = tmp1310
 		}
-		_ = tmp1322 // to prevent unused warnings
+		_ = tmp1310 // to prevent unused warnings
 		if !(LenTmp == 0) {
 			return nil, errors.New("Assertion failed")
 		}
 	} else if p.Type.Code == AttributeCode_AGGREGATOR {
-		tmp1303, ok := p.tmp786.(*tmp1308)
+		tmp1291, ok := p.tmp768.(*tmp1296)
 		if !ok {
 			return nil, errors.New("invalid union type for encoding")
 		}
-		_ = tmp1303 // to prevent unused warnings
-		tmp769 := tmp64
-		var tmp1305 error
-		tmp769, tmp1305 = tmp1303.Aggregator.Append(tmp769)
+		_ = tmp1291 // to prevent unused warnings
+		tmp752 := tmp60
+		var tmp1293 error
+		tmp752, tmp1293 = tmp1291.Aggregator.Append(tmp752)
 
-		if tmp1305 != nil {
-			return nil, tmp1305
+		if tmp1293 != nil {
+			return nil, tmp1293
 		}
-		if len(tmp769)-len(tmp64) != int(LenTmp) {
-			return nil, fmt.Errorf("subrange length mismatch: expected %d, got %d", int(LenTmp), len(tmp769)-len(tmp64))
+		if len(tmp752)-len(tmp60) != int(LenTmp) {
+			return nil, fmt.Errorf("subrange length mismatch: expected %d, got %d", int(LenTmp), len(tmp752)-len(tmp60))
 		}
-		tmp64 = tmp769
+		tmp60 = tmp752
 	} else if p.Type.Code == AttributeCode_COMMUNITIES {
-		tmp1294, ok := p.tmp786.(*tmp1300)
+		tmp1282, ok := p.tmp768.(*tmp1288)
 		if !ok {
 			return nil, errors.New("invalid union type for encoding")
 		}
-		_ = tmp1294 // to prevent unused warnings
-		tmp533 := tmp64
-		tmp766 := int(0)
-		for tmp766 < len(tmp1294.Communities) {
-			tmp1298 := [4]uint8{}
-			binary.BigEndian.PutUint32(tmp1298[:], uint32(tmp1294.Communities[tmp766]))
-			tmp533 = append(tmp533, tmp1298[:4]...)
-			tmp766 = tmp766 + int(1)
+		_ = tmp1282 // to prevent unused warnings
+		tmp524 := tmp60
+		tmp749 := int(0)
+		for tmp749 < len(tmp1282.Communities) {
+			tmp1286 := [4]uint8{}
+			binary.BigEndian.PutUint32(tmp1286[:], uint32(tmp1282.Communities[tmp749]))
+			tmp524 = append(tmp524, tmp1286[:4]...)
+			tmp749 = tmp749 + int(1)
 		}
-		if len(tmp533)-len(tmp64) != int(LenTmp) {
-			return nil, fmt.Errorf("subrange length mismatch: expected %d, got %d", int(LenTmp), len(tmp533)-len(tmp64))
+		if len(tmp524)-len(tmp60) != int(LenTmp) {
+			return nil, fmt.Errorf("subrange length mismatch: expected %d, got %d", int(LenTmp), len(tmp524)-len(tmp60))
 		}
-		tmp64 = tmp533
+		tmp60 = tmp524
 	} else if p.Type.Code == AttributeCode_MP_REACH_NLRI {
-		tmp1254, ok := p.tmp786.(*tmp1259)
+		tmp1242, ok := p.tmp768.(*tmp1247)
 		if !ok {
 			return nil, errors.New("invalid union type for encoding")
 		}
-		_ = tmp1254 // to prevent unused warnings
-		tmp761 := tmp64
-		var tmp1256 error
-		tmp761, tmp1256 = tmp1254.MpReachNlri.Append(tmp761)
+		_ = tmp1242 // to prevent unused warnings
+		tmp744 := tmp60
+		var tmp1244 error
+		tmp744, tmp1244 = tmp1242.MpReachNlri.Append(tmp744)
 
-		if tmp1256 != nil {
-			return nil, tmp1256
+		if tmp1244 != nil {
+			return nil, tmp1244
 		}
-		if len(tmp761)-len(tmp64) != int(LenTmp) {
-			return nil, fmt.Errorf("subrange length mismatch: expected %d, got %d", int(LenTmp), len(tmp761)-len(tmp64))
+		if len(tmp744)-len(tmp60) != int(LenTmp) {
+			return nil, fmt.Errorf("subrange length mismatch: expected %d, got %d", int(LenTmp), len(tmp744)-len(tmp60))
 		}
-		tmp64 = tmp761
+		tmp60 = tmp744
 	} else if p.Type.Code == AttributeCode_MP_UNREACH_NLRI {
-		tmp1229, ok := p.tmp786.(*tmp1234)
+		tmp1217, ok := p.tmp768.(*tmp1222)
 		if !ok {
 			return nil, errors.New("invalid union type for encoding")
 		}
-		_ = tmp1229 // to prevent unused warnings
-		tmp755 := tmp64
-		var tmp1231 error
-		tmp755, tmp1231 = tmp1229.MpUnreachNlri.Append(tmp755)
+		_ = tmp1217 // to prevent unused warnings
+		tmp738 := tmp60
+		var tmp1219 error
+		tmp738, tmp1219 = tmp1217.MpUnreachNlri.Append(tmp738)
 
-		if tmp1231 != nil {
-			return nil, tmp1231
+		if tmp1219 != nil {
+			return nil, tmp1219
 		}
-		if len(tmp755)-len(tmp64) != int(LenTmp) {
-			return nil, fmt.Errorf("subrange length mismatch: expected %d, got %d", int(LenTmp), len(tmp755)-len(tmp64))
+		if len(tmp738)-len(tmp60) != int(LenTmp) {
+			return nil, fmt.Errorf("subrange length mismatch: expected %d, got %d", int(LenTmp), len(tmp738)-len(tmp60))
 		}
-		tmp64 = tmp755
+		tmp60 = tmp738
 	} else {
-		tmp1226, ok := p.tmp786.(*tmp1227)
+		tmp1214, ok := p.tmp768.(*tmp1215)
 		if !ok {
 			return nil, errors.New("invalid union type for encoding")
 		}
-		_ = tmp1226 // to prevent unused warnings
-		if len(tmp1226.Data) != int(int(LenTmp)) {
-			return nil, fmt.Errorf("size mismatch when writing field \"PathAttribute::tmp786::Data\": expected %d, got %d", int(int(LenTmp)), len(tmp1226.Data))
+		_ = tmp1214 // to prevent unused warnings
+		if len(tmp1214.Data) != int(int(LenTmp)) {
+			return nil, fmt.Errorf("size mismatch when writing field \"PathAttribute::tmp768::Data\": expected %d, got %d", int(int(LenTmp)), len(tmp1214.Data))
 		}
-		tmp64 = append(tmp64, tmp1226.Data...)
+		tmp60 = append(tmp60, tmp1214.Data...)
 	}
-	return tmp64, nil
+	return tmp60, nil
 }
 func (s *PathAttribute) MustAppend(buf []byte) []byte {
 	var err error
@@ -4375,213 +4990,445 @@ func (s *PathAttribute) MustAppend(buf []byte) []byte {
 	}
 	return buf
 }
+func (p *PathAttribute) encodedSize(tmp60 int) (int, error) {
+	var tmp1387 error
+	tmp60, tmp1387 = p.Type.encodedSize(tmp60)
 
-func (p *PathAttribute) Read(tmp63 io.Reader) error {
-	tmp63ByteIO, _ := tmp63.(io.ByteReader)
-	_ = tmp63ByteIO
-	tmp1207 := p.Type.Read(tmp63)
-	if tmp1207 != nil {
-		return tmp1207
+	if tmp1387 != nil {
+		return 0, tmp1387
 	}
 	if p.Type.extended() == 1 {
-		tmp1428, ok := p.tmp794.(*tmp1429)
+		tmp1401, ok := p.tmp772.(*tmp1402)
 		if !ok {
-			tmp1428 = &tmp1429{}
-			p.tmp794 = tmp1428
+			return 0, errors.New("invalid union type for encoding")
 		}
-		_ = tmp1428 // to prevent unused warnings
-		tmp1205 := [2]uint8{}
-		if _, err := io.ReadFull(tmp63, tmp1205[0:0+2]); err != nil {
+		_ = tmp1401 // to prevent unused warnings
+		tmp1385 := [2]uint8{}
+		binary.BigEndian.PutUint16(tmp1385[:], uint16(tmp1401.Len))
+		tmp60 += int(2)
+	} else {
+		tmp1399, ok := p.tmp772.(*tmp1400)
+		if !ok {
+			return 0, errors.New("invalid union type for encoding")
+		}
+		_ = tmp1399 // to prevent unused warnings
+		tmp1383 := [1]uint8{}
+		tmp1383[0] = tmp1399.Len
+		tmp60 += int(1)
+	}
+	LenTmp := uint16(p.Len())
+	if p.Type.Code == AttributeCode_ORIGIN {
+		tmp1379, ok := p.tmp768.(*tmp1397)
+		if !ok {
+			return 0, errors.New("invalid union type for encoding")
+		}
+		_ = tmp1379 // to prevent unused warnings
+		tmp553 := tmp60
+		tmp1209 := [1]uint8{}
+		tmp1209[0] = uint8(tmp1379.Origin)
+		tmp553 += int(1)
+		if tmp553-tmp60 != int(LenTmp) {
+			return 0, fmt.Errorf("subrange length mismatch: expected %d, got %d", int(LenTmp), tmp553-tmp60)
+		}
+		tmp60 = tmp553
+	} else if p.Type.Code == AttributeCode_AS_PATH {
+		tmp1333, ok := p.tmp768.(*tmp1338)
+		if !ok {
+			return 0, errors.New("invalid union type for encoding")
+		}
+		_ = tmp1333 // to prevent unused warnings
+		tmp759 := tmp60
+		var tmp1335 error
+		tmp759, tmp1335 = tmp1333.AsPath.encodedSize(tmp759)
+
+		if tmp1335 != nil {
+			return 0, tmp1335
+		}
+		if tmp759-tmp60 != int(LenTmp) {
+			return 0, fmt.Errorf("subrange length mismatch: expected %d, got %d", int(LenTmp), tmp759-tmp60)
+		}
+		tmp60 = tmp759
+	} else if p.Type.Code == AttributeCode_NEXT_HOP {
+		tmp1327, ok := p.tmp768.(*tmp1330)
+		if !ok {
+			return 0, errors.New("invalid union type for encoding")
+		}
+		_ = tmp1327 // to prevent unused warnings
+		tmp1328 := tmp60
+		tmp1328 += int(4)
+		if tmp1328-tmp60 != int(LenTmp) {
+			return 0, fmt.Errorf("subrange length mismatch: expected %d, got %d", int(LenTmp), tmp1328-tmp60)
+		}
+		tmp60 = tmp1328
+	} else if p.Type.Code == AttributeCode_MULTI_EXIT_DISC {
+		tmp1320, ok := p.tmp768.(*tmp1324)
+		if !ok {
+			return 0, errors.New("invalid union type for encoding")
+		}
+		_ = tmp1320 // to prevent unused warnings
+		tmp756 := tmp60
+		tmp1322 := [4]uint8{}
+		binary.BigEndian.PutUint32(tmp1322[:], uint32(tmp1320.MultiExitDisc))
+		tmp756 += int(4)
+		if tmp756-tmp60 != int(LenTmp) {
+			return 0, fmt.Errorf("subrange length mismatch: expected %d, got %d", int(LenTmp), tmp756-tmp60)
+		}
+		tmp60 = tmp756
+	} else if p.Type.Code == AttributeCode_LOCAL_PREF {
+		tmp1313, ok := p.tmp768.(*tmp1317)
+		if !ok {
+			return 0, errors.New("invalid union type for encoding")
+		}
+		_ = tmp1313 // to prevent unused warnings
+		tmp754 := tmp60
+		tmp1315 := [4]uint8{}
+		binary.BigEndian.PutUint32(tmp1315[:], uint32(tmp1313.LocalPref))
+		tmp754 += int(4)
+		if tmp754-tmp60 != int(LenTmp) {
+			return 0, fmt.Errorf("subrange length mismatch: expected %d, got %d", int(LenTmp), tmp754-tmp60)
+		}
+		tmp60 = tmp754
+	} else if p.Type.Code == AttributeCode_ATOMIC_AGGREGATE {
+		tmp1310, ok := p.tmp768.(*tmp3332)
+		if !ok {
+			tmp1310 = &tmp3332{}
+			p.tmp768 = tmp1310
+		}
+		_ = tmp1310 // to prevent unused warnings
+		if !(LenTmp == 0) {
+			return 0, errors.New("Assertion failed")
+		}
+	} else if p.Type.Code == AttributeCode_AGGREGATOR {
+		tmp1291, ok := p.tmp768.(*tmp1296)
+		if !ok {
+			return 0, errors.New("invalid union type for encoding")
+		}
+		_ = tmp1291 // to prevent unused warnings
+		tmp752 := tmp60
+		var tmp1293 error
+		tmp752, tmp1293 = tmp1291.Aggregator.encodedSize(tmp752)
+
+		if tmp1293 != nil {
+			return 0, tmp1293
+		}
+		if tmp752-tmp60 != int(LenTmp) {
+			return 0, fmt.Errorf("subrange length mismatch: expected %d, got %d", int(LenTmp), tmp752-tmp60)
+		}
+		tmp60 = tmp752
+	} else if p.Type.Code == AttributeCode_COMMUNITIES {
+		tmp1282, ok := p.tmp768.(*tmp1288)
+		if !ok {
+			return 0, errors.New("invalid union type for encoding")
+		}
+		_ = tmp1282 // to prevent unused warnings
+		tmp524 := tmp60
+		tmp749 := int(0)
+		for tmp749 < len(tmp1282.Communities) {
+			tmp1286 := [4]uint8{}
+			binary.BigEndian.PutUint32(tmp1286[:], uint32(tmp1282.Communities[tmp749]))
+			tmp524 += int(4)
+			tmp749 = tmp749 + int(1)
+		}
+		if tmp524-tmp60 != int(LenTmp) {
+			return 0, fmt.Errorf("subrange length mismatch: expected %d, got %d", int(LenTmp), tmp524-tmp60)
+		}
+		tmp60 = tmp524
+	} else if p.Type.Code == AttributeCode_MP_REACH_NLRI {
+		tmp1242, ok := p.tmp768.(*tmp1247)
+		if !ok {
+			return 0, errors.New("invalid union type for encoding")
+		}
+		_ = tmp1242 // to prevent unused warnings
+		tmp744 := tmp60
+		var tmp1244 error
+		tmp744, tmp1244 = tmp1242.MpReachNlri.encodedSize(tmp744)
+
+		if tmp1244 != nil {
+			return 0, tmp1244
+		}
+		if tmp744-tmp60 != int(LenTmp) {
+			return 0, fmt.Errorf("subrange length mismatch: expected %d, got %d", int(LenTmp), tmp744-tmp60)
+		}
+		tmp60 = tmp744
+	} else if p.Type.Code == AttributeCode_MP_UNREACH_NLRI {
+		tmp1217, ok := p.tmp768.(*tmp1222)
+		if !ok {
+			return 0, errors.New("invalid union type for encoding")
+		}
+		_ = tmp1217 // to prevent unused warnings
+		tmp738 := tmp60
+		var tmp1219 error
+		tmp738, tmp1219 = tmp1217.MpUnreachNlri.encodedSize(tmp738)
+
+		if tmp1219 != nil {
+			return 0, tmp1219
+		}
+		if tmp738-tmp60 != int(LenTmp) {
+			return 0, fmt.Errorf("subrange length mismatch: expected %d, got %d", int(LenTmp), tmp738-tmp60)
+		}
+		tmp60 = tmp738
+	} else {
+		tmp1214, ok := p.tmp768.(*tmp1215)
+		if !ok {
+			return 0, errors.New("invalid union type for encoding")
+		}
+		_ = tmp1214 // to prevent unused warnings
+		if len(tmp1214.Data) != int(int(LenTmp)) {
+			return 0, fmt.Errorf("size mismatch when writing field \"PathAttribute::tmp768::Data\": expected %d, got %d", int(int(LenTmp)), len(tmp1214.Data))
+		}
+		tmp60 += int(int(LenTmp))
+	}
+	return tmp60, nil
+}
+
+// EncodedSize returns how many bytes encoding this value produces, without
+// encoding it (so a buffer can be allocated once). It fails where encoding would.
+func (s *PathAttribute) EncodedSize() (int, error) {
+	return s.encodedSize(0)
+}
+
+func (p *PathAttribute) Read(tmp59 io.Reader) error {
+	tmp59ByteIO, _ := tmp59.(io.ByteReader)
+	_ = tmp59ByteIO
+	tmp1195 := p.Type.Read(tmp59)
+	if tmp1195 != nil {
+		return tmp1195
+	}
+	if p.Type.extended() == 1 {
+		tmp1401, ok := p.tmp772.(*tmp1402)
+		if !ok {
+			tmp1401 = &tmp1402{}
+			p.tmp772 = tmp1401
+		}
+		_ = tmp1401 // to prevent unused warnings
+		tmp1193 := [2]uint8{}
+		if _, err := io.ReadFull(tmp59, tmp1193[0:0+2]); err != nil {
 			return err
 		}
-		tmp1428.Len = binary.BigEndian.Uint16(tmp1205[:])
+		tmp1401.Len = binary.BigEndian.Uint16(tmp1193[:])
 	} else {
-		tmp1426, ok := p.tmp794.(*tmp1427)
+		tmp1399, ok := p.tmp772.(*tmp1400)
 		if !ok {
-			tmp1426 = &tmp1427{}
-			p.tmp794 = tmp1426
+			tmp1399 = &tmp1400{}
+			p.tmp772 = tmp1399
 		}
-		_ = tmp1426 // to prevent unused warnings
-		if tmp63ByteIO != nil {
+		_ = tmp1399 // to prevent unused warnings
+		if tmp59ByteIO != nil {
 			var err error
-			tmp1426.Len, err = tmp63ByteIO.ReadByte()
+			tmp1399.Len, err = tmp59ByteIO.ReadByte()
 			if err != nil {
 				return err
 			}
 		} else {
 			var err error
-			var n int
+			var ioN2907 int
 			buf := [1]byte{0}
-			if n, err = io.ReadFull(tmp63, buf[:]); err != nil {
+			if ioN2907, err = io.ReadFull(tmp59, buf[:]); err != nil {
 				return err
 			}
-			if n != 1 {
-				return fmt.Errorf("failed to read byte for field \"PathAttribute::tmp794::Len\": expected to read 1 byte, but read %d bytes", n)
+			if ioN2907 != 1 {
+				return fmt.Errorf("failed to read byte for field \"PathAttribute::tmp772::Len\": expected to read 1 byte, but read %d bytes", ioN2907)
 			}
-			tmp1426.Len = buf[0]
+			tmp1399.Len = buf[0]
 		}
 	}
 	LenTmp := uint16(p.Len())
 	if p.Type.Code == AttributeCode_ORIGIN {
-		tmp1395, ok := p.tmp786.(*tmp1413)
+		tmp1379, ok := p.tmp768.(*tmp1397)
 		if !ok {
-			tmp1395 = &tmp1413{}
-			p.tmp786 = tmp1395
+			tmp1379 = &tmp1397{}
+			p.tmp768 = tmp1379
 		}
-		_ = tmp1395 // to prevent unused warnings
-		tmp753 := io.LimitReader(tmp63, int64(LenTmp))
-		tmp1197 := tmp1395.Origin.Read(tmp753)
-		if tmp1197 != nil {
-			return tmp1197
+		_ = tmp1379 // to prevent unused warnings
+		tmp500 := io.LimitReader(tmp59, int64(LenTmp))
+		tmp500ByteIO, _ := tmp500.(io.ByteReader)
+		_ = tmp500ByteIO
+		tmp1185 := uint8(0)
+		if tmp500ByteIO != nil {
+			var err error
+			tmp1185, err = tmp500ByteIO.ReadByte()
+			if err != nil {
+				return err
+			}
+		} else {
+			var err error
+			var ioN2896 int
+			buf := [1]byte{0}
+			if ioN2896, err = io.ReadFull(tmp500, buf[:]); err != nil {
+				return err
+			}
+			if ioN2896 != 1 {
+				return fmt.Errorf("failed to read byte for field \"PathAttribute::tmp768::Origin\": expected to read 1 byte, but read %d bytes", ioN2896)
+			}
+			tmp1185 = buf[0]
 		}
-		if tmp753.(*io.LimitedReader).N != 0 {
-			return fmt.Errorf("subrange length mismatch: expected %d, but remains %d", int(LenTmp), tmp753.(*io.LimitedReader).N)
+		tmp1379.Origin = Origin(tmp1185)
+		if tmp500.(*io.LimitedReader).N != 0 {
+			return fmt.Errorf("subrange length mismatch: expected %d, but remains %d", int(LenTmp), tmp500.(*io.LimitedReader).N)
 		}
 	} else if p.Type.Code == AttributeCode_AS_PATH {
-		tmp1350, ok := p.tmp786.(*tmp1355)
+		tmp1333, ok := p.tmp768.(*tmp1338)
 		if !ok {
-			tmp1350 = &tmp1355{}
-			p.tmp786 = tmp1350
+			tmp1333 = &tmp1338{}
+			p.tmp768 = tmp1333
 		}
-		_ = tmp1350 // to prevent unused warnings
-		tmp752 := io.LimitReader(tmp63, int64(LenTmp))
-		tmp1191 := tmp1350.AsPath.Read(tmp752)
-		if tmp1191 != nil {
-			return tmp1191
+		_ = tmp1333 // to prevent unused warnings
+		tmp735 := io.LimitReader(tmp59, int64(LenTmp))
+		tmp735ByteIO, _ := tmp735.(io.ByteReader)
+		_ = tmp735ByteIO
+		tmp1177 := tmp1333.AsPath.Read(tmp735)
+		if tmp1177 != nil {
+			return tmp1177
 		}
-		if tmp752.(*io.LimitedReader).N != 0 {
-			return fmt.Errorf("subrange length mismatch: expected %d, but remains %d", int(LenTmp), tmp752.(*io.LimitedReader).N)
+		if tmp735.(*io.LimitedReader).N != 0 {
+			return fmt.Errorf("subrange length mismatch: expected %d, but remains %d", int(LenTmp), tmp735.(*io.LimitedReader).N)
 		}
 	} else if p.Type.Code == AttributeCode_NEXT_HOP {
-		tmp1344, ok := p.tmp786.(*tmp1347)
+		tmp1327, ok := p.tmp768.(*tmp1330)
 		if !ok {
-			tmp1344 = &tmp1347{}
-			p.tmp786 = tmp1344
+			tmp1327 = &tmp1330{}
+			p.tmp768 = tmp1327
 		}
-		_ = tmp1344 // to prevent unused warnings
-		tmp1185 := io.LimitReader(tmp63, int64(LenTmp))
-		if _, err := io.ReadFull(tmp1185, tmp1344.NextHop[0:0+4]); err != nil {
+		_ = tmp1327 // to prevent unused warnings
+		tmp1171 := io.LimitReader(tmp59, int64(LenTmp))
+		tmp1171ByteIO, _ := tmp1171.(io.ByteReader)
+		_ = tmp1171ByteIO
+		if _, err := io.ReadFull(tmp1171, tmp1327.NextHop[0:0+4]); err != nil {
 			return err
 		}
-		if tmp1185.(*io.LimitedReader).N != 0 {
-			return fmt.Errorf("subrange length mismatch: expected %d, but remains %d", int(LenTmp), tmp1185.(*io.LimitedReader).N)
+		if tmp1171.(*io.LimitedReader).N != 0 {
+			return fmt.Errorf("subrange length mismatch: expected %d, but remains %d", int(LenTmp), tmp1171.(*io.LimitedReader).N)
 		}
 	} else if p.Type.Code == AttributeCode_MULTI_EXIT_DISC {
-		tmp1331, ok := p.tmp786.(*tmp1335)
+		tmp1320, ok := p.tmp768.(*tmp1324)
 		if !ok {
-			tmp1331 = &tmp1335{}
-			p.tmp786 = tmp1331
+			tmp1320 = &tmp1324{}
+			p.tmp768 = tmp1320
 		}
-		_ = tmp1331 // to prevent unused warnings
-		tmp751 := io.LimitReader(tmp63, int64(LenTmp))
-		tmp1180 := tmp1331.MultiExitDisc.Read(tmp751)
-		if tmp1180 != nil {
-			return tmp1180
+		_ = tmp1320 // to prevent unused warnings
+		tmp734 := io.LimitReader(tmp59, int64(LenTmp))
+		tmp734ByteIO, _ := tmp734.(io.ByteReader)
+		_ = tmp734ByteIO
+		tmp1166 := [4]uint8{}
+		if _, err := io.ReadFull(tmp734, tmp1166[0:0+4]); err != nil {
+			return err
 		}
-		if tmp751.(*io.LimitedReader).N != 0 {
-			return fmt.Errorf("subrange length mismatch: expected %d, but remains %d", int(LenTmp), tmp751.(*io.LimitedReader).N)
+		tmp1320.MultiExitDisc = binary.BigEndian.Uint32(tmp1166[:])
+		if tmp734.(*io.LimitedReader).N != 0 {
+			return fmt.Errorf("subrange length mismatch: expected %d, but remains %d", int(LenTmp), tmp734.(*io.LimitedReader).N)
 		}
 	} else if p.Type.Code == AttributeCode_LOCAL_PREF {
-		tmp1325, ok := p.tmp786.(*tmp1328)
+		tmp1313, ok := p.tmp768.(*tmp1317)
 		if !ok {
-			tmp1325 = &tmp1328{}
-			p.tmp786 = tmp1325
+			tmp1313 = &tmp1317{}
+			p.tmp768 = tmp1313
 		}
-		_ = tmp1325 // to prevent unused warnings
-		tmp749 := io.LimitReader(tmp63, int64(LenTmp))
-		tmp1175 := tmp1325.LocalPref.Read(tmp749)
-		if tmp1175 != nil {
-			return tmp1175
+		_ = tmp1313 // to prevent unused warnings
+		tmp733 := io.LimitReader(tmp59, int64(LenTmp))
+		tmp733ByteIO, _ := tmp733.(io.ByteReader)
+		_ = tmp733ByteIO
+		tmp1160 := [4]uint8{}
+		if _, err := io.ReadFull(tmp733, tmp1160[0:0+4]); err != nil {
+			return err
 		}
-		if tmp749.(*io.LimitedReader).N != 0 {
-			return fmt.Errorf("subrange length mismatch: expected %d, but remains %d", int(LenTmp), tmp749.(*io.LimitedReader).N)
+		tmp1313.LocalPref = binary.BigEndian.Uint32(tmp1160[:])
+		if tmp733.(*io.LimitedReader).N != 0 {
+			return fmt.Errorf("subrange length mismatch: expected %d, but remains %d", int(LenTmp), tmp733.(*io.LimitedReader).N)
 		}
 	} else if p.Type.Code == AttributeCode_ATOMIC_AGGREGATE {
-		tmp1322, ok := p.tmp786.(*tmp3339)
+		tmp1310, ok := p.tmp768.(*tmp3332)
 		if !ok {
-			tmp1322 = &tmp3339{}
-			p.tmp786 = tmp1322
+			tmp1310 = &tmp3332{}
+			p.tmp768 = tmp1310
 		}
-		_ = tmp1322 // to prevent unused warnings
+		_ = tmp1310 // to prevent unused warnings
 		if !(LenTmp == 0) {
 			return errors.New("Assertion failed")
 		}
 	} else if p.Type.Code == AttributeCode_AGGREGATOR {
-		tmp1303, ok := p.tmp786.(*tmp1308)
+		tmp1291, ok := p.tmp768.(*tmp1296)
 		if !ok {
-			tmp1303 = &tmp1308{}
-			p.tmp786 = tmp1303
+			tmp1291 = &tmp1296{}
+			p.tmp768 = tmp1291
 		}
-		_ = tmp1303 // to prevent unused warnings
-		tmp748 := io.LimitReader(tmp63, int64(LenTmp))
-		tmp1166 := tmp1303.Aggregator.Read(tmp748)
-		if tmp1166 != nil {
-			return tmp1166
+		_ = tmp1291 // to prevent unused warnings
+		tmp732 := io.LimitReader(tmp59, int64(LenTmp))
+		tmp732ByteIO, _ := tmp732.(io.ByteReader)
+		_ = tmp732ByteIO
+		tmp1151 := tmp1291.Aggregator.Read(tmp732)
+		if tmp1151 != nil {
+			return tmp1151
 		}
-		if tmp748.(*io.LimitedReader).N != 0 {
-			return fmt.Errorf("subrange length mismatch: expected %d, but remains %d", int(LenTmp), tmp748.(*io.LimitedReader).N)
+		if tmp732.(*io.LimitedReader).N != 0 {
+			return fmt.Errorf("subrange length mismatch: expected %d, but remains %d", int(LenTmp), tmp732.(*io.LimitedReader).N)
 		}
 	} else if p.Type.Code == AttributeCode_COMMUNITIES {
-		tmp1294, ok := p.tmp786.(*tmp1300)
+		tmp1282, ok := p.tmp768.(*tmp1288)
 		if !ok {
-			tmp1294 = &tmp1300{}
-			p.tmp786 = tmp1294
+			tmp1282 = &tmp1288{}
+			p.tmp768 = tmp1282
 		}
-		_ = tmp1294 // to prevent unused warnings
-		tmp317 := io.LimitReader(tmp63, int64(LenTmp))
+		_ = tmp1282 // to prevent unused warnings
+		tmp316 := io.LimitReader(tmp59, int64(LenTmp))
+		tmp316ByteIO, _ := tmp316.(io.ByteReader)
+		_ = tmp316ByteIO
 		for true {
-			tmp1160 := uint32(0)
-			tmp1159 := [4]uint8{}
-			if _, err := io.ReadFull(tmp317, tmp1159[0:0+4]); err != nil {
+			tmp1145 := uint32(0)
+			tmp1144 := [4]uint8{}
+			if _, err := io.ReadFull(tmp316, tmp1144[0:0+4]); err != nil {
 				if err == io.EOF {
 					break
 				}
 				return err
 			}
-			tmp1160 = binary.BigEndian.Uint32(tmp1159[:])
-			tmp1294.Communities = append(tmp1294.Communities, tmp1160)
+			tmp1145 = binary.BigEndian.Uint32(tmp1144[:])
+			tmp1282.Communities = append(tmp1282.Communities, tmp1145)
 		}
-		if tmp317.(*io.LimitedReader).N != 0 {
-			return fmt.Errorf("subrange length mismatch: expected %d, but remains %d", int(LenTmp), tmp317.(*io.LimitedReader).N)
+		if tmp316.(*io.LimitedReader).N != 0 {
+			return fmt.Errorf("subrange length mismatch: expected %d, but remains %d", int(LenTmp), tmp316.(*io.LimitedReader).N)
 		}
 	} else if p.Type.Code == AttributeCode_MP_REACH_NLRI {
-		tmp1254, ok := p.tmp786.(*tmp1259)
+		tmp1242, ok := p.tmp768.(*tmp1247)
 		if !ok {
-			tmp1254 = &tmp1259{}
-			p.tmp786 = tmp1254
+			tmp1242 = &tmp1247{}
+			p.tmp768 = tmp1242
 		}
-		_ = tmp1254 // to prevent unused warnings
-		tmp747 := io.LimitReader(tmp63, int64(LenTmp))
-		tmp1154 := tmp1254.MpReachNlri.Read(tmp747)
-		if tmp1154 != nil {
-			return tmp1154
+		_ = tmp1242 // to prevent unused warnings
+		tmp731 := io.LimitReader(tmp59, int64(LenTmp))
+		tmp731ByteIO, _ := tmp731.(io.ByteReader)
+		_ = tmp731ByteIO
+		tmp1139 := tmp1242.MpReachNlri.Read(tmp731)
+		if tmp1139 != nil {
+			return tmp1139
 		}
-		if tmp747.(*io.LimitedReader).N != 0 {
-			return fmt.Errorf("subrange length mismatch: expected %d, but remains %d", int(LenTmp), tmp747.(*io.LimitedReader).N)
+		if tmp731.(*io.LimitedReader).N != 0 {
+			return fmt.Errorf("subrange length mismatch: expected %d, but remains %d", int(LenTmp), tmp731.(*io.LimitedReader).N)
 		}
 	} else if p.Type.Code == AttributeCode_MP_UNREACH_NLRI {
-		tmp1229, ok := p.tmp786.(*tmp1234)
+		tmp1217, ok := p.tmp768.(*tmp1222)
 		if !ok {
-			tmp1229 = &tmp1234{}
-			p.tmp786 = tmp1229
+			tmp1217 = &tmp1222{}
+			p.tmp768 = tmp1217
 		}
-		_ = tmp1229 // to prevent unused warnings
-		tmp746 := io.LimitReader(tmp63, int64(LenTmp))
-		tmp1148 := tmp1229.MpUnreachNlri.Read(tmp746)
-		if tmp1148 != nil {
-			return tmp1148
+		_ = tmp1217 // to prevent unused warnings
+		tmp730 := io.LimitReader(tmp59, int64(LenTmp))
+		tmp730ByteIO, _ := tmp730.(io.ByteReader)
+		_ = tmp730ByteIO
+		tmp1133 := tmp1217.MpUnreachNlri.Read(tmp730)
+		if tmp1133 != nil {
+			return tmp1133
 		}
-		if tmp746.(*io.LimitedReader).N != 0 {
-			return fmt.Errorf("subrange length mismatch: expected %d, but remains %d", int(LenTmp), tmp746.(*io.LimitedReader).N)
+		if tmp730.(*io.LimitedReader).N != 0 {
+			return fmt.Errorf("subrange length mismatch: expected %d, but remains %d", int(LenTmp), tmp730.(*io.LimitedReader).N)
 		}
 	} else {
-		tmp1226, ok := p.tmp786.(*tmp1227)
+		tmp1214, ok := p.tmp768.(*tmp1215)
 		if !ok {
-			tmp1226 = &tmp1227{}
-			p.tmp786 = tmp1226
+			tmp1214 = &tmp1215{}
+			p.tmp768 = tmp1214
 		}
-		_ = tmp1226 // to prevent unused warnings
-		if seeker, ok := tmp63.(io.Seeker); ok {
+		_ = tmp1214 // to prevent unused warnings
+		if seeker, ok := tmp59.(io.Seeker); ok {
 			current, err := seeker.Seek(0, io.SeekCurrent)
 			if err != nil {
 				return err
@@ -4597,18 +5444,18 @@ func (p *PathAttribute) Read(tmp63 io.Reader) error {
 			if (endOffset - current) < int64(int(LenTmp)) {
 				return fmt.Errorf("Too large length requested: %d < %d", endOffset-current, int64(int(LenTmp)))
 			}
-			tmp1226.Data = make([]byte, int(LenTmp))
-			if _, err := io.ReadFull(tmp63, tmp1226.Data[0:0+int(LenTmp)]); err != nil {
+			tmp1214.Data = make([]byte, int(LenTmp))
+			if _, err := io.ReadFull(tmp59, tmp1214.Data[0:0+int(LenTmp)]); err != nil {
 				return err
 			}
 		} else {
 			// To mitigate DoS attack, use incremental buffer allocation
 			// for more performance, use (assert on DSL or safe-len-limit option) and trust-input-len option
-			io_temp_2747 := bytes.NewBuffer(nil)
-			if _, err := io.CopyN(io_temp_2747, tmp63, int64(int(LenTmp))); err != nil {
+			io_temp_2727 := bytes.NewBuffer(nil)
+			if _, err := io.CopyN(io_temp_2727, tmp59, int64(int(LenTmp))); err != nil {
 				return err
 			}
-			tmp1226.Data = io_temp_2747.Bytes()
+			tmp1214.Data = io_temp_2727.Bytes()
 		}
 	}
 	return nil
@@ -4631,233 +5478,244 @@ func (s *PathAttribute) DecodeExactCopy(buf []byte) error {
 	}
 	return nil
 }
-func (p *PathAttribute) DecodeSlice(tmp63 []byte, tmp63Offset *int) error {
-	tmp1207 := p.Type.DecodeSlice(tmp63, tmp63Offset)
-	if tmp1207 != nil {
-		return tmp1207
+func (p *PathAttribute) DecodeSlice(tmp59 []byte, tmp59Offset *int) error {
+	tmp1195 := p.Type.DecodeSlice(tmp59, tmp59Offset)
+	if tmp1195 != nil {
+		return tmp1195
 	}
 	if p.Type.extended() == 1 {
-		tmp1428, ok := p.tmp794.(*tmp1429)
+		tmp1401, ok := p.tmp772.(*tmp1402)
 		if !ok {
-			tmp1428 = &tmp1429{}
-			p.tmp794 = tmp1428
+			tmp1401 = &tmp1402{}
+			p.tmp772 = tmp1401
 		}
-		_ = tmp1428 // to prevent unused warnings
-		tmp1205 := []uint8{}
-		if len(tmp63)-*tmp63Offset < 2 {
-			return errors.New("not enough data to read for field \"PathAttribute::tmp794::Len\"")
+		_ = tmp1401 // to prevent unused warnings
+		tmp1193 := []uint8{}
+		if len(tmp59)-*tmp59Offset < 2 {
+			return errors.New("not enough data to read for field \"PathAttribute::tmp772::Len\"")
 		}
-		tmp1205 = tmp63[*tmp63Offset : *tmp63Offset+2]
-		*tmp63Offset += int(2)
-		tmp1428.Len = binary.BigEndian.Uint16(tmp1205[:])
+		tmp1193 = tmp59[*tmp59Offset : *tmp59Offset+2]
+		*tmp59Offset += int(2)
+		tmp1401.Len = binary.BigEndian.Uint16(tmp1193[:])
 	} else {
-		tmp1426, ok := p.tmp794.(*tmp1427)
+		tmp1399, ok := p.tmp772.(*tmp1400)
 		if !ok {
-			tmp1426 = &tmp1427{}
-			p.tmp794 = tmp1426
+			tmp1399 = &tmp1400{}
+			p.tmp772 = tmp1399
 		}
-		_ = tmp1426 // to prevent unused warnings
-		tmp1203 := []uint8{}
-		if len(tmp63)-*tmp63Offset < 1 {
-			return errors.New("not enough data to read for field \"PathAttribute::tmp794::Len\"")
+		_ = tmp1399 // to prevent unused warnings
+		tmp1191 := []uint8{}
+		if len(tmp59)-*tmp59Offset < 1 {
+			return errors.New("not enough data to read for field \"PathAttribute::tmp772::Len\"")
 		}
-		tmp1203 = tmp63[*tmp63Offset : *tmp63Offset+1]
-		*tmp63Offset += int(1)
-		tmp1426.Len = tmp1203[0]
+		tmp1191 = tmp59[*tmp59Offset : *tmp59Offset+1]
+		*tmp59Offset += int(1)
+		tmp1399.Len = tmp1191[0]
 	}
 	LenTmp := uint16(p.Len())
 	if p.Type.Code == AttributeCode_ORIGIN {
-		tmp1395, ok := p.tmp786.(*tmp1413)
+		tmp1379, ok := p.tmp768.(*tmp1397)
 		if !ok {
-			tmp1395 = &tmp1413{}
-			p.tmp786 = tmp1395
+			tmp1379 = &tmp1397{}
+			p.tmp768 = tmp1379
 		}
-		_ = tmp1395 // to prevent unused warnings
-		if len(tmp63)-*tmp63Offset < int(LenTmp) {
+		_ = tmp1379 // to prevent unused warnings
+		if len(tmp59)-*tmp59Offset < int(LenTmp) {
 			return errors.New("not enough data for subrange")
 		}
-		tmp753 := tmp63[*tmp63Offset : *tmp63Offset+int(LenTmp)]
-		tmp753OffsetBase := 0
-		tmp753Offset := &tmp753OffsetBase
-		*tmp63Offset += int(LenTmp)
-		tmp1197 := tmp1395.Origin.DecodeSlice(tmp753, tmp753Offset)
-		if tmp1197 != nil {
-			return tmp1197
+		tmp500 := tmp59[*tmp59Offset : *tmp59Offset+int(LenTmp)]
+		tmp500OffsetBase := 0
+		tmp500Offset := &tmp500OffsetBase
+		*tmp59Offset += int(LenTmp)
+		tmp1185 := uint8(0)
+		tmp1184 := []uint8{}
+		if len(tmp500)-*tmp500Offset < 1 {
+			return errors.New("not enough data to read for field \"PathAttribute::tmp768::Origin\"")
 		}
+		tmp1184 = tmp500[*tmp500Offset : *tmp500Offset+1]
+		*tmp500Offset += int(1)
+		tmp1185 = tmp1184[0]
+		tmp1379.Origin = Origin(tmp1185)
 	} else if p.Type.Code == AttributeCode_AS_PATH {
-		tmp1350, ok := p.tmp786.(*tmp1355)
+		tmp1333, ok := p.tmp768.(*tmp1338)
 		if !ok {
-			tmp1350 = &tmp1355{}
-			p.tmp786 = tmp1350
+			tmp1333 = &tmp1338{}
+			p.tmp768 = tmp1333
 		}
-		_ = tmp1350 // to prevent unused warnings
-		if len(tmp63)-*tmp63Offset < int(LenTmp) {
+		_ = tmp1333 // to prevent unused warnings
+		if len(tmp59)-*tmp59Offset < int(LenTmp) {
 			return errors.New("not enough data for subrange")
 		}
-		tmp752 := tmp63[*tmp63Offset : *tmp63Offset+int(LenTmp)]
-		tmp752OffsetBase := 0
-		tmp752Offset := &tmp752OffsetBase
-		*tmp63Offset += int(LenTmp)
-		tmp1191 := tmp1350.AsPath.DecodeSlice(tmp752, tmp752Offset)
-		if tmp1191 != nil {
-			return tmp1191
+		tmp735 := tmp59[*tmp59Offset : *tmp59Offset+int(LenTmp)]
+		tmp735OffsetBase := 0
+		tmp735Offset := &tmp735OffsetBase
+		*tmp59Offset += int(LenTmp)
+		tmp1177 := tmp1333.AsPath.DecodeSlice(tmp735, tmp735Offset)
+		if tmp1177 != nil {
+			return tmp1177
 		}
 	} else if p.Type.Code == AttributeCode_NEXT_HOP {
-		tmp1344, ok := p.tmp786.(*tmp1347)
+		tmp1327, ok := p.tmp768.(*tmp1330)
 		if !ok {
-			tmp1344 = &tmp1347{}
-			p.tmp786 = tmp1344
+			tmp1327 = &tmp1330{}
+			p.tmp768 = tmp1327
 		}
-		_ = tmp1344 // to prevent unused warnings
-		if len(tmp63)-*tmp63Offset < int(LenTmp) {
+		_ = tmp1327 // to prevent unused warnings
+		if len(tmp59)-*tmp59Offset < int(LenTmp) {
 			return errors.New("not enough data for subrange")
 		}
-		tmp1185 := tmp63[*tmp63Offset : *tmp63Offset+int(LenTmp)]
-		tmp1185OffsetBase := 0
-		tmp1185Offset := &tmp1185OffsetBase
-		*tmp63Offset += int(LenTmp)
-		if len(tmp1185)-*tmp1185Offset < 4 {
-			return errors.New("not enough data to read for field \"PathAttribute::tmp786::NextHop\"")
+		tmp1171 := tmp59[*tmp59Offset : *tmp59Offset+int(LenTmp)]
+		tmp1171OffsetBase := 0
+		tmp1171Offset := &tmp1171OffsetBase
+		*tmp59Offset += int(LenTmp)
+		if len(tmp1171)-*tmp1171Offset < 4 {
+			return errors.New("not enough data to read for field \"PathAttribute::tmp768::NextHop\"")
 		}
-		copy(tmp1344.NextHop[:], tmp1185[*tmp1185Offset:*tmp1185Offset+4])
-		*tmp1185Offset += int(4)
+		copy(tmp1327.NextHop[:], tmp1171[*tmp1171Offset:*tmp1171Offset+4])
+		*tmp1171Offset += int(4)
 	} else if p.Type.Code == AttributeCode_MULTI_EXIT_DISC {
-		tmp1331, ok := p.tmp786.(*tmp1335)
+		tmp1320, ok := p.tmp768.(*tmp1324)
 		if !ok {
-			tmp1331 = &tmp1335{}
-			p.tmp786 = tmp1331
+			tmp1320 = &tmp1324{}
+			p.tmp768 = tmp1320
 		}
-		_ = tmp1331 // to prevent unused warnings
-		if len(tmp63)-*tmp63Offset < int(LenTmp) {
+		_ = tmp1320 // to prevent unused warnings
+		if len(tmp59)-*tmp59Offset < int(LenTmp) {
 			return errors.New("not enough data for subrange")
 		}
-		tmp751 := tmp63[*tmp63Offset : *tmp63Offset+int(LenTmp)]
-		tmp751OffsetBase := 0
-		tmp751Offset := &tmp751OffsetBase
-		*tmp63Offset += int(LenTmp)
-		tmp1180 := tmp1331.MultiExitDisc.DecodeSlice(tmp751, tmp751Offset)
-		if tmp1180 != nil {
-			return tmp1180
+		tmp734 := tmp59[*tmp59Offset : *tmp59Offset+int(LenTmp)]
+		tmp734OffsetBase := 0
+		tmp734Offset := &tmp734OffsetBase
+		*tmp59Offset += int(LenTmp)
+		tmp1166 := []uint8{}
+		if len(tmp734)-*tmp734Offset < 4 {
+			return errors.New("not enough data to read for field \"PathAttribute::tmp768::MultiExitDisc\"")
 		}
+		tmp1166 = tmp734[*tmp734Offset : *tmp734Offset+4]
+		*tmp734Offset += int(4)
+		tmp1320.MultiExitDisc = binary.BigEndian.Uint32(tmp1166[:])
 	} else if p.Type.Code == AttributeCode_LOCAL_PREF {
-		tmp1325, ok := p.tmp786.(*tmp1328)
+		tmp1313, ok := p.tmp768.(*tmp1317)
 		if !ok {
-			tmp1325 = &tmp1328{}
-			p.tmp786 = tmp1325
+			tmp1313 = &tmp1317{}
+			p.tmp768 = tmp1313
 		}
-		_ = tmp1325 // to prevent unused warnings
-		if len(tmp63)-*tmp63Offset < int(LenTmp) {
+		_ = tmp1313 // to prevent unused warnings
+		if len(tmp59)-*tmp59Offset < int(LenTmp) {
 			return errors.New("not enough data for subrange")
 		}
-		tmp749 := tmp63[*tmp63Offset : *tmp63Offset+int(LenTmp)]
-		tmp749OffsetBase := 0
-		tmp749Offset := &tmp749OffsetBase
-		*tmp63Offset += int(LenTmp)
-		tmp1175 := tmp1325.LocalPref.DecodeSlice(tmp749, tmp749Offset)
-		if tmp1175 != nil {
-			return tmp1175
+		tmp733 := tmp59[*tmp59Offset : *tmp59Offset+int(LenTmp)]
+		tmp733OffsetBase := 0
+		tmp733Offset := &tmp733OffsetBase
+		*tmp59Offset += int(LenTmp)
+		tmp1160 := []uint8{}
+		if len(tmp733)-*tmp733Offset < 4 {
+			return errors.New("not enough data to read for field \"PathAttribute::tmp768::LocalPref\"")
 		}
+		tmp1160 = tmp733[*tmp733Offset : *tmp733Offset+4]
+		*tmp733Offset += int(4)
+		tmp1313.LocalPref = binary.BigEndian.Uint32(tmp1160[:])
 	} else if p.Type.Code == AttributeCode_ATOMIC_AGGREGATE {
-		tmp1322, ok := p.tmp786.(*tmp3339)
+		tmp1310, ok := p.tmp768.(*tmp3332)
 		if !ok {
-			tmp1322 = &tmp3339{}
-			p.tmp786 = tmp1322
+			tmp1310 = &tmp3332{}
+			p.tmp768 = tmp1310
 		}
-		_ = tmp1322 // to prevent unused warnings
+		_ = tmp1310 // to prevent unused warnings
 		if !(LenTmp == 0) {
 			return errors.New("Assertion failed")
 		}
 	} else if p.Type.Code == AttributeCode_AGGREGATOR {
-		tmp1303, ok := p.tmp786.(*tmp1308)
+		tmp1291, ok := p.tmp768.(*tmp1296)
 		if !ok {
-			tmp1303 = &tmp1308{}
-			p.tmp786 = tmp1303
+			tmp1291 = &tmp1296{}
+			p.tmp768 = tmp1291
 		}
-		_ = tmp1303 // to prevent unused warnings
-		if len(tmp63)-*tmp63Offset < int(LenTmp) {
+		_ = tmp1291 // to prevent unused warnings
+		if len(tmp59)-*tmp59Offset < int(LenTmp) {
 			return errors.New("not enough data for subrange")
 		}
-		tmp748 := tmp63[*tmp63Offset : *tmp63Offset+int(LenTmp)]
-		tmp748OffsetBase := 0
-		tmp748Offset := &tmp748OffsetBase
-		*tmp63Offset += int(LenTmp)
-		tmp1166 := tmp1303.Aggregator.DecodeSlice(tmp748, tmp748Offset)
-		if tmp1166 != nil {
-			return tmp1166
+		tmp732 := tmp59[*tmp59Offset : *tmp59Offset+int(LenTmp)]
+		tmp732OffsetBase := 0
+		tmp732Offset := &tmp732OffsetBase
+		*tmp59Offset += int(LenTmp)
+		tmp1151 := tmp1291.Aggregator.DecodeSlice(tmp732, tmp732Offset)
+		if tmp1151 != nil {
+			return tmp1151
 		}
 	} else if p.Type.Code == AttributeCode_COMMUNITIES {
-		tmp1294, ok := p.tmp786.(*tmp1300)
+		tmp1282, ok := p.tmp768.(*tmp1288)
 		if !ok {
-			tmp1294 = &tmp1300{}
-			p.tmp786 = tmp1294
+			tmp1282 = &tmp1288{}
+			p.tmp768 = tmp1282
 		}
-		_ = tmp1294 // to prevent unused warnings
-		if len(tmp63)-*tmp63Offset < int(LenTmp) {
+		_ = tmp1282 // to prevent unused warnings
+		if len(tmp59)-*tmp59Offset < int(LenTmp) {
 			return errors.New("not enough data for subrange")
 		}
-		tmp317 := tmp63[*tmp63Offset : *tmp63Offset+int(LenTmp)]
-		tmp317OffsetBase := 0
-		tmp317Offset := &tmp317OffsetBase
-		*tmp63Offset += int(LenTmp)
-		for len(tmp317)-*tmp317Offset >= 1 {
-			tmp1160 := uint32(0)
-			tmp1159 := []uint8{}
-			if len(tmp317)-*tmp317Offset < 4 {
-				return errors.New("not enough data to read for field \"PathAttribute::tmp786::Communities\"")
+		tmp316 := tmp59[*tmp59Offset : *tmp59Offset+int(LenTmp)]
+		tmp316OffsetBase := 0
+		tmp316Offset := &tmp316OffsetBase
+		*tmp59Offset += int(LenTmp)
+		for len(tmp316)-*tmp316Offset >= 1 {
+			tmp1145 := uint32(0)
+			tmp1144 := []uint8{}
+			if len(tmp316)-*tmp316Offset < 4 {
+				return errors.New("not enough data to read for field \"PathAttribute::tmp768::Communities\"")
 			}
-			tmp1159 = tmp317[*tmp317Offset : *tmp317Offset+4]
-			*tmp317Offset += int(4)
-			tmp1160 = binary.BigEndian.Uint32(tmp1159[:])
-			tmp1294.Communities = append(tmp1294.Communities, tmp1160)
+			tmp1144 = tmp316[*tmp316Offset : *tmp316Offset+4]
+			*tmp316Offset += int(4)
+			tmp1145 = binary.BigEndian.Uint32(tmp1144[:])
+			tmp1282.Communities = append(tmp1282.Communities, tmp1145)
 		}
 	} else if p.Type.Code == AttributeCode_MP_REACH_NLRI {
-		tmp1254, ok := p.tmp786.(*tmp1259)
+		tmp1242, ok := p.tmp768.(*tmp1247)
 		if !ok {
-			tmp1254 = &tmp1259{}
-			p.tmp786 = tmp1254
+			tmp1242 = &tmp1247{}
+			p.tmp768 = tmp1242
 		}
-		_ = tmp1254 // to prevent unused warnings
-		if len(tmp63)-*tmp63Offset < int(LenTmp) {
+		_ = tmp1242 // to prevent unused warnings
+		if len(tmp59)-*tmp59Offset < int(LenTmp) {
 			return errors.New("not enough data for subrange")
 		}
-		tmp747 := tmp63[*tmp63Offset : *tmp63Offset+int(LenTmp)]
-		tmp747OffsetBase := 0
-		tmp747Offset := &tmp747OffsetBase
-		*tmp63Offset += int(LenTmp)
-		tmp1154 := tmp1254.MpReachNlri.DecodeSlice(tmp747, tmp747Offset)
-		if tmp1154 != nil {
-			return tmp1154
+		tmp731 := tmp59[*tmp59Offset : *tmp59Offset+int(LenTmp)]
+		tmp731OffsetBase := 0
+		tmp731Offset := &tmp731OffsetBase
+		*tmp59Offset += int(LenTmp)
+		tmp1139 := tmp1242.MpReachNlri.DecodeSlice(tmp731, tmp731Offset)
+		if tmp1139 != nil {
+			return tmp1139
 		}
 	} else if p.Type.Code == AttributeCode_MP_UNREACH_NLRI {
-		tmp1229, ok := p.tmp786.(*tmp1234)
+		tmp1217, ok := p.tmp768.(*tmp1222)
 		if !ok {
-			tmp1229 = &tmp1234{}
-			p.tmp786 = tmp1229
+			tmp1217 = &tmp1222{}
+			p.tmp768 = tmp1217
 		}
-		_ = tmp1229 // to prevent unused warnings
-		if len(tmp63)-*tmp63Offset < int(LenTmp) {
+		_ = tmp1217 // to prevent unused warnings
+		if len(tmp59)-*tmp59Offset < int(LenTmp) {
 			return errors.New("not enough data for subrange")
 		}
-		tmp746 := tmp63[*tmp63Offset : *tmp63Offset+int(LenTmp)]
-		tmp746OffsetBase := 0
-		tmp746Offset := &tmp746OffsetBase
-		*tmp63Offset += int(LenTmp)
-		tmp1148 := tmp1229.MpUnreachNlri.DecodeSlice(tmp746, tmp746Offset)
-		if tmp1148 != nil {
-			return tmp1148
+		tmp730 := tmp59[*tmp59Offset : *tmp59Offset+int(LenTmp)]
+		tmp730OffsetBase := 0
+		tmp730Offset := &tmp730OffsetBase
+		*tmp59Offset += int(LenTmp)
+		tmp1133 := tmp1217.MpUnreachNlri.DecodeSlice(tmp730, tmp730Offset)
+		if tmp1133 != nil {
+			return tmp1133
 		}
 	} else {
-		tmp1226, ok := p.tmp786.(*tmp1227)
+		tmp1214, ok := p.tmp768.(*tmp1215)
 		if !ok {
-			tmp1226 = &tmp1227{}
-			p.tmp786 = tmp1226
+			tmp1214 = &tmp1215{}
+			p.tmp768 = tmp1214
 		}
-		_ = tmp1226 // to prevent unused warnings
-		if len(tmp63)-*tmp63Offset < int(LenTmp) {
-			return errors.New("not enough data to read for field \"PathAttribute::tmp786::Data\"")
+		_ = tmp1214 // to prevent unused warnings
+		if len(tmp59)-*tmp59Offset < int(LenTmp) {
+			return errors.New("not enough data to read for field \"PathAttribute::tmp768::Data\"")
 		}
-		tmp1226.Data = tmp63[*tmp63Offset : *tmp63Offset+int(LenTmp)]
-		*tmp63Offset += int(int(LenTmp))
+		tmp1214.Data = tmp59[*tmp59Offset : *tmp59Offset+int(LenTmp)]
+		*tmp59Offset += int(int(LenTmp))
 	}
 	return nil
 }
@@ -4901,275 +5759,6 @@ func (e Origin) String() string {
 	}
 }
 
-type OriginValue struct {
-	Value Origin
-}
-
-func (o *OriginValue) Write(tmp419 io.Writer) error {
-	tmp419ByteIO, _ := tmp419.(io.ByteWriter)
-	_ = tmp419ByteIO
-	if tmp419ByteIO != nil {
-		if err := tmp419ByteIO.WriteByte(uint8(o.Value)); err != nil {
-			return err
-		}
-	} else {
-		if _, err := tmp419.Write([]byte{uint8(o.Value)}); err != nil {
-			return err
-		}
-	}
-	return nil
-}
-func (s *OriginValue) EncodeCopy(reserved []byte) ([]byte, error) {
-	buf := bytes.NewBuffer(reserved)
-	err := s.Write(buf)
-	if err != nil {
-		return nil, err
-	}
-	return buf.Bytes(), nil
-}
-func (s *OriginValue) MustEncodeCopy(reserved []byte) []byte {
-	buf, err := s.EncodeCopy(reserved)
-	if err != nil {
-		panic(err)
-	}
-	return buf
-}
-func (o *OriginValue) EncodeSlice(tmp419 []byte, tmp419Offset *int) error {
-	tmp1416 := []uint8{}
-	if len(tmp419)-*tmp419Offset < int(1) {
-		return errors.New("not enough space to reserve data for field \"OriginValue::Value\"")
-	}
-	tmp1416 = tmp419[*tmp419Offset : *tmp419Offset+int(1)]
-	tmp1416[0] = uint8(o.Value)
-	*tmp419Offset += int(1)
-	return nil
-}
-func (s *OriginValue) Encode(buf []byte) ([]byte, error) {
-	var offset int
-	err := s.EncodeSlice(buf, &offset)
-	if err != nil {
-		return nil, err
-	}
-	return buf[:offset], nil
-}
-func (s *OriginValue) MustEncode(reserved []byte) []byte {
-	buf, err := s.Encode(reserved)
-	if err != nil {
-		panic(err)
-	}
-	return buf
-}
-func (o *OriginValue) Append(tmp419 []byte) ([]byte, error) {
-	tmp1416 := [1]uint8{}
-	tmp1416[0] = uint8(o.Value)
-	tmp419 = append(tmp419, tmp1416[:1]...)
-	return tmp419, nil
-}
-func (s *OriginValue) MustAppend(buf []byte) []byte {
-	var err error
-	buf, err = s.Append(buf)
-	if err != nil {
-		panic(err)
-	}
-	return buf
-}
-
-func (o *OriginValue) Read(tmp421 io.Reader) error {
-	tmp421ByteIO, _ := tmp421.(io.ByteReader)
-	_ = tmp421ByteIO
-	tmp1422 := uint8(0)
-	if tmp421ByteIO != nil {
-		var err error
-		tmp1422, err = tmp421ByteIO.ReadByte()
-		if err != nil {
-			return err
-		}
-	} else {
-		var err error
-		var n int
-		buf := [1]byte{0}
-		if n, err = io.ReadFull(tmp421, buf[:]); err != nil {
-			return err
-		}
-		if n != 1 {
-			return fmt.Errorf("failed to read byte for field \"OriginValue::Value\": expected to read 1 byte, but read %d bytes", n)
-		}
-		tmp1422 = buf[0]
-	}
-	o.Value = Origin(tmp1422)
-	return nil
-}
-func (s *OriginValue) DecodeCopy(buf []byte) ([]byte, error) {
-	r := bytes.NewReader(buf)
-	err := s.Read(r)
-	if err != nil {
-		return nil, err
-	}
-	return buf[int(r.Size())-r.Len():], nil
-}
-func (s *OriginValue) DecodeExactCopy(buf []byte) error {
-	remain, err := s.DecodeCopy(buf)
-	if err != nil {
-		return err
-	}
-	if len(remain) != 0 {
-		return fmt.Errorf("expect no remaining bytes but got %d bytes", len(remain))
-	}
-	return nil
-}
-func (o *OriginValue) DecodeSlice(tmp421 []byte, tmp421Offset *int) error {
-	tmp1422 := uint8(0)
-	tmp1421 := []uint8{}
-	if len(tmp421)-*tmp421Offset < 1 {
-		return errors.New("not enough data to read for field \"OriginValue::Value\"")
-	}
-	tmp1421 = tmp421[*tmp421Offset : *tmp421Offset+1]
-	*tmp421Offset += int(1)
-	tmp1422 = tmp1421[0]
-	o.Value = Origin(tmp1422)
-	return nil
-}
-func (s *OriginValue) Decode(buf []byte) ([]byte, error) {
-	var offset int
-	err := s.DecodeSlice(buf, &offset)
-	if err != nil {
-		return nil, err
-	}
-	return buf[offset:], nil
-}
-func (s *OriginValue) DecodeExact(buf []byte) error {
-	remain, err := s.Decode(buf)
-	if err != nil {
-		return err
-	}
-	if len(remain) != 0 {
-		return fmt.Errorf("expect no remaining bytes but got %d bytes", len(remain))
-	}
-	return nil
-}
-
-type U32Value struct {
-	Value uint32
-}
-
-func (u *U32Value) Write(tmp404 io.Writer) error {
-	tmp1337 := [4]uint8{}
-	binary.BigEndian.PutUint32(tmp1337[:], uint32(u.Value))
-	if _, err := tmp404.Write(tmp1337[:4]); err != nil {
-		return err
-	}
-	return nil
-}
-func (s *U32Value) EncodeCopy(reserved []byte) ([]byte, error) {
-	buf := bytes.NewBuffer(reserved)
-	err := s.Write(buf)
-	if err != nil {
-		return nil, err
-	}
-	return buf.Bytes(), nil
-}
-func (s *U32Value) MustEncodeCopy(reserved []byte) []byte {
-	buf, err := s.EncodeCopy(reserved)
-	if err != nil {
-		panic(err)
-	}
-	return buf
-}
-func (u *U32Value) EncodeSlice(tmp404 []byte, tmp404Offset *int) error {
-	tmp1337 := []uint8{}
-	if len(tmp404)-*tmp404Offset < int(4) {
-		return errors.New("not enough space to reserve data for field \"U32Value::Value\"")
-	}
-	tmp1337 = tmp404[*tmp404Offset : *tmp404Offset+int(4)]
-	binary.BigEndian.PutUint32(tmp1337[:], uint32(u.Value))
-	*tmp404Offset += int(4)
-	return nil
-}
-func (s *U32Value) Encode(buf []byte) ([]byte, error) {
-	var offset int
-	err := s.EncodeSlice(buf, &offset)
-	if err != nil {
-		return nil, err
-	}
-	return buf[:offset], nil
-}
-func (s *U32Value) MustEncode(reserved []byte) []byte {
-	buf, err := s.Encode(reserved)
-	if err != nil {
-		panic(err)
-	}
-	return buf
-}
-func (u *U32Value) Append(tmp404 []byte) ([]byte, error) {
-	tmp1337 := [4]uint8{}
-	binary.BigEndian.PutUint32(tmp1337[:], uint32(u.Value))
-	tmp404 = append(tmp404, tmp1337[:4]...)
-	return tmp404, nil
-}
-func (s *U32Value) MustAppend(buf []byte) []byte {
-	var err error
-	buf, err = s.Append(buf)
-	if err != nil {
-		panic(err)
-	}
-	return buf
-}
-
-func (u *U32Value) Read(tmp405 io.Reader) error {
-	tmp1340 := [4]uint8{}
-	if _, err := io.ReadFull(tmp405, tmp1340[0:0+4]); err != nil {
-		return err
-	}
-	u.Value = binary.BigEndian.Uint32(tmp1340[:])
-	return nil
-}
-func (s *U32Value) DecodeCopy(buf []byte) ([]byte, error) {
-	r := bytes.NewReader(buf)
-	err := s.Read(r)
-	if err != nil {
-		return nil, err
-	}
-	return buf[int(r.Size())-r.Len():], nil
-}
-func (s *U32Value) DecodeExactCopy(buf []byte) error {
-	remain, err := s.DecodeCopy(buf)
-	if err != nil {
-		return err
-	}
-	if len(remain) != 0 {
-		return fmt.Errorf("expect no remaining bytes but got %d bytes", len(remain))
-	}
-	return nil
-}
-func (u *U32Value) DecodeSlice(tmp405 []byte, tmp405Offset *int) error {
-	tmp1340 := []uint8{}
-	if len(tmp405)-*tmp405Offset < 4 {
-		return errors.New("not enough data to read for field \"U32Value::Value\"")
-	}
-	tmp1340 = tmp405[*tmp405Offset : *tmp405Offset+4]
-	*tmp405Offset += int(4)
-	u.Value = binary.BigEndian.Uint32(tmp1340[:])
-	return nil
-}
-func (s *U32Value) Decode(buf []byte) ([]byte, error) {
-	var offset int
-	err := s.DecodeSlice(buf, &offset)
-	if err != nil {
-		return nil, err
-	}
-	return buf[offset:], nil
-}
-func (s *U32Value) DecodeExact(buf []byte) error {
-	remain, err := s.Decode(buf)
-	if err != nil {
-		return err
-	}
-	if len(remain) != 0 {
-		return fmt.Errorf("expect no remaining bytes but got %d bytes", len(remain))
-	}
-	return nil
-}
-
 type AsPathSegmentType uint8
 
 const (
@@ -5198,14 +5787,14 @@ type AsPath struct {
 	Segments []AsPathSegment
 }
 
-func (a *AsPath) Write(tmp408 io.Writer) error {
-	tmp867 := int(0)
-	for tmp867 < len(a.Segments) {
-		tmp1642 := a.Segments[tmp867].Write(tmp408)
-		if tmp1642 != nil {
-			return tmp1642
+func (a *AsPath) Write(tmp404 io.Writer) error {
+	tmp851 := int(0)
+	for tmp851 < len(a.Segments) {
+		tmp1350 := a.Segments[tmp851].Write(tmp404)
+		if tmp1350 != nil {
+			return tmp1350
 		}
-		tmp867 = tmp867 + int(1)
+		tmp851 = tmp851 + int(1)
 	}
 	return nil
 }
@@ -5224,14 +5813,14 @@ func (s *AsPath) MustEncodeCopy(reserved []byte) []byte {
 	}
 	return buf
 }
-func (a *AsPath) EncodeSlice(tmp408 []byte, tmp408Offset *int) error {
-	tmp867 := int(0)
-	for tmp867 < len(a.Segments) {
-		tmp1642 := a.Segments[tmp867].EncodeSlice(tmp408, tmp408Offset)
-		if tmp1642 != nil {
-			return tmp1642
+func (a *AsPath) EncodeSlice(tmp404 []byte, tmp404Offset *int) error {
+	tmp851 := int(0)
+	for tmp851 < len(a.Segments) {
+		tmp1350 := a.Segments[tmp851].EncodeSlice(tmp404, tmp404Offset)
+		if tmp1350 != nil {
+			return tmp1350
 		}
-		tmp867 = tmp867 + int(1)
+		tmp851 = tmp851 + int(1)
 	}
 	return nil
 }
@@ -5250,18 +5839,18 @@ func (s *AsPath) MustEncode(reserved []byte) []byte {
 	}
 	return buf
 }
-func (a *AsPath) Append(tmp408 []byte) ([]byte, error) {
-	tmp867 := int(0)
-	for tmp867 < len(a.Segments) {
-		var tmp1642 error
-		tmp408, tmp1642 = a.Segments[tmp867].Append(tmp408)
+func (a *AsPath) Append(tmp404 []byte) ([]byte, error) {
+	tmp851 := int(0)
+	for tmp851 < len(a.Segments) {
+		var tmp1350 error
+		tmp404, tmp1350 = a.Segments[tmp851].Append(tmp404)
 
-		if tmp1642 != nil {
-			return nil, tmp1642
+		if tmp1350 != nil {
+			return nil, tmp1350
 		}
-		tmp867 = tmp867 + int(1)
+		tmp851 = tmp851 + int(1)
 	}
-	return tmp408, nil
+	return tmp404, nil
 }
 func (s *AsPath) MustAppend(buf []byte) []byte {
 	var err error
@@ -5271,18 +5860,37 @@ func (s *AsPath) MustAppend(buf []byte) []byte {
 	}
 	return buf
 }
+func (a *AsPath) encodedSize(tmp404 int) (int, error) {
+	tmp851 := int(0)
+	for tmp851 < len(a.Segments) {
+		var tmp1350 error
+		tmp404, tmp1350 = a.Segments[tmp851].encodedSize(tmp404)
 
-func (a *AsPath) Read(tmp266 io.Reader) error {
+		if tmp1350 != nil {
+			return 0, tmp1350
+		}
+		tmp851 = tmp851 + int(1)
+	}
+	return tmp404, nil
+}
+
+// EncodedSize returns how many bytes encoding this value produces, without
+// encoding it (so a buffer can be allocated once). It fails where encoding would.
+func (s *AsPath) EncodedSize() (int, error) {
+	return s.encodedSize(0)
+}
+
+func (a *AsPath) Read(tmp267 io.Reader) error {
 	for true {
-		tmp1362 := AsPathSegment{}
-		tmp1358 := tmp1362.Read(tmp266)
-		if tmp1358 != nil {
-			if tmp1358 == io.EOF {
+		tmp1345 := AsPathSegment{}
+		tmp1343 := tmp1345.Read(tmp267)
+		if tmp1343 != nil {
+			if tmp1343 == io.EOF {
 				break
 			}
-			return tmp1358
+			return tmp1343
 		}
-		a.Segments = append(a.Segments, tmp1362)
+		a.Segments = append(a.Segments, tmp1345)
 	}
 	return nil
 }
@@ -5304,14 +5912,14 @@ func (s *AsPath) DecodeExactCopy(buf []byte) error {
 	}
 	return nil
 }
-func (a *AsPath) DecodeSlice(tmp266 []byte, tmp266Offset *int) error {
-	for len(tmp266)-*tmp266Offset >= 1 {
-		tmp1362 := AsPathSegment{}
-		tmp1358 := tmp1362.DecodeSlice(tmp266, tmp266Offset)
-		if tmp1358 != nil {
-			return tmp1358
+func (a *AsPath) DecodeSlice(tmp267 []byte, tmp267Offset *int) error {
+	for len(tmp267)-*tmp267Offset >= 1 {
+		tmp1345 := AsPathSegment{}
+		tmp1343 := tmp1345.DecodeSlice(tmp267, tmp267Offset)
+		if tmp1343 != nil {
+			return tmp1343
 		}
-		a.Segments = append(a.Segments, tmp1362)
+		a.Segments = append(a.Segments, tmp1345)
 	}
 	return nil
 }
@@ -5340,37 +5948,37 @@ type AsPathSegment struct {
 	Data []uint16
 }
 
-func (a *AsPathSegment) SetData(tmp1366 []uint16) bool {
-	if len(tmp1366) > int(255) {
+func (a *AsPathSegment) SetData(tmp1351 []uint16) bool {
+	if len(tmp1351) > int(255) {
 		return false
 	}
-	a.Len = uint8(len(tmp1366))
-	a.Data = tmp1366
+	a.Len = uint8(len(tmp1351))
+	a.Data = tmp1351
 	return true
 }
 
-func (a *AsPathSegment) Write(tmp126 io.Writer) error {
-	tmp1378 := [1]uint8{}
-	tmp1378[0] = uint8(a.Type)
-	if _, err := tmp126.Write(tmp1378[:1]); err != nil {
+func (a *AsPathSegment) Write(tmp129 io.Writer) error {
+	tmp1363 := [1]uint8{}
+	tmp1363[0] = uint8(a.Type)
+	if _, err := tmp129.Write(tmp1363[:1]); err != nil {
 		return err
 	}
-	tmp1375 := [1]uint8{}
-	tmp1375[0] = a.Len
-	if _, err := tmp126.Write(tmp1375[:1]); err != nil {
+	tmp1360 := [1]uint8{}
+	tmp1360[0] = a.Len
+	if _, err := tmp129.Write(tmp1360[:1]); err != nil {
 		return err
 	}
 	if len(a.Data) != int(int(a.Len)) {
 		return fmt.Errorf("size mismatch when writing field \"AsPathSegment::Data\": expected %d, got %d", int(int(a.Len)), len(a.Data))
 	}
-	tmp781 := int(0)
-	for tmp781 < int(a.Len) {
-		tmp1370 := [2]uint8{}
-		binary.BigEndian.PutUint16(tmp1370[:], uint16(a.Data[tmp781]))
-		if _, err := tmp126.Write(tmp1370[:2]); err != nil {
+	tmp763 := int(0)
+	for tmp763 < int(a.Len) {
+		tmp1355 := [2]uint8{}
+		binary.BigEndian.PutUint16(tmp1355[:], uint16(a.Data[tmp763]))
+		if _, err := tmp129.Write(tmp1355[:2]); err != nil {
 			return err
 		}
-		tmp781 = tmp781 + int(1)
+		tmp763 = tmp763 + int(1)
 	}
 	return nil
 }
@@ -5389,34 +5997,34 @@ func (s *AsPathSegment) MustEncodeCopy(reserved []byte) []byte {
 	}
 	return buf
 }
-func (a *AsPathSegment) EncodeSlice(tmp126 []byte, tmp126Offset *int) error {
-	tmp1378 := []uint8{}
-	if len(tmp126)-*tmp126Offset < int(1) {
+func (a *AsPathSegment) EncodeSlice(tmp129 []byte, tmp129Offset *int) error {
+	tmp1363 := []uint8{}
+	if len(tmp129)-*tmp129Offset < int(1) {
 		return errors.New("not enough space to reserve data for field \"AsPathSegment::Type\"")
 	}
-	tmp1378 = tmp126[*tmp126Offset : *tmp126Offset+int(1)]
-	tmp1378[0] = uint8(a.Type)
-	*tmp126Offset += int(1)
-	tmp1375 := []uint8{}
-	if len(tmp126)-*tmp126Offset < int(1) {
+	tmp1363 = tmp129[*tmp129Offset : *tmp129Offset+int(1)]
+	tmp1363[0] = uint8(a.Type)
+	*tmp129Offset += int(1)
+	tmp1360 := []uint8{}
+	if len(tmp129)-*tmp129Offset < int(1) {
 		return errors.New("not enough space to reserve data for field \"AsPathSegment::Len\"")
 	}
-	tmp1375 = tmp126[*tmp126Offset : *tmp126Offset+int(1)]
-	tmp1375[0] = a.Len
-	*tmp126Offset += int(1)
+	tmp1360 = tmp129[*tmp129Offset : *tmp129Offset+int(1)]
+	tmp1360[0] = a.Len
+	*tmp129Offset += int(1)
 	if len(a.Data) != int(int(a.Len)) {
 		return fmt.Errorf("size mismatch when writing field \"AsPathSegment::Data\": expected %d, got %d", int(int(a.Len)), len(a.Data))
 	}
-	tmp781 := int(0)
-	for tmp781 < int(a.Len) {
-		tmp1370 := []uint8{}
-		if len(tmp126)-*tmp126Offset < int(2) {
+	tmp763 := int(0)
+	for tmp763 < int(a.Len) {
+		tmp1355 := []uint8{}
+		if len(tmp129)-*tmp129Offset < int(2) {
 			return errors.New("not enough space to reserve data for field \"AsPathSegment::Data\"")
 		}
-		tmp1370 = tmp126[*tmp126Offset : *tmp126Offset+int(2)]
-		binary.BigEndian.PutUint16(tmp1370[:], uint16(a.Data[tmp781]))
-		*tmp126Offset += int(2)
-		tmp781 = tmp781 + int(1)
+		tmp1355 = tmp129[*tmp129Offset : *tmp129Offset+int(2)]
+		binary.BigEndian.PutUint16(tmp1355[:], uint16(a.Data[tmp763]))
+		*tmp129Offset += int(2)
+		tmp763 = tmp763 + int(1)
 	}
 	return nil
 }
@@ -5435,24 +6043,24 @@ func (s *AsPathSegment) MustEncode(reserved []byte) []byte {
 	}
 	return buf
 }
-func (a *AsPathSegment) Append(tmp126 []byte) ([]byte, error) {
-	tmp1378 := [1]uint8{}
-	tmp1378[0] = uint8(a.Type)
-	tmp126 = append(tmp126, tmp1378[:1]...)
-	tmp1375 := [1]uint8{}
-	tmp1375[0] = a.Len
-	tmp126 = append(tmp126, tmp1375[:1]...)
+func (a *AsPathSegment) Append(tmp129 []byte) ([]byte, error) {
+	tmp1363 := [1]uint8{}
+	tmp1363[0] = uint8(a.Type)
+	tmp129 = append(tmp129, tmp1363[:1]...)
+	tmp1360 := [1]uint8{}
+	tmp1360[0] = a.Len
+	tmp129 = append(tmp129, tmp1360[:1]...)
 	if len(a.Data) != int(int(a.Len)) {
 		return nil, fmt.Errorf("size mismatch when writing field \"AsPathSegment::Data\": expected %d, got %d", int(int(a.Len)), len(a.Data))
 	}
-	tmp781 := int(0)
-	for tmp781 < int(a.Len) {
-		tmp1370 := [2]uint8{}
-		binary.BigEndian.PutUint16(tmp1370[:], uint16(a.Data[tmp781]))
-		tmp126 = append(tmp126, tmp1370[:2]...)
-		tmp781 = tmp781 + int(1)
+	tmp763 := int(0)
+	for tmp763 < int(a.Len) {
+		tmp1355 := [2]uint8{}
+		binary.BigEndian.PutUint16(tmp1355[:], uint16(a.Data[tmp763]))
+		tmp129 = append(tmp129, tmp1355[:2]...)
+		tmp763 = tmp763 + int(1)
 	}
-	return tmp126, nil
+	return tmp129, nil
 }
 func (s *AsPathSegment) MustAppend(buf []byte) []byte {
 	var err error
@@ -5462,30 +6070,55 @@ func (s *AsPathSegment) MustAppend(buf []byte) []byte {
 	}
 	return buf
 }
+func (a *AsPathSegment) encodedSize(tmp129 int) (int, error) {
+	tmp1363 := [1]uint8{}
+	tmp1363[0] = uint8(a.Type)
+	tmp129 += int(1)
+	tmp1360 := [1]uint8{}
+	tmp1360[0] = a.Len
+	tmp129 += int(1)
+	if len(a.Data) != int(int(a.Len)) {
+		return 0, fmt.Errorf("size mismatch when writing field \"AsPathSegment::Data\": expected %d, got %d", int(int(a.Len)), len(a.Data))
+	}
+	tmp763 := int(0)
+	for tmp763 < int(a.Len) {
+		tmp1355 := [2]uint8{}
+		binary.BigEndian.PutUint16(tmp1355[:], uint16(a.Data[tmp763]))
+		tmp129 += int(2)
+		tmp763 = tmp763 + int(1)
+	}
+	return tmp129, nil
+}
 
-func (a *AsPathSegment) Read(tmp127 io.Reader) error {
-	tmp1391 := uint8(0)
-	tmp1390 := [1]uint8{}
-	if _, err := io.ReadFull(tmp127, tmp1390[0:0+1]); err != nil {
+// EncodedSize returns how many bytes encoding this value produces, without
+// encoding it (so a buffer can be allocated once). It fails where encoding would.
+func (s *AsPathSegment) EncodedSize() (int, error) {
+	return s.encodedSize(0)
+}
+
+func (a *AsPathSegment) Read(tmp130 io.Reader) error {
+	tmp1375 := uint8(0)
+	tmp1374 := [1]uint8{}
+	if _, err := io.ReadFull(tmp130, tmp1374[0:0+1]); err != nil {
 		return err
 	}
-	tmp1391 = tmp1390[0]
-	a.Type = AsPathSegmentType(tmp1391)
-	tmp1387 := [1]uint8{}
-	if _, err := io.ReadFull(tmp127, tmp1387[0:0+1]); err != nil {
+	tmp1375 = tmp1374[0]
+	a.Type = AsPathSegmentType(tmp1375)
+	tmp1371 := [1]uint8{}
+	if _, err := io.ReadFull(tmp130, tmp1371[0:0+1]); err != nil {
 		return err
 	}
-	a.Len = tmp1387[0]
-	tmp783 := int(0)
-	for tmp783 < int(a.Len) {
-		tmp1384 := uint16(0)
-		tmp1383 := [2]uint8{}
-		if _, err := io.ReadFull(tmp127, tmp1383[0:0+2]); err != nil {
+	a.Len = tmp1371[0]
+	tmp765 := int(0)
+	for tmp765 < int(a.Len) {
+		tmp1368 := uint16(0)
+		tmp1367 := [2]uint8{}
+		if _, err := io.ReadFull(tmp130, tmp1367[0:0+2]); err != nil {
 			return err
 		}
-		tmp1384 = binary.BigEndian.Uint16(tmp1383[:])
-		a.Data = append(a.Data, tmp1384)
-		tmp783 = tmp783 + int(1)
+		tmp1368 = binary.BigEndian.Uint16(tmp1367[:])
+		a.Data = append(a.Data, tmp1368)
+		tmp765 = tmp765 + int(1)
 	}
 	return nil
 }
@@ -5507,35 +6140,35 @@ func (s *AsPathSegment) DecodeExactCopy(buf []byte) error {
 	}
 	return nil
 }
-func (a *AsPathSegment) DecodeSlice(tmp127 []byte, tmp127Offset *int) error {
-	tmp1391 := uint8(0)
-	tmp1390 := []uint8{}
-	if len(tmp127)-*tmp127Offset < 1 {
+func (a *AsPathSegment) DecodeSlice(tmp130 []byte, tmp130Offset *int) error {
+	tmp1375 := uint8(0)
+	tmp1374 := []uint8{}
+	if len(tmp130)-*tmp130Offset < 1 {
 		return errors.New("not enough data to read for field \"AsPathSegment::Type\"")
 	}
-	tmp1390 = tmp127[*tmp127Offset : *tmp127Offset+1]
-	*tmp127Offset += int(1)
-	tmp1391 = tmp1390[0]
-	a.Type = AsPathSegmentType(tmp1391)
-	tmp1387 := []uint8{}
-	if len(tmp127)-*tmp127Offset < 1 {
+	tmp1374 = tmp130[*tmp130Offset : *tmp130Offset+1]
+	*tmp130Offset += int(1)
+	tmp1375 = tmp1374[0]
+	a.Type = AsPathSegmentType(tmp1375)
+	tmp1371 := []uint8{}
+	if len(tmp130)-*tmp130Offset < 1 {
 		return errors.New("not enough data to read for field \"AsPathSegment::Len\"")
 	}
-	tmp1387 = tmp127[*tmp127Offset : *tmp127Offset+1]
-	*tmp127Offset += int(1)
-	a.Len = tmp1387[0]
-	tmp783 := int(0)
-	for tmp783 < int(a.Len) {
-		tmp1384 := uint16(0)
-		tmp1383 := []uint8{}
-		if len(tmp127)-*tmp127Offset < 2 {
+	tmp1371 = tmp130[*tmp130Offset : *tmp130Offset+1]
+	*tmp130Offset += int(1)
+	a.Len = tmp1371[0]
+	tmp765 := int(0)
+	for tmp765 < int(a.Len) {
+		tmp1368 := uint16(0)
+		tmp1367 := []uint8{}
+		if len(tmp130)-*tmp130Offset < 2 {
 			return errors.New("not enough data to read for field \"AsPathSegment::Data\"")
 		}
-		tmp1383 = tmp127[*tmp127Offset : *tmp127Offset+2]
-		*tmp127Offset += int(2)
-		tmp1384 = binary.BigEndian.Uint16(tmp1383[:])
-		a.Data = append(a.Data, tmp1384)
-		tmp783 = tmp783 + int(1)
+		tmp1367 = tmp130[*tmp130Offset : *tmp130Offset+2]
+		*tmp130Offset += int(2)
+		tmp1368 = binary.BigEndian.Uint16(tmp1367[:])
+		a.Data = append(a.Data, tmp1368)
+		tmp765 = tmp765 + int(1)
 	}
 	return nil
 }
@@ -5563,13 +6196,13 @@ type Aggregator struct {
 	Addr [4]uint8
 }
 
-func (a *Aggregator) Write(tmp325 io.Writer) error {
-	tmp1310 := [2]uint8{}
-	binary.BigEndian.PutUint16(tmp1310[:], uint16(a.As))
-	if _, err := tmp325.Write(tmp1310[:2]); err != nil {
+func (a *Aggregator) Write(tmp326 io.Writer) error {
+	tmp1298 := [2]uint8{}
+	binary.BigEndian.PutUint16(tmp1298[:], uint16(a.As))
+	if _, err := tmp326.Write(tmp1298[:2]); err != nil {
 		return err
 	}
-	if _, err := tmp325.Write(a.Addr[:4]); err != nil {
+	if _, err := tmp326.Write(a.Addr[:4]); err != nil {
 		return err
 	}
 	return nil
@@ -5589,19 +6222,19 @@ func (s *Aggregator) MustEncodeCopy(reserved []byte) []byte {
 	}
 	return buf
 }
-func (a *Aggregator) EncodeSlice(tmp325 []byte, tmp325Offset *int) error {
-	tmp1310 := []uint8{}
-	if len(tmp325)-*tmp325Offset < int(2) {
+func (a *Aggregator) EncodeSlice(tmp326 []byte, tmp326Offset *int) error {
+	tmp1298 := []uint8{}
+	if len(tmp326)-*tmp326Offset < int(2) {
 		return errors.New("not enough space to reserve data for field \"Aggregator::As\"")
 	}
-	tmp1310 = tmp325[*tmp325Offset : *tmp325Offset+int(2)]
-	binary.BigEndian.PutUint16(tmp1310[:], uint16(a.As))
-	*tmp325Offset += int(2)
-	if len(tmp325)-*tmp325Offset < int(4) {
+	tmp1298 = tmp326[*tmp326Offset : *tmp326Offset+int(2)]
+	binary.BigEndian.PutUint16(tmp1298[:], uint16(a.As))
+	*tmp326Offset += int(2)
+	if len(tmp326)-*tmp326Offset < int(4) {
 		return errors.New("not enough space to write for field \"Aggregator::Addr\"")
 	}
-	copy(tmp325[*tmp325Offset:*tmp325Offset+int(4)], a.Addr[:])
-	*tmp325Offset += int(4)
+	copy(tmp326[*tmp326Offset:*tmp326Offset+int(4)], a.Addr[:])
+	*tmp326Offset += int(4)
 	return nil
 }
 func (s *Aggregator) Encode(buf []byte) ([]byte, error) {
@@ -5619,12 +6252,12 @@ func (s *Aggregator) MustEncode(reserved []byte) []byte {
 	}
 	return buf
 }
-func (a *Aggregator) Append(tmp325 []byte) ([]byte, error) {
-	tmp1310 := [2]uint8{}
-	binary.BigEndian.PutUint16(tmp1310[:], uint16(a.As))
-	tmp325 = append(tmp325, tmp1310[:2]...)
-	tmp325 = append(tmp325, a.Addr[:4]...)
-	return tmp325, nil
+func (a *Aggregator) Append(tmp326 []byte) ([]byte, error) {
+	tmp1298 := [2]uint8{}
+	binary.BigEndian.PutUint16(tmp1298[:], uint16(a.As))
+	tmp326 = append(tmp326, tmp1298[:2]...)
+	tmp326 = append(tmp326, a.Addr[:4]...)
+	return tmp326, nil
 }
 func (s *Aggregator) MustAppend(buf []byte) []byte {
 	var err error
@@ -5634,14 +6267,27 @@ func (s *Aggregator) MustAppend(buf []byte) []byte {
 	}
 	return buf
 }
+func (a *Aggregator) encodedSize(tmp326 int) (int, error) {
+	tmp1298 := [2]uint8{}
+	binary.BigEndian.PutUint16(tmp1298[:], uint16(a.As))
+	tmp326 += int(2)
+	tmp326 += int(4)
+	return tmp326, nil
+}
 
-func (a *Aggregator) Read(tmp326 io.Reader) error {
-	tmp1314 := [2]uint8{}
-	if _, err := io.ReadFull(tmp326, tmp1314[0:0+2]); err != nil {
+// EncodedSize returns how many bytes encoding this value produces, without
+// encoding it (so a buffer can be allocated once). It fails where encoding would.
+func (s *Aggregator) EncodedSize() (int, error) {
+	return s.encodedSize(0)
+}
+
+func (a *Aggregator) Read(tmp327 io.Reader) error {
+	tmp1302 := [2]uint8{}
+	if _, err := io.ReadFull(tmp327, tmp1302[0:0+2]); err != nil {
 		return err
 	}
-	a.As = binary.BigEndian.Uint16(tmp1314[:])
-	if _, err := io.ReadFull(tmp326, a.Addr[0:0+4]); err != nil {
+	a.As = binary.BigEndian.Uint16(tmp1302[:])
+	if _, err := io.ReadFull(tmp327, a.Addr[0:0+4]); err != nil {
 		return err
 	}
 	return nil
@@ -5664,19 +6310,19 @@ func (s *Aggregator) DecodeExactCopy(buf []byte) error {
 	}
 	return nil
 }
-func (a *Aggregator) DecodeSlice(tmp326 []byte, tmp326Offset *int) error {
-	tmp1314 := []uint8{}
-	if len(tmp326)-*tmp326Offset < 2 {
+func (a *Aggregator) DecodeSlice(tmp327 []byte, tmp327Offset *int) error {
+	tmp1302 := []uint8{}
+	if len(tmp327)-*tmp327Offset < 2 {
 		return errors.New("not enough data to read for field \"Aggregator::As\"")
 	}
-	tmp1314 = tmp326[*tmp326Offset : *tmp326Offset+2]
-	*tmp326Offset += int(2)
-	a.As = binary.BigEndian.Uint16(tmp1314[:])
-	if len(tmp326)-*tmp326Offset < 4 {
+	tmp1302 = tmp327[*tmp327Offset : *tmp327Offset+2]
+	*tmp327Offset += int(2)
+	a.As = binary.BigEndian.Uint16(tmp1302[:])
+	if len(tmp327)-*tmp327Offset < 4 {
 		return errors.New("not enough data to read for field \"Aggregator::Addr\"")
 	}
-	copy(a.Addr[:], tmp326[*tmp326Offset:*tmp326Offset+4])
-	*tmp326Offset += int(4)
+	copy(a.Addr[:], tmp327[*tmp327Offset:*tmp327Offset+4])
+	*tmp327Offset += int(4)
 	return nil
 }
 func (s *Aggregator) Decode(buf []byte) ([]byte, error) {
@@ -5740,63 +6386,63 @@ type MPReachNLRI struct {
 	Nlri       []Prefix
 }
 
-func (m *MPReachNLRI) SetNextHop(tmp1361 []uint8) bool {
-	if len(tmp1361) > int(255) {
+func (m *MPReachNLRI) SetNextHop(tmp1339 []uint8) bool {
+	if len(tmp1339) > int(255) {
 		return false
 	}
-	m.NextHopLen = uint8(len(tmp1361))
-	m.NextHop = tmp1361
+	m.NextHopLen = uint8(len(tmp1339))
+	m.NextHop = tmp1339
 	return true
 }
 
-func (m *MPReachNLRI) Write(tmp74 io.Writer) error {
-	tmp74ByteIO, _ := tmp74.(io.ByteWriter)
-	_ = tmp74ByteIO
-	tmp1276 := [2]uint8{}
-	binary.BigEndian.PutUint16(tmp1276[:], uint16(m.Afi))
-	if _, err := tmp74.Write(tmp1276[:2]); err != nil {
+func (m *MPReachNLRI) Write(tmp75 io.Writer) error {
+	tmp75ByteIO, _ := tmp75.(io.ByteWriter)
+	_ = tmp75ByteIO
+	tmp1264 := [2]uint8{}
+	binary.BigEndian.PutUint16(tmp1264[:], uint16(m.Afi))
+	if _, err := tmp75.Write(tmp1264[:2]); err != nil {
 		return err
 	}
-	if tmp74ByteIO != nil {
-		if err := tmp74ByteIO.WriteByte(m.Safi); err != nil {
+	if tmp75ByteIO != nil {
+		if err := tmp75ByteIO.WriteByte(m.Safi); err != nil {
 			return err
 		}
 	} else {
-		if _, err := tmp74.Write([]byte{m.Safi}); err != nil {
+		if _, err := tmp75.Write([]byte{m.Safi}); err != nil {
 			return err
 		}
 	}
-	if tmp74ByteIO != nil {
-		if err := tmp74ByteIO.WriteByte(m.NextHopLen); err != nil {
+	if tmp75ByteIO != nil {
+		if err := tmp75ByteIO.WriteByte(m.NextHopLen); err != nil {
 			return err
 		}
 	} else {
-		if _, err := tmp74.Write([]byte{m.NextHopLen}); err != nil {
+		if _, err := tmp75.Write([]byte{m.NextHopLen}); err != nil {
 			return err
 		}
 	}
 	if len(m.NextHop) != int(int(m.NextHopLen)) {
 		return fmt.Errorf("size mismatch when writing field \"MPReachNLRI::NextHop\": expected %d, got %d", int(int(m.NextHopLen)), len(m.NextHop))
 	}
-	if _, err := tmp74.Write(m.NextHop); err != nil {
+	if _, err := tmp75.Write(m.NextHop); err != nil {
 		return err
 	}
-	if tmp74ByteIO != nil {
-		if err := tmp74ByteIO.WriteByte(m.Reserved); err != nil {
+	if tmp75ByteIO != nil {
+		if err := tmp75ByteIO.WriteByte(m.Reserved); err != nil {
 			return err
 		}
 	} else {
-		if _, err := tmp74.Write([]byte{m.Reserved}); err != nil {
+		if _, err := tmp75.Write([]byte{m.Reserved}); err != nil {
 			return err
 		}
 	}
-	tmp764 := int(0)
-	for tmp764 < len(m.Nlri) {
-		tmp1263 := m.Nlri[tmp764].Write(tmp74)
-		if tmp1263 != nil {
-			return tmp1263
+	tmp747 := int(0)
+	for tmp747 < len(m.Nlri) {
+		tmp1251 := m.Nlri[tmp747].Write(tmp75)
+		if tmp1251 != nil {
+			return tmp1251
 		}
-		tmp764 = tmp764 + int(1)
+		tmp747 = tmp747 + int(1)
 	}
 	return nil
 }
@@ -5815,50 +6461,50 @@ func (s *MPReachNLRI) MustEncodeCopy(reserved []byte) []byte {
 	}
 	return buf
 }
-func (m *MPReachNLRI) EncodeSlice(tmp74 []byte, tmp74Offset *int) error {
-	tmp1276 := []uint8{}
-	if len(tmp74)-*tmp74Offset < int(2) {
+func (m *MPReachNLRI) EncodeSlice(tmp75 []byte, tmp75Offset *int) error {
+	tmp1264 := []uint8{}
+	if len(tmp75)-*tmp75Offset < int(2) {
 		return errors.New("not enough space to reserve data for field \"MPReachNLRI::Afi\"")
 	}
-	tmp1276 = tmp74[*tmp74Offset : *tmp74Offset+int(2)]
-	binary.BigEndian.PutUint16(tmp1276[:], uint16(m.Afi))
-	*tmp74Offset += int(2)
-	tmp1274 := []uint8{}
-	if len(tmp74)-*tmp74Offset < int(1) {
+	tmp1264 = tmp75[*tmp75Offset : *tmp75Offset+int(2)]
+	binary.BigEndian.PutUint16(tmp1264[:], uint16(m.Afi))
+	*tmp75Offset += int(2)
+	tmp1262 := []uint8{}
+	if len(tmp75)-*tmp75Offset < int(1) {
 		return errors.New("not enough space to reserve data for field \"MPReachNLRI::Safi\"")
 	}
-	tmp1274 = tmp74[*tmp74Offset : *tmp74Offset+int(1)]
-	tmp1274[0] = m.Safi
-	*tmp74Offset += int(1)
-	tmp1271 := []uint8{}
-	if len(tmp74)-*tmp74Offset < int(1) {
+	tmp1262 = tmp75[*tmp75Offset : *tmp75Offset+int(1)]
+	tmp1262[0] = m.Safi
+	*tmp75Offset += int(1)
+	tmp1259 := []uint8{}
+	if len(tmp75)-*tmp75Offset < int(1) {
 		return errors.New("not enough space to reserve data for field \"MPReachNLRI::NextHopLen\"")
 	}
-	tmp1271 = tmp74[*tmp74Offset : *tmp74Offset+int(1)]
-	tmp1271[0] = m.NextHopLen
-	*tmp74Offset += int(1)
+	tmp1259 = tmp75[*tmp75Offset : *tmp75Offset+int(1)]
+	tmp1259[0] = m.NextHopLen
+	*tmp75Offset += int(1)
 	if len(m.NextHop) != int(int(m.NextHopLen)) {
 		return fmt.Errorf("size mismatch when writing field \"MPReachNLRI::NextHop\": expected %d, got %d", int(int(m.NextHopLen)), len(m.NextHop))
 	}
-	if len(tmp74)-*tmp74Offset < int(0+int(m.NextHopLen)) {
+	if len(tmp75)-*tmp75Offset < int(0+int(m.NextHopLen)) {
 		return errors.New("not enough space to write for field \"MPReachNLRI::NextHop\"")
 	}
-	copy(tmp74[*tmp74Offset:*tmp74Offset+int(int(m.NextHopLen))], m.NextHop)
-	*tmp74Offset += int(int(m.NextHopLen))
-	tmp1266 := []uint8{}
-	if len(tmp74)-*tmp74Offset < int(1) {
+	copy(tmp75[*tmp75Offset:*tmp75Offset+int(int(m.NextHopLen))], m.NextHop)
+	*tmp75Offset += int(int(m.NextHopLen))
+	tmp1254 := []uint8{}
+	if len(tmp75)-*tmp75Offset < int(1) {
 		return errors.New("not enough space to reserve data for field \"MPReachNLRI::Reserved\"")
 	}
-	tmp1266 = tmp74[*tmp74Offset : *tmp74Offset+int(1)]
-	tmp1266[0] = m.Reserved
-	*tmp74Offset += int(1)
-	tmp764 := int(0)
-	for tmp764 < len(m.Nlri) {
-		tmp1263 := m.Nlri[tmp764].EncodeSlice(tmp74, tmp74Offset)
-		if tmp1263 != nil {
-			return tmp1263
+	tmp1254 = tmp75[*tmp75Offset : *tmp75Offset+int(1)]
+	tmp1254[0] = m.Reserved
+	*tmp75Offset += int(1)
+	tmp747 := int(0)
+	for tmp747 < len(m.Nlri) {
+		tmp1251 := m.Nlri[tmp747].EncodeSlice(tmp75, tmp75Offset)
+		if tmp1251 != nil {
+			return tmp1251
 		}
-		tmp764 = tmp764 + int(1)
+		tmp747 = tmp747 + int(1)
 	}
 	return nil
 }
@@ -5877,34 +6523,34 @@ func (s *MPReachNLRI) MustEncode(reserved []byte) []byte {
 	}
 	return buf
 }
-func (m *MPReachNLRI) Append(tmp74 []byte) ([]byte, error) {
-	tmp1276 := [2]uint8{}
-	binary.BigEndian.PutUint16(tmp1276[:], uint16(m.Afi))
-	tmp74 = append(tmp74, tmp1276[:2]...)
-	tmp1274 := [1]uint8{}
-	tmp1274[0] = m.Safi
-	tmp74 = append(tmp74, tmp1274[:1]...)
-	tmp1271 := [1]uint8{}
-	tmp1271[0] = m.NextHopLen
-	tmp74 = append(tmp74, tmp1271[:1]...)
+func (m *MPReachNLRI) Append(tmp75 []byte) ([]byte, error) {
+	tmp1264 := [2]uint8{}
+	binary.BigEndian.PutUint16(tmp1264[:], uint16(m.Afi))
+	tmp75 = append(tmp75, tmp1264[:2]...)
+	tmp1262 := [1]uint8{}
+	tmp1262[0] = m.Safi
+	tmp75 = append(tmp75, tmp1262[:1]...)
+	tmp1259 := [1]uint8{}
+	tmp1259[0] = m.NextHopLen
+	tmp75 = append(tmp75, tmp1259[:1]...)
 	if len(m.NextHop) != int(int(m.NextHopLen)) {
 		return nil, fmt.Errorf("size mismatch when writing field \"MPReachNLRI::NextHop\": expected %d, got %d", int(int(m.NextHopLen)), len(m.NextHop))
 	}
-	tmp74 = append(tmp74, m.NextHop...)
-	tmp1266 := [1]uint8{}
-	tmp1266[0] = m.Reserved
-	tmp74 = append(tmp74, tmp1266[:1]...)
-	tmp764 := int(0)
-	for tmp764 < len(m.Nlri) {
-		var tmp1263 error
-		tmp74, tmp1263 = m.Nlri[tmp764].Append(tmp74)
+	tmp75 = append(tmp75, m.NextHop...)
+	tmp1254 := [1]uint8{}
+	tmp1254[0] = m.Reserved
+	tmp75 = append(tmp75, tmp1254[:1]...)
+	tmp747 := int(0)
+	for tmp747 < len(m.Nlri) {
+		var tmp1251 error
+		tmp75, tmp1251 = m.Nlri[tmp747].Append(tmp75)
 
-		if tmp1263 != nil {
-			return nil, tmp1263
+		if tmp1251 != nil {
+			return nil, tmp1251
 		}
-		tmp764 = tmp764 + int(1)
+		tmp747 = tmp747 + int(1)
 	}
-	return tmp74, nil
+	return tmp75, nil
 }
 func (s *MPReachNLRI) MustAppend(buf []byte) []byte {
 	var err error
@@ -5914,15 +6560,50 @@ func (s *MPReachNLRI) MustAppend(buf []byte) []byte {
 	}
 	return buf
 }
+func (m *MPReachNLRI) encodedSize(tmp75 int) (int, error) {
+	tmp1264 := [2]uint8{}
+	binary.BigEndian.PutUint16(tmp1264[:], uint16(m.Afi))
+	tmp75 += int(2)
+	tmp1262 := [1]uint8{}
+	tmp1262[0] = m.Safi
+	tmp75 += int(1)
+	tmp1259 := [1]uint8{}
+	tmp1259[0] = m.NextHopLen
+	tmp75 += int(1)
+	if len(m.NextHop) != int(int(m.NextHopLen)) {
+		return 0, fmt.Errorf("size mismatch when writing field \"MPReachNLRI::NextHop\": expected %d, got %d", int(int(m.NextHopLen)), len(m.NextHop))
+	}
+	tmp75 += int(int(m.NextHopLen))
+	tmp1254 := [1]uint8{}
+	tmp1254[0] = m.Reserved
+	tmp75 += int(1)
+	tmp747 := int(0)
+	for tmp747 < len(m.Nlri) {
+		var tmp1251 error
+		tmp75, tmp1251 = m.Nlri[tmp747].encodedSize(tmp75)
+
+		if tmp1251 != nil {
+			return 0, tmp1251
+		}
+		tmp747 = tmp747 + int(1)
+	}
+	return tmp75, nil
+}
+
+// EncodedSize returns how many bytes encoding this value produces, without
+// encoding it (so a buffer can be allocated once). It fails where encoding would.
+func (s *MPReachNLRI) EncodedSize() (int, error) {
+	return s.encodedSize(0)
+}
 
 func (m *MPReachNLRI) Read(tmp67 io.Reader) error {
 	tmp67ByteIO, _ := tmp67.(io.ByteReader)
 	_ = tmp67ByteIO
-	tmp1290 := [2]uint8{}
-	if _, err := io.ReadFull(tmp67, tmp1290[0:0+2]); err != nil {
+	tmp1278 := [2]uint8{}
+	if _, err := io.ReadFull(tmp67, tmp1278[0:0+2]); err != nil {
 		return err
 	}
-	m.Afi = binary.BigEndian.Uint16(tmp1290[:])
+	m.Afi = binary.BigEndian.Uint16(tmp1278[:])
 	if tmp67ByteIO != nil {
 		var err error
 		m.Safi, err = tmp67ByteIO.ReadByte()
@@ -5931,13 +6612,13 @@ func (m *MPReachNLRI) Read(tmp67 io.Reader) error {
 		}
 	} else {
 		var err error
-		var n int
+		var ioN3211 int
 		buf := [1]byte{0}
-		if n, err = io.ReadFull(tmp67, buf[:]); err != nil {
+		if ioN3211, err = io.ReadFull(tmp67, buf[:]); err != nil {
 			return err
 		}
-		if n != 1 {
-			return fmt.Errorf("failed to read byte for field \"MPReachNLRI::Safi\": expected to read 1 byte, but read %d bytes", n)
+		if ioN3211 != 1 {
+			return fmt.Errorf("failed to read byte for field \"MPReachNLRI::Safi\": expected to read 1 byte, but read %d bytes", ioN3211)
 		}
 		m.Safi = buf[0]
 	}
@@ -5949,13 +6630,13 @@ func (m *MPReachNLRI) Read(tmp67 io.Reader) error {
 		}
 	} else {
 		var err error
-		var n int
+		var ioN3206 int
 		buf := [1]byte{0}
-		if n, err = io.ReadFull(tmp67, buf[:]); err != nil {
+		if ioN3206, err = io.ReadFull(tmp67, buf[:]); err != nil {
 			return err
 		}
-		if n != 1 {
-			return fmt.Errorf("failed to read byte for field \"MPReachNLRI::NextHopLen\": expected to read 1 byte, but read %d bytes", n)
+		if ioN3206 != 1 {
+			return fmt.Errorf("failed to read byte for field \"MPReachNLRI::NextHopLen\": expected to read 1 byte, but read %d bytes", ioN3206)
 		}
 		m.NextHopLen = buf[0]
 	}
@@ -5982,11 +6663,11 @@ func (m *MPReachNLRI) Read(tmp67 io.Reader) error {
 	} else {
 		// To mitigate DoS attack, use incremental buffer allocation
 		// for more performance, use (assert on DSL or safe-len-limit option) and trust-input-len option
-		io_temp_3211 := bytes.NewBuffer(nil)
-		if _, err := io.CopyN(io_temp_3211, tmp67, int64(int(m.NextHopLen))); err != nil {
+		io_temp_3204 := bytes.NewBuffer(nil)
+		if _, err := io.CopyN(io_temp_3204, tmp67, int64(int(m.NextHopLen))); err != nil {
 			return err
 		}
-		m.NextHop = io_temp_3211.Bytes()
+		m.NextHop = io_temp_3204.Bytes()
 	}
 	if tmp67ByteIO != nil {
 		var err error
@@ -5996,26 +6677,26 @@ func (m *MPReachNLRI) Read(tmp67 io.Reader) error {
 		}
 	} else {
 		var err error
-		var n int
+		var ioN3198 int
 		buf := [1]byte{0}
-		if n, err = io.ReadFull(tmp67, buf[:]); err != nil {
+		if ioN3198, err = io.ReadFull(tmp67, buf[:]); err != nil {
 			return err
 		}
-		if n != 1 {
-			return fmt.Errorf("failed to read byte for field \"MPReachNLRI::Reserved\": expected to read 1 byte, but read %d bytes", n)
+		if ioN3198 != 1 {
+			return fmt.Errorf("failed to read byte for field \"MPReachNLRI::Reserved\": expected to read 1 byte, but read %d bytes", ioN3198)
 		}
 		m.Reserved = buf[0]
 	}
 	for true {
-		tmp1279 := Prefix{}
-		tmp1278 := tmp1279.Read(tmp67)
-		if tmp1278 != nil {
-			if tmp1278 == io.EOF {
+		tmp1267 := Prefix{}
+		tmp1266 := tmp1267.Read(tmp67)
+		if tmp1266 != nil {
+			if tmp1266 == io.EOF {
 				break
 			}
-			return tmp1278
+			return tmp1266
 		}
-		m.Nlri = append(m.Nlri, tmp1279)
+		m.Nlri = append(m.Nlri, tmp1267)
 	}
 	return nil
 }
@@ -6038,46 +6719,46 @@ func (s *MPReachNLRI) DecodeExactCopy(buf []byte) error {
 	return nil
 }
 func (m *MPReachNLRI) DecodeSlice(tmp67 []byte, tmp67Offset *int) error {
-	tmp1290 := []uint8{}
+	tmp1278 := []uint8{}
 	if len(tmp67)-*tmp67Offset < 2 {
 		return errors.New("not enough data to read for field \"MPReachNLRI::Afi\"")
 	}
-	tmp1290 = tmp67[*tmp67Offset : *tmp67Offset+2]
+	tmp1278 = tmp67[*tmp67Offset : *tmp67Offset+2]
 	*tmp67Offset += int(2)
-	m.Afi = binary.BigEndian.Uint16(tmp1290[:])
-	tmp1288 := []uint8{}
+	m.Afi = binary.BigEndian.Uint16(tmp1278[:])
+	tmp1276 := []uint8{}
 	if len(tmp67)-*tmp67Offset < 1 {
 		return errors.New("not enough data to read for field \"MPReachNLRI::Safi\"")
 	}
-	tmp1288 = tmp67[*tmp67Offset : *tmp67Offset+1]
+	tmp1276 = tmp67[*tmp67Offset : *tmp67Offset+1]
 	*tmp67Offset += int(1)
-	m.Safi = tmp1288[0]
-	tmp1285 := []uint8{}
+	m.Safi = tmp1276[0]
+	tmp1273 := []uint8{}
 	if len(tmp67)-*tmp67Offset < 1 {
 		return errors.New("not enough data to read for field \"MPReachNLRI::NextHopLen\"")
 	}
-	tmp1285 = tmp67[*tmp67Offset : *tmp67Offset+1]
+	tmp1273 = tmp67[*tmp67Offset : *tmp67Offset+1]
 	*tmp67Offset += int(1)
-	m.NextHopLen = tmp1285[0]
+	m.NextHopLen = tmp1273[0]
 	if len(tmp67)-*tmp67Offset < int(m.NextHopLen) {
 		return errors.New("not enough data to read for field \"MPReachNLRI::NextHop\"")
 	}
 	m.NextHop = tmp67[*tmp67Offset : *tmp67Offset+int(m.NextHopLen)]
 	*tmp67Offset += int(int(m.NextHopLen))
-	tmp1282 := []uint8{}
+	tmp1270 := []uint8{}
 	if len(tmp67)-*tmp67Offset < 1 {
 		return errors.New("not enough data to read for field \"MPReachNLRI::Reserved\"")
 	}
-	tmp1282 = tmp67[*tmp67Offset : *tmp67Offset+1]
+	tmp1270 = tmp67[*tmp67Offset : *tmp67Offset+1]
 	*tmp67Offset += int(1)
-	m.Reserved = tmp1282[0]
+	m.Reserved = tmp1270[0]
 	for len(tmp67)-*tmp67Offset >= 1 {
-		tmp1279 := Prefix{}
-		tmp1278 := tmp1279.DecodeSlice(tmp67, tmp67Offset)
-		if tmp1278 != nil {
-			return tmp1278
+		tmp1267 := Prefix{}
+		tmp1266 := tmp1267.DecodeSlice(tmp67, tmp67Offset)
+		if tmp1266 != nil {
+			return tmp1266
 		}
-		m.Nlri = append(m.Nlri, tmp1279)
+		m.Nlri = append(m.Nlri, tmp1267)
 	}
 	return nil
 }
@@ -6106,24 +6787,24 @@ type MPUnreachNLRI struct {
 	Withdrawn []Prefix
 }
 
-func (m *MPUnreachNLRI) Write(tmp147 io.Writer) error {
-	tmp1243 := [2]uint8{}
-	binary.BigEndian.PutUint16(tmp1243[:], uint16(m.Afi))
-	if _, err := tmp147.Write(tmp1243[:2]); err != nil {
+func (m *MPUnreachNLRI) Write(tmp149 io.Writer) error {
+	tmp1231 := [2]uint8{}
+	binary.BigEndian.PutUint16(tmp1231[:], uint16(m.Afi))
+	if _, err := tmp149.Write(tmp1231[:2]); err != nil {
 		return err
 	}
-	tmp1241 := [1]uint8{}
-	tmp1241[0] = m.Safi
-	if _, err := tmp147.Write(tmp1241[:1]); err != nil {
+	tmp1229 := [1]uint8{}
+	tmp1229[0] = m.Safi
+	if _, err := tmp149.Write(tmp1229[:1]); err != nil {
 		return err
 	}
-	tmp758 := int(0)
-	for tmp758 < len(m.Withdrawn) {
-		tmp1238 := m.Withdrawn[tmp758].Write(tmp147)
-		if tmp1238 != nil {
-			return tmp1238
+	tmp741 := int(0)
+	for tmp741 < len(m.Withdrawn) {
+		tmp1226 := m.Withdrawn[tmp741].Write(tmp149)
+		if tmp1226 != nil {
+			return tmp1226
 		}
-		tmp758 = tmp758 + int(1)
+		tmp741 = tmp741 + int(1)
 	}
 	return nil
 }
@@ -6142,28 +6823,28 @@ func (s *MPUnreachNLRI) MustEncodeCopy(reserved []byte) []byte {
 	}
 	return buf
 }
-func (m *MPUnreachNLRI) EncodeSlice(tmp147 []byte, tmp147Offset *int) error {
-	tmp1243 := []uint8{}
-	if len(tmp147)-*tmp147Offset < int(2) {
+func (m *MPUnreachNLRI) EncodeSlice(tmp149 []byte, tmp149Offset *int) error {
+	tmp1231 := []uint8{}
+	if len(tmp149)-*tmp149Offset < int(2) {
 		return errors.New("not enough space to reserve data for field \"MPUnreachNLRI::Afi\"")
 	}
-	tmp1243 = tmp147[*tmp147Offset : *tmp147Offset+int(2)]
-	binary.BigEndian.PutUint16(tmp1243[:], uint16(m.Afi))
-	*tmp147Offset += int(2)
-	tmp1241 := []uint8{}
-	if len(tmp147)-*tmp147Offset < int(1) {
+	tmp1231 = tmp149[*tmp149Offset : *tmp149Offset+int(2)]
+	binary.BigEndian.PutUint16(tmp1231[:], uint16(m.Afi))
+	*tmp149Offset += int(2)
+	tmp1229 := []uint8{}
+	if len(tmp149)-*tmp149Offset < int(1) {
 		return errors.New("not enough space to reserve data for field \"MPUnreachNLRI::Safi\"")
 	}
-	tmp1241 = tmp147[*tmp147Offset : *tmp147Offset+int(1)]
-	tmp1241[0] = m.Safi
-	*tmp147Offset += int(1)
-	tmp758 := int(0)
-	for tmp758 < len(m.Withdrawn) {
-		tmp1238 := m.Withdrawn[tmp758].EncodeSlice(tmp147, tmp147Offset)
-		if tmp1238 != nil {
-			return tmp1238
+	tmp1229 = tmp149[*tmp149Offset : *tmp149Offset+int(1)]
+	tmp1229[0] = m.Safi
+	*tmp149Offset += int(1)
+	tmp741 := int(0)
+	for tmp741 < len(m.Withdrawn) {
+		tmp1226 := m.Withdrawn[tmp741].EncodeSlice(tmp149, tmp149Offset)
+		if tmp1226 != nil {
+			return tmp1226
 		}
-		tmp758 = tmp758 + int(1)
+		tmp741 = tmp741 + int(1)
 	}
 	return nil
 }
@@ -6182,24 +6863,24 @@ func (s *MPUnreachNLRI) MustEncode(reserved []byte) []byte {
 	}
 	return buf
 }
-func (m *MPUnreachNLRI) Append(tmp147 []byte) ([]byte, error) {
-	tmp1243 := [2]uint8{}
-	binary.BigEndian.PutUint16(tmp1243[:], uint16(m.Afi))
-	tmp147 = append(tmp147, tmp1243[:2]...)
-	tmp1241 := [1]uint8{}
-	tmp1241[0] = m.Safi
-	tmp147 = append(tmp147, tmp1241[:1]...)
-	tmp758 := int(0)
-	for tmp758 < len(m.Withdrawn) {
-		var tmp1238 error
-		tmp147, tmp1238 = m.Withdrawn[tmp758].Append(tmp147)
+func (m *MPUnreachNLRI) Append(tmp149 []byte) ([]byte, error) {
+	tmp1231 := [2]uint8{}
+	binary.BigEndian.PutUint16(tmp1231[:], uint16(m.Afi))
+	tmp149 = append(tmp149, tmp1231[:2]...)
+	tmp1229 := [1]uint8{}
+	tmp1229[0] = m.Safi
+	tmp149 = append(tmp149, tmp1229[:1]...)
+	tmp741 := int(0)
+	for tmp741 < len(m.Withdrawn) {
+		var tmp1226 error
+		tmp149, tmp1226 = m.Withdrawn[tmp741].Append(tmp149)
 
-		if tmp1238 != nil {
-			return nil, tmp1238
+		if tmp1226 != nil {
+			return nil, tmp1226
 		}
-		tmp758 = tmp758 + int(1)
+		tmp741 = tmp741 + int(1)
 	}
-	return tmp147, nil
+	return tmp149, nil
 }
 func (s *MPUnreachNLRI) MustAppend(buf []byte) []byte {
 	var err error
@@ -6209,28 +6890,53 @@ func (s *MPUnreachNLRI) MustAppend(buf []byte) []byte {
 	}
 	return buf
 }
+func (m *MPUnreachNLRI) encodedSize(tmp149 int) (int, error) {
+	tmp1231 := [2]uint8{}
+	binary.BigEndian.PutUint16(tmp1231[:], uint16(m.Afi))
+	tmp149 += int(2)
+	tmp1229 := [1]uint8{}
+	tmp1229[0] = m.Safi
+	tmp149 += int(1)
+	tmp741 := int(0)
+	for tmp741 < len(m.Withdrawn) {
+		var tmp1226 error
+		tmp149, tmp1226 = m.Withdrawn[tmp741].encodedSize(tmp149)
 
-func (m *MPUnreachNLRI) Read(tmp99 io.Reader) error {
-	tmp1251 := [2]uint8{}
-	if _, err := io.ReadFull(tmp99, tmp1251[0:0+2]); err != nil {
+		if tmp1226 != nil {
+			return 0, tmp1226
+		}
+		tmp741 = tmp741 + int(1)
+	}
+	return tmp149, nil
+}
+
+// EncodedSize returns how many bytes encoding this value produces, without
+// encoding it (so a buffer can be allocated once). It fails where encoding would.
+func (s *MPUnreachNLRI) EncodedSize() (int, error) {
+	return s.encodedSize(0)
+}
+
+func (m *MPUnreachNLRI) Read(tmp103 io.Reader) error {
+	tmp1239 := [2]uint8{}
+	if _, err := io.ReadFull(tmp103, tmp1239[0:0+2]); err != nil {
 		return err
 	}
-	m.Afi = binary.BigEndian.Uint16(tmp1251[:])
-	tmp1249 := [1]uint8{}
-	if _, err := io.ReadFull(tmp99, tmp1249[0:0+1]); err != nil {
+	m.Afi = binary.BigEndian.Uint16(tmp1239[:])
+	tmp1237 := [1]uint8{}
+	if _, err := io.ReadFull(tmp103, tmp1237[0:0+1]); err != nil {
 		return err
 	}
-	m.Safi = tmp1249[0]
+	m.Safi = tmp1237[0]
 	for true {
-		tmp1246 := Prefix{}
-		tmp1245 := tmp1246.Read(tmp99)
-		if tmp1245 != nil {
-			if tmp1245 == io.EOF {
+		tmp1234 := Prefix{}
+		tmp1233 := tmp1234.Read(tmp103)
+		if tmp1233 != nil {
+			if tmp1233 == io.EOF {
 				break
 			}
-			return tmp1245
+			return tmp1233
 		}
-		m.Withdrawn = append(m.Withdrawn, tmp1246)
+		m.Withdrawn = append(m.Withdrawn, tmp1234)
 	}
 	return nil
 }
@@ -6252,28 +6958,28 @@ func (s *MPUnreachNLRI) DecodeExactCopy(buf []byte) error {
 	}
 	return nil
 }
-func (m *MPUnreachNLRI) DecodeSlice(tmp99 []byte, tmp99Offset *int) error {
-	tmp1251 := []uint8{}
-	if len(tmp99)-*tmp99Offset < 2 {
+func (m *MPUnreachNLRI) DecodeSlice(tmp103 []byte, tmp103Offset *int) error {
+	tmp1239 := []uint8{}
+	if len(tmp103)-*tmp103Offset < 2 {
 		return errors.New("not enough data to read for field \"MPUnreachNLRI::Afi\"")
 	}
-	tmp1251 = tmp99[*tmp99Offset : *tmp99Offset+2]
-	*tmp99Offset += int(2)
-	m.Afi = binary.BigEndian.Uint16(tmp1251[:])
-	tmp1249 := []uint8{}
-	if len(tmp99)-*tmp99Offset < 1 {
+	tmp1239 = tmp103[*tmp103Offset : *tmp103Offset+2]
+	*tmp103Offset += int(2)
+	m.Afi = binary.BigEndian.Uint16(tmp1239[:])
+	tmp1237 := []uint8{}
+	if len(tmp103)-*tmp103Offset < 1 {
 		return errors.New("not enough data to read for field \"MPUnreachNLRI::Safi\"")
 	}
-	tmp1249 = tmp99[*tmp99Offset : *tmp99Offset+1]
-	*tmp99Offset += int(1)
-	m.Safi = tmp1249[0]
-	for len(tmp99)-*tmp99Offset >= 1 {
-		tmp1246 := Prefix{}
-		tmp1245 := tmp1246.DecodeSlice(tmp99, tmp99Offset)
-		if tmp1245 != nil {
-			return tmp1245
+	tmp1237 = tmp103[*tmp103Offset : *tmp103Offset+1]
+	*tmp103Offset += int(1)
+	m.Safi = tmp1237[0]
+	for len(tmp103)-*tmp103Offset >= 1 {
+		tmp1234 := Prefix{}
+		tmp1233 := tmp1234.DecodeSlice(tmp103, tmp103Offset)
+		if tmp1233 != nil {
+			return tmp1233
 		}
-		m.Withdrawn = append(m.Withdrawn, tmp1246)
+		m.Withdrawn = append(m.Withdrawn, tmp1234)
 	}
 	return nil
 }
@@ -6303,14 +7009,14 @@ type Notification struct {
 }
 
 func (n *Notification) Write(tmp201 io.Writer) error {
-	tmp945 := [1]uint8{}
-	tmp945[0] = n.Code
-	if _, err := tmp201.Write(tmp945[:1]); err != nil {
+	tmp930 := [1]uint8{}
+	tmp930[0] = n.Code
+	if _, err := tmp201.Write(tmp930[:1]); err != nil {
 		return err
 	}
-	tmp942 := [1]uint8{}
-	tmp942[0] = n.Subcode
-	if _, err := tmp201.Write(tmp942[:1]); err != nil {
+	tmp927 := [1]uint8{}
+	tmp927[0] = n.Subcode
+	if _, err := tmp201.Write(tmp927[:1]); err != nil {
 		return err
 	}
 	if _, err := tmp201.Write(n.Data); err != nil {
@@ -6334,19 +7040,19 @@ func (s *Notification) MustEncodeCopy(reserved []byte) []byte {
 	return buf
 }
 func (n *Notification) EncodeSlice(tmp201 []byte, tmp201Offset *int) error {
-	tmp945 := []uint8{}
+	tmp930 := []uint8{}
 	if len(tmp201)-*tmp201Offset < int(1) {
 		return errors.New("not enough space to reserve data for field \"Notification::Code\"")
 	}
-	tmp945 = tmp201[*tmp201Offset : *tmp201Offset+int(1)]
-	tmp945[0] = n.Code
+	tmp930 = tmp201[*tmp201Offset : *tmp201Offset+int(1)]
+	tmp930[0] = n.Code
 	*tmp201Offset += int(1)
-	tmp942 := []uint8{}
+	tmp927 := []uint8{}
 	if len(tmp201)-*tmp201Offset < int(1) {
 		return errors.New("not enough space to reserve data for field \"Notification::Subcode\"")
 	}
-	tmp942 = tmp201[*tmp201Offset : *tmp201Offset+int(1)]
-	tmp942[0] = n.Subcode
+	tmp927 = tmp201[*tmp201Offset : *tmp201Offset+int(1)]
+	tmp927[0] = n.Subcode
 	*tmp201Offset += int(1)
 	if len(tmp201)-*tmp201Offset < int(0+len(n.Data)) {
 		return errors.New("not enough space to write for field \"Notification::Data\"")
@@ -6371,12 +7077,12 @@ func (s *Notification) MustEncode(reserved []byte) []byte {
 	return buf
 }
 func (n *Notification) Append(tmp201 []byte) ([]byte, error) {
-	tmp945 := [1]uint8{}
-	tmp945[0] = n.Code
-	tmp201 = append(tmp201, tmp945[:1]...)
-	tmp942 := [1]uint8{}
-	tmp942[0] = n.Subcode
-	tmp201 = append(tmp201, tmp942[:1]...)
+	tmp930 := [1]uint8{}
+	tmp930[0] = n.Code
+	tmp201 = append(tmp201, tmp930[:1]...)
+	tmp927 := [1]uint8{}
+	tmp927[0] = n.Subcode
+	tmp201 = append(tmp201, tmp927[:1]...)
 	tmp201 = append(tmp201, n.Data...)
 	return tmp201, nil
 }
@@ -6388,21 +7094,37 @@ func (s *Notification) MustAppend(buf []byte) []byte {
 	}
 	return buf
 }
+func (n *Notification) encodedSize(tmp201 int) (int, error) {
+	tmp930 := [1]uint8{}
+	tmp930[0] = n.Code
+	tmp201 += int(1)
+	tmp927 := [1]uint8{}
+	tmp927[0] = n.Subcode
+	tmp201 += int(1)
+	tmp201 += int(len(n.Data))
+	return tmp201, nil
+}
 
-func (n *Notification) Read(tmp167 io.Reader) error {
-	tmp952 := [1]uint8{}
-	if _, err := io.ReadFull(tmp167, tmp952[0:0+1]); err != nil {
+// EncodedSize returns how many bytes encoding this value produces, without
+// encoding it (so a buffer can be allocated once). It fails where encoding would.
+func (s *Notification) EncodedSize() (int, error) {
+	return s.encodedSize(0)
+}
+
+func (n *Notification) Read(tmp168 io.Reader) error {
+	tmp937 := [1]uint8{}
+	if _, err := io.ReadFull(tmp168, tmp937[0:0+1]); err != nil {
 		return err
 	}
-	n.Code = tmp952[0]
-	tmp949 := [1]uint8{}
-	if _, err := io.ReadFull(tmp167, tmp949[0:0+1]); err != nil {
+	n.Code = tmp937[0]
+	tmp934 := [1]uint8{}
+	if _, err := io.ReadFull(tmp168, tmp934[0:0+1]); err != nil {
 		return err
 	}
-	n.Subcode = tmp949[0]
+	n.Subcode = tmp934[0]
 	{
 		var readErr error
-		n.Data, readErr = io.ReadAll(tmp167)
+		n.Data, readErr = io.ReadAll(tmp168)
 		if readErr != nil {
 			return readErr
 		}
@@ -6427,23 +7149,23 @@ func (s *Notification) DecodeExactCopy(buf []byte) error {
 	}
 	return nil
 }
-func (n *Notification) DecodeSlice(tmp167 []byte, tmp167Offset *int) error {
-	tmp952 := []uint8{}
-	if len(tmp167)-*tmp167Offset < 1 {
+func (n *Notification) DecodeSlice(tmp168 []byte, tmp168Offset *int) error {
+	tmp937 := []uint8{}
+	if len(tmp168)-*tmp168Offset < 1 {
 		return errors.New("not enough data to read for field \"Notification::Code\"")
 	}
-	tmp952 = tmp167[*tmp167Offset : *tmp167Offset+1]
-	*tmp167Offset += int(1)
-	n.Code = tmp952[0]
-	tmp949 := []uint8{}
-	if len(tmp167)-*tmp167Offset < 1 {
+	tmp937 = tmp168[*tmp168Offset : *tmp168Offset+1]
+	*tmp168Offset += int(1)
+	n.Code = tmp937[0]
+	tmp934 := []uint8{}
+	if len(tmp168)-*tmp168Offset < 1 {
 		return errors.New("not enough data to read for field \"Notification::Subcode\"")
 	}
-	tmp949 = tmp167[*tmp167Offset : *tmp167Offset+1]
-	*tmp167Offset += int(1)
-	n.Subcode = tmp949[0]
-	n.Data = tmp167[*tmp167Offset:]
-	*tmp167Offset += len(n.Data)
+	tmp934 = tmp168[*tmp168Offset : *tmp168Offset+1]
+	*tmp168Offset += int(1)
+	n.Subcode = tmp934[0]
+	n.Data = tmp168[*tmp168Offset:]
+	*tmp168Offset += len(n.Data)
 	return nil
 }
 func (s *Notification) Decode(buf []byte) ([]byte, error) {

@@ -36,6 +36,7 @@ format BGPPacket:
         BGPType.update => update :Update(input=input.subrange(header.length-19))
         BGPType.notification => notification :Notification(input=input.subrange(header.length-19))
         BGPType.keepalive => header.length == 19
+        .. => error("unknown BGP message type")
 
 format Open:
     version :u8
@@ -123,11 +124,11 @@ format PathAttribute:
         len :u8
     len_tmp ::= u16(len)
     match type.code:
-        AttributeCode.ORIGIN => origin :OriginValue(input=input.subrange(len_tmp))
+        AttributeCode.ORIGIN => origin :Origin(input=input.subrange(len_tmp))
         AttributeCode.AS_PATH => as_path :AsPath(input=input.subrange(len_tmp))
         AttributeCode.NEXT_HOP => next_hop :[4]u8(input=input.subrange(len_tmp))
-        AttributeCode.MULTI_EXIT_DISC => multi_exit_disc :U32Value(input=input.subrange(len_tmp))
-        AttributeCode.LOCAL_PREF => local_pref :U32Value(input=input.subrange(len_tmp))
+        AttributeCode.MULTI_EXIT_DISC => multi_exit_disc :u32(input=input.subrange(len_tmp))
+        AttributeCode.LOCAL_PREF => local_pref :u32(input=input.subrange(len_tmp))
         AttributeCode.ATOMIC_AGGREGATE => len_tmp == 0
         AttributeCode.AGGREGATOR => aggregator :Aggregator(input=input.subrange(len_tmp))
         AttributeCode.COMMUNITIES => communities :[..]u32(input=input.subrange(len_tmp))
@@ -140,15 +141,6 @@ enum Origin:
     IGP = 0
     EGP = 1
     INCOMPLETE = 2
-
-# ORIGIN, MULTI_EXIT_DISC and LOCAL_PREF are wrapped in a one-field format:
-# brgen's go3 writer does not declare its byte writer when a bare enum or
-# integer sits directly under input.subrange (generated code fails to build).
-format OriginValue:
-    value :Origin
-
-format U32Value:
-    value :u32
 
 enum AsPathSegmentType:
     :u8

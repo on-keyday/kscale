@@ -111,22 +111,13 @@ type readResult struct {
 	err error
 }
 
-// readPacket reads one message. The generated reader leaves the body of an
-// unknown message type unread, so the type is checked here and the session
-// ends on one (the stream would be out of sync).
+// readPacket reads one message. The generated reader rejects a wrong marker
+// and an unknown message type itself (bgp.bgn), so either ends the session
+// with a plain error; the peer gets no NOTIFICATION 1/1 or 1/3 for it.
 func readPacket(r io.Reader) (wire.BGPPacket, error) {
 	var p wire.BGPPacket
-	if err := p.Read(r); err != nil {
-		return p, err
-	}
-	if p.Header.Marker != marker {
-		return p, &NotificationError{Code: 1, Subcode: 1} // connection not synchronized
-	}
-	switch p.Header.Type {
-	case wire.BGPType_Open, wire.BGPType_Update, wire.BGPType_Notification, wire.BGPType_Keepalive:
-		return p, nil
-	}
-	return p, &NotificationError{Code: 1, Subcode: 3, Data: []byte{uint8(p.Header.Type)}} // bad message type
+	err := p.Read(r)
+	return p, err
 }
 
 type conn struct {

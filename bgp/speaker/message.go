@@ -68,12 +68,8 @@ func encodeOpen(localAS, hold uint16, routerID netip.Addr) ([]byte, error) {
 	return packet(wire.BGPType_Open, len(body), func(p *wire.BGPPacket) bool { return p.SetOpen(o) })
 }
 
-// encodeKeepalive encodes just the header: a KEEPALIVE has no body, and the
-// generated BGPPacket has no setter for its (empty) keepalive variant, so
-// encoding it through BGPPacket fails with "invalid union type".
 func encodeKeepalive() ([]byte, error) {
-	h := wire.BGPHeader{Marker: marker, Length: headerLen, Type: wire.BGPType_Keepalive}
-	return h.Append(nil)
+	return packet(wire.BGPType_Keepalive, 0, nil)
 }
 
 func encodeNotification(code, subcode uint8, data []byte) ([]byte, error) {
@@ -135,7 +131,7 @@ func (u updateAttrs) build() ([]wire.PathAttribute, error) {
 		return nil, errors.New("bgp: next hop must be IPv4")
 	}
 	origin, err := attr(wire.AttributeCode_ORIGIN, false, true, 1, func(a *wire.PathAttribute) bool {
-		return a.SetOrigin(wire.OriginValue{Value: wire.Origin_IGP})
+		return a.SetOrigin(wire.Origin_IGP)
 	})
 	if err != nil {
 		return nil, err
@@ -167,7 +163,7 @@ func (u updateAttrs) build() ([]wire.PathAttribute, error) {
 	attrs := []wire.PathAttribute{origin, asPath, nh}
 	if u.ibgp {
 		lp, err := attr(wire.AttributeCode_LOCAL_PREF, false, true, 4, func(a *wire.PathAttribute) bool {
-			return a.SetLocalPref(wire.U32Value{Value: 100})
+			return a.SetLocalPref(100)
 		})
 		if err != nil {
 			return nil, err
